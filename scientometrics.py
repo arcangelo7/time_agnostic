@@ -1,7 +1,7 @@
 import requests, json
 from oc_ocdm.graph import GraphSet
 
-def get_all_references_for_journal(journal_issn, i_am_polite):
+def get_all_references_from_journal(journal_issn, i_am_polite):
     journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?mailto={i_am_polite}')
     journal_data_json = journal_data.json()
     journal_data_items = journal_data_json["message"]["items"]
