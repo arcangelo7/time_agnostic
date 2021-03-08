@@ -3,7 +3,6 @@ from oc_ocdm.graph import GraphSet
 from oc_ocdm.storer import Storer
 from oc_ocdm.support import create_date
 from rdflib import URIRef
-import networkx as nx
 
 
 def get_journal_data(journal_issn, i_am_polite):

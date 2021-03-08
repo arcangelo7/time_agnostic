@@ -13,21 +13,21 @@
 </head>
 
 <body>
-    <!-- <header class="header-global">
+    <header class="header-global">
         <div class="nav-wrapper container position-relative">
             <ul class="nav nav-pills nav-fill flex-column flex-sm-row">
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-3 mb-md-0 active" data-toggle="tab" href="#">Home</a>
+                    <a class="nav-link mb-sm-3 mb-md-0 active" href="#">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-3 mb-md-0" data-toggle="tab" href="next-meet">Prossimo incontro</a>
+                    <a class="nav-link mb-sm-3 mb-md-0" href="#next-meet">Prossimo incontro</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link mb-sm-3 mb-md-0" data-toggle="tab" href="past-meet">Incontri passati</a>
+                    <a class="nav-link mb-sm-3 mb-md-0" href="#past-meet">Archivio</a>
                 </li>
             </ul>
         </div>
-    </header> -->
+    </header>
 
     <main>
         <!-- Hero -->
@@ -40,11 +40,12 @@
                                 href="http://opencitations.net/" alt="Link to the OpenCitations main page"
                                 target="_blank"><span class="oc-purple">Open</span><span
                                     class="oc-blue">Citations</span></a>.</p>
-                        <!-- <div class="d-flex flex-column flex-wrap flex-md-row justify-content-md-center mb-5">
-                            <a href="https://themesberg.com/product/ui-kits/neumorphism-ui" target="_blank"
-                                class="btn btn-primary mb-3 mb-lg-0 mr-3"><i class="far fa-calendar-check mr-2"></i> Vai
-                                agli incontri</a>
-                        </div> -->
+                        <div class="d-flex flex-column flex-wrap flex-md-row justify-content-md-center mb-5">
+                            <a href="https://github.com/arcangelo7/time_agnostic" target="_blank"
+                                class="btn btn-primary mb-3 mb-lg-0 mr-3" alt="Link to the repository"><i
+                                    class="fab fa-github mr-2"></i>Vai
+                                alla repository</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -53,16 +54,109 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro</h2>
+                    <h2>Prossimo incontro (10/03/2020)</h2>
                 </div>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <h3>Cosa ho fatto</h3>
+                <ul>
+                    <li>Ho letto:</li>
+                    <ul>
+                        <li>Peroni, S., Shotton, D., Vitali, F. (2016). <em>A document-inspired way for tracking changes
+                                of RDF data</em>. <a href="https://w3id.org/oc/paper/occ-driftalod2016.html"
+                                alt="Link to the paper">https://w3id.org/oc/paper/occ-driftalod2016.html</a>. </li>
+                        <li>Daquino, M., Peroni, S., Shotton D. (2020). <em>The OpenCitations Data Model</em>. <a
+                                href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7"
+                                alt="Link to the OpenCitations Data Model documentation">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>
+                        </li>
+                        <li>Documentazione delle seguenti librerie e API: <em>Crossref REST API</em>, <em>REST API for
+                                COCI</em>, <em>oc_ocdm</em>.</li>
+                        <li>Ho sfogliato il lavoro fin qui svolto da Arianna Moretti.</li>
+                    </ul>
+                    <li>Ho scritto il seguente codice con lo scopo di comprendere il funzionamento di tutte le librerie e API su menzionate, nonché di produrre output utili in vista della realizzazione del dataset su "Scientometrics": <a href="https://github.com/arcangelo7/time_agnostic/blob/main/scientometrics.py" target="_blank" alt="Link to scientometrics.py">scientometrics.py</a>.</li>
+                    <div class="col-12 mt-3 mb-4">
+                        <div class="card bg-primary shadow-inset border-light">
+                            <div class="card-body p-5"> 
+                                <pre>
+                                    <code class="prettyprint">
+import requests, requests_cache, json
+from oc_ocdm.graph import GraphSet
+from oc_ocdm.storer import Storer
+from oc_ocdm.support import create_date
+from rdflib import URIRef
+
+
+def get_journal_data(journal_issn, i_am_polite):
+    journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?mailto={i_am_polite}')
+    journal_data_json = journal_data.json()
+    return journal_data_json
+
+
+def get_all_references_from_journal(journal_data_json):
+    journal_data_items = journal_data_json["message"]["items"]
+    all_references = list()
+    for item in journal_data_items:
+        references = requests.get(url = f'https://w3id.org/oc/index/coci/api/v1/references/{item["DOI"]}?format=json')
+        references_json = references.json()
+        all_references.append(references_json)
+    return all_references
+
+
+def update_graph(journal_data_json, graphset):
+    journal_data_items = journal_data_json["message"]["items"]
+    for item in journal_data_items:
+        scientometrics_br = scientometrics_graphset.add_br(item["link"][0]["URL"])
+        scientometrics_br.has_title(item["title"][0])
+        iso_date_string = create_date([item["published-print"]["date-parts"][0][0]])
+        scientometrics_br.has_pub_date(iso_date_string)
+        # for reference in item["reference"]:
+        #     my_br.has_related_document(URIRef("http://related_document_uri/"))
+    graphset.commit_changes()
+
+
+# Crossref test
+requests_cache.install_cache('cache')
+issn_web_scientometrics = "1588-2861"
+my_mail = "arcangelo.massari@studio.unibo.it"
+journal_data = get_journal_data(issn_web_scientometrics, my_mail)
+
+# REST API for COCI test
+all_references = get_all_references_from_journal(journal_data)
+
+# oc_ocdm test
+scientometrics_graphset = GraphSet("https://arcangelo7.github.io/time_agnostic/")
+update_graph(journal_data, scientometrics_graphset)
+
+# Retrieved data dump
+with open('data/scientometrics.json', 'w') as outfile:
+    json.dump(journal_data, outfile)
+with open('data/references.json', 'w') as outfile:
+    json.dump(all_references, outfile)
+storer = Storer(scientometrics_graphset)
+storer.store_graphs_in_file("data/graph.json", "./")                            
+                                    </code>
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                    <li>Ho ottenuto in output tre file json:</li>
+                    <ul>
+                        <li>Una lista di tutti i lavori (articoli, libri, atti di convegni, etc) presenti nella rivista "Scientometrics", con relativi metadati: <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/scientometrics.json" alt="Link to scientometrics.json" target="_blank">scientometrics.json</a>.</li>
+                        <li>I dati citazionali per tutti i riferimenti in uscita relativi ai DOI di tutti i lavori presenti nella rivista "Scientometrics": <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/references.json" target="_blank" alt="Link to references.json">references.json</a>.</li>
+                        <li>Una lista di grafi conformi a OCDM v2.0.1 contenente tante entità di tipo BibliographicResource quanti sono i lavori presenti in "Scientometrics", con metadati relativi a titolo e data di pubblicazione: <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/graph.json" target="_blank" alt="Link to the graph">graph.json</a>.</li>
+                    </ul>
+                </ul>
+                <h3>Cosa non ho capito</h3>
+                <ul>
+                    <li>Non posso accedere a <em>The OpenCitations Data Model</em> su SpringerLink (<a href="https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28" alt="Link to the OpenCitations Data Model docuemntation on Springer" target="_blank">https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28</a>) neanche tramite proxy Unibo. È diverso rispetto a quello pubblicato su figshare? (<a href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7" alt="Link to the OpenCitations Data Model documentation on Figshare">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>)</li>
+                    <li>Gli articoli di "Scientometrics" ritornati tramite GET a http://api.crossref.org/journals/{1588-2861}/works, dove 1588-2861 è l'ISSN web di "Scientometrics", sono 6061, ma mi sono empiricamente accorto che l'elenco non è completo. È possibile che alcuni articoli non siano presenti? Oppure devo usare una query differente per ritornarli tutti?</li>
+                    <li>A quale ISSN di "Scientometrics" devo fare riferimento, quello web (1588-2861), quello stampa (0138-9130) o entrambi?</li>
+                </ul>
             </div>
         </section>
 
         <section class="section pb-5" id="past-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Incontri passati</h2>
+                    <h2>Archivio</h2>
                 </div>
                 <div class="accordion shadow-soft rounded" id="accordionExample1">
                     <div class="card card-sm card-body bg-primary border-light mb-0">
@@ -75,11 +169,21 @@
                             <div class="pt-3">
                                 <h3 class="mb-3">Cosa ho fatto</h3>
                                 <p class="mb-3">
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+                                    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+                                    irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+                                    pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
+                                    deserunt mollit anim id est laborum.
                                 </p>
                                 <h3 class="mb-3">Cosa non ho capito</h3>
                                 <p class="mb-3">
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+                                    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+                                    irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+                                    pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
+                                    deserunt mollit anim id est laborum.
                                 </p>
                             </div>
                         </div>
@@ -118,6 +222,7 @@
     <script src="./vendor/popper.js/dist/umd/popper.min.js"></script>
     <script src="./vendor/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="./vendor/headroom.js/dist/headroom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
 
     <!-- Vendor JS -->
     <script src="./vendor/onscreen/dist/on-screen.umd.min.js"></script>
