@@ -283,7 +283,7 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                     <li>Per creare una nuova entità di qualunque tipo, sia essa una Bibliographic Resource o una Citation, occorre passare in input al metodo corrispondente il responsible agent. Ad esempio, <code class="prettyprint">scientometrics_graphset.add_br(responsible_agent)</code>. Dato che l'OCDM prevede il Responsible agent come tipo, credo ci si riferisca ad esso. Su questo ho due dubbi:
                                         <ol>
                                             <li>Nel grafo finale non vedo il collegamento tra i Responsible Agents e le corrispondenti Bibliographic Resources. Entrambi vengono indicati da un URL nella forma [dataset URL][entity dataset identifier] - ad esempio https://arcangelo7.github.io/time_agnostic/ra/6 - ma il grafo non riporta qual è la Bibliographic Resource corrispondente. Fa fede il numero? Ovvero il Responsible Agent 6 è responsabile della Bibliographic Resource 6?</li>
-                                            <li>Suggerimenti su come gestire le omonimie?</li>
+                                            <li>Di alcuni autori viene riportato l'ORCID, di altri no. Suggerimenti su come gestire le omonimie?</li>
                                         </ol>
                                     </li>
                                 </ul>
