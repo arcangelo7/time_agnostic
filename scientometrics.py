@@ -24,12 +24,19 @@ def get_all_references_from_journal(journal_data_json):
 def update_graph(journal_data_json, graphset):
     journal_data_items = journal_data_json["message"]["items"]
     for item in journal_data_items:
-        scientometrics_br = scientometrics_graphset.add_br(item["link"][0]["URL"])
-        scientometrics_br.has_title(item["title"][0])
-        iso_date_string = create_date([item["published-print"]["date-parts"][0][0]])
-        scientometrics_br.has_pub_date(iso_date_string)
-        # for reference in item["reference"]:
-        #     my_br.has_related_document(URIRef("http://related_document_uri/"))
+        try:
+            # a volte gli articoli ritornati da crossref non hanno il campo "author". È molto raro, ma accade.
+            responsible_agent_name = item["author"][0]["given"] + " " + item["author"][0]["family"]
+            responsible_agent = scientometrics_graphset.add_ra(responsible_agent_name)
+            responsible_agent.has_given_name(item["author"][0]["given"])
+            responsible_agent.has_family_name(item["author"][0]["family"])
+            # non ho ancora gestito il problema dell'omonimia, ma sono consapevole che vada gestito
+            scientometrics_br = scientometrics_graphset.add_br(responsible_agent)
+            scientometrics_br.has_title(item["title"][0])
+            iso_date_string = create_date([item["published-print"]["date-parts"][0][0]])
+            scientometrics_br.has_pub_date(iso_date_string)
+        except KeyError:
+            pass
     graphset.commit_changes()
 
 

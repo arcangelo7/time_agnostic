@@ -2,138 +2,6 @@
     {
         "@graph": [
             {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/12",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2020"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "Analysis of journal evaluation indicators: an experimental study based on unsupervised Laplacian score"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 12 [br/12]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/13",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "1980"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "Introduction"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 13 [br/13]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/16",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2009"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "Research performance and bureaucracy within public research labs"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 16 [br/16]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/10",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2005"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "Some considerations on the use of the impact factor of scientific journals as a tool to evaluate research in psychology"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 10 [br/10]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/11",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2006"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "h-index sequence and h-index matrix: Constructions and applications"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 11 [br/11]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/20",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2016"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "How can differences in international university rankings be explained?"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 20 [br/20]"
-                    }
-                ]
-            },
-            {
                 "@id": "https://arcangelo7.github.io/time_agnostic/br/5",
                 "@type": [
                     "http://purl.org/spar/fabio/Expression"
@@ -156,95 +24,7 @@
                 ]
             },
             {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/2",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2014"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "On the quality evaluation of scientific entities in Poland supported by consistency-driven pairwise comparisons method"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 2 [br/2]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/7",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2005"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "Klaus Fuchs - the enduring contribution to physics from his British period"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 7 [br/7]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/4",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2016"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "A bibliometric analysis to illustrate the role of an embedded research capability in South African National Parks"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 4 [br/4]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/1",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "1992"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "A validation study of “LEXIMAPPE”"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 1 [br/1]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/18",
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/17",
                 "@type": [
                     "http://purl.org/spar/fabio/Expression"
                 ],
@@ -261,34 +41,34 @@
                 ],
                 "http://www.w3.org/2000/01/rdf-schema#label": [
                     {
-                        "@value": "bibliographic resource 18 [br/18]"
+                        "@value": "bibliographic resource 17 [br/17]"
                     }
                 ]
             },
             {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/17",
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/12",
                 "@type": [
                     "http://purl.org/spar/fabio/Expression"
                 ],
                 "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
                     {
                         "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "1984"
+                        "@value": "2020"
                     }
                 ],
                 "http://purl.org/dc/terms/title": [
                     {
-                        "@value": "Indicators of measurement of impact of science and technology on socio-economic development objectives"
+                        "@value": "Analysis of journal evaluation indicators: an experimental study based on unsupervised Laplacian score"
                     }
                 ],
                 "http://www.w3.org/2000/01/rdf-schema#label": [
                     {
-                        "@value": "bibliographic resource 17 [br/17]"
+                        "@value": "bibliographic resource 12 [br/12]"
                     }
                 ]
             },
             {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/15",
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/18",
                 "@type": [
                     "http://purl.org/spar/fabio/Expression"
                 ],
@@ -300,34 +80,12 @@
                 ],
                 "http://purl.org/dc/terms/title": [
                     {
-                        "@value": "Allometric models to measure and analyze the evolution of international research collaboration"
+                        "@value": "Twenty-first century macro-trends in the institutional fabric of science: bibliometric monitoring and analysis"
                     }
                 ],
                 "http://www.w3.org/2000/01/rdf-schema#label": [
                     {
-                        "@value": "bibliographic resource 15 [br/15]"
-                    }
-                ]
-            },
-            {
-                "@id": "https://arcangelo7.github.io/time_agnostic/br/14",
-                "@type": [
-                    "http://purl.org/spar/fabio/Expression"
-                ],
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
-                    {
-                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
-                        "@value": "2014"
-                    }
-                ],
-                "http://purl.org/dc/terms/title": [
-                    {
-                        "@value": "How to kill inventors: testing the Massacrator© algorithm for inventor disambiguation"
-                    }
-                ],
-                "http://www.w3.org/2000/01/rdf-schema#label": [
-                    {
-                        "@value": "bibliographic resource 14 [br/14]"
+                        "@value": "bibliographic resource 18 [br/18]"
                     }
                 ]
             },
@@ -354,6 +112,116 @@
                 ]
             },
             {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/1",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "1992"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "A validation study of “LEXIMAPPE”"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 1 [br/1]"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/10",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "2005"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "Some considerations on the use of the impact factor of scientific journals as a tool to evaluate research in psychology"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 10 [br/10]"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/15",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "2016"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "Allometric models to measure and analyze the evolution of international research collaboration"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 15 [br/15]"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/4",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "2016"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "A bibliometric analysis to illustrate the role of an embedded research capability in South African National Parks"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 4 [br/4]"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/16",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "2009"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "Research performance and bureaucracy within public research labs"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 16 [br/16]"
+                    }
+                ]
+            },
+            {
                 "@id": "https://arcangelo7.github.io/time_agnostic/br/19",
                 "@type": [
                     "http://purl.org/spar/fabio/Expression"
@@ -366,12 +234,56 @@
                 ],
                 "http://purl.org/dc/terms/title": [
                     {
-                        "@value": "Twenty-first century macro-trends in the institutional fabric of science: bibliometric monitoring and analysis"
+                        "@value": "How can differences in international university rankings be explained?"
                     }
                 ],
                 "http://www.w3.org/2000/01/rdf-schema#label": [
                     {
                         "@value": "bibliographic resource 19 [br/19]"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/2",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "2014"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "On the quality evaluation of scientific entities in Poland supported by consistency-driven pairwise comparisons method"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 2 [br/2]"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/14",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "2014"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "How to kill inventors: testing the Massacrator© algorithm for inventor disambiguation"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 14 [br/14]"
                     }
                 ]
             },
@@ -394,6 +306,28 @@
                 "http://www.w3.org/2000/01/rdf-schema#label": [
                     {
                         "@value": "bibliographic resource 6 [br/6]"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/7",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "2005"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "Klaus Fuchs - the enduring contribution to physics from his British period"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 7 [br/7]"
                     }
                 ]
             },
@@ -440,8 +374,456 @@
                         "@value": "bibliographic resource 9 [br/9]"
                     }
                 ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/13",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "1980"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "Introduction"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 13 [br/13]"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/br/11",
+                "@type": [
+                    "http://purl.org/spar/fabio/Expression"
+                ],
+                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": [
+                    {
+                        "@type": "http://www.w3.org/2001/XMLSchema#gYear",
+                        "@value": "2006"
+                    }
+                ],
+                "http://purl.org/dc/terms/title": [
+                    {
+                        "@value": "h-index sequence and h-index matrix: Constructions and applications"
+                    }
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "bibliographic resource 11 [br/11]"
+                    }
+                ]
             }
         ],
         "@id": "https://arcangelo7.github.io/time_agnostic/br/"
+    },
+    {
+        "@graph": [
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/15",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 15 [ra/15]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Coccia"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Mario"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/10",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 10 [ra/10]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Lluch"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Julia Osca"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/9",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 9 [ra/9]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Gordon"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Avishag"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/11",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 11 [ra/11]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Liang"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Liming"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/8",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 8 [ra/8]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Keiser"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Jennifer"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/18",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 18 [ra/18]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Tijssen"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Robert J. W."
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/16",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 16 [ra/16]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Coccia"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Mario"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/19",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 19 [ra/19]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Piro"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Fredrik Niclas"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/12",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 12 [ra/12]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Feng"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Lin"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/6",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 6 [ra/6]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Santos"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Jesús Basulto"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/5",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 5 [ra/5]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Egghe"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Leo"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/3",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 3 [ra/3]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Basu"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Aparna"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/4",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 4 [ra/4]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "van Wilgen"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Brian W."
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/13",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 13 [ra/13]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Zuckerman"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Harriet"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/14",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 14 [ra/14]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Pezzoni"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Michele"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/7",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 7 [ra/7]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Bonitz"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Manfred"
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/2",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 2 [ra/2]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Koczkodaj"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Waldemar W."
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/1",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 1 [ra/1]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "Leydesdorff"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "L."
+                    }
+                ]
+            },
+            {
+                "@id": "https://arcangelo7.github.io/time_agnostic/ra/17",
+                "@type": [
+                    "http://xmlns.com/foaf/0.1/Agent"
+                ],
+                "http://www.w3.org/2000/01/rdf-schema#label": [
+                    {
+                        "@value": "responsible agent 17 [ra/17]"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/familyName": [
+                    {
+                        "@value": "De Marchi"
+                    }
+                ],
+                "http://xmlns.com/foaf/0.1/givenName": [
+                    {
+                        "@value": "Mario"
+                    }
+                ]
+            }
+        ],
+        "@id": "https://arcangelo7.github.io/time_agnostic/ra/"
     }
 ]
