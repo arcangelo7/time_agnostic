@@ -1,16 +1,22 @@
-import requests, requests_cache, json
+import requests, requests_cache, json, urllib
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.storer import Storer
 from oc_ocdm.support import create_date
 from rdflib import URIRef
 
-
 class DatasetBuilder(object):
     def __init__(self, journal_issn, your_email):
         requests_cache.install_cache('cache')
-        journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?mailto={your_email}')
-        journal_data_json = journal_data.json()
-        self.data = journal_data_json
+        journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor=*&mailto={your_email}').json()
+        next_cursor = journal_data["message"]["next-cursor"]
+        cursors = set()
+        while next_cursor not in cursors:
+            cursors.add(next_cursor)
+            next_chunk = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor={urllib.parse.quote(next_cursor)}&mailto={your_email}').json()
+            next_cursor = next_chunk["message"]["next-cursor"]
+            items_retrieved = next_chunk["message"]["items"]
+            journal_data["message"]["items"].append(items_retrieved)
+        self.data = journal_data
 
     def get_all_references_from_journal(self):
         journal_data_json = self.data
@@ -47,7 +53,6 @@ class DatasetBuilder(object):
             data = self.data
         with open(path, 'w') as outfile:
             json.dump(data, outfile)
-
     
     def dump_dataset(self, data, path):
         storer = Storer(data)
