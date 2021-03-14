@@ -8,10 +8,13 @@ from tqdm import tqdm
 class DatasetBuilder(object):
     def get_journal_data_from_crossref(self, journal_issn, your_email, path, small=False):
         requests_cache.install_cache('cache/crossref_cache')
+        if requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}').status_code != 200:
+            raise("ISSN not found!")
         if small:
             journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?mailto={your_email}').json()
         else:
             journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor=*&mailto={your_email}').json()
+            journal_data = journal_data.json()
             next_cursor = journal_data["message"]["next-cursor"]
             total_results = journal_data["message"]["total-results"]
             pbar = tqdm(total=total_results)
@@ -30,18 +33,29 @@ class DatasetBuilder(object):
     
     def get_citation_data_from_coci(self, journal_data_path, path):
         total_references = dict()
+        metadata_index = dict()
         requests_cache.install_cache('cache/coci_cache')
         with open(journal_data_path) as journal_data:
             journal_item = json.load(journal_data)["message"]["items"]
             pbar = tqdm(total=len(journal_item))
             for item in journal_item:
-                references = requests.get(url = f'https://w3id.org/oc/index/coci/api/v1/references/{item["DOI"]}?format=json').json()
-                references_with_metadata = list()
-                for reference in references:
-                    metadata = requests.get(url = f'https://w3id.org/oc/index/coci/api/v1/metadata/{reference["cited"]}?format=json').json()
-                    reference["cited_metadata"] = metadata[0]
-                    references_with_metadata.append(reference)
-                total_references[item["DOI"]] = references_with_metadata
+                references_data = requests.get(url = f'https://w3id.org/oc/index/coci/api/v1/references/{item["DOI"]}?format=json')
+                if references_data.status_code == 200:
+                    references = references_data.json()
+                    references_with_metadata = list()
+                    for reference in references:
+                        if reference["cited"] not in metadata_index: # To avoid asking twice for the same resource
+                            metadata_data = requests.get(url = f'https://w3id.org/oc/index/coci/api/v1/metadata/{reference["cited"]}?format=json')
+                            if metadata_data.status_code == 200:
+                                metadata = metadata_data.json()
+                                reference["cited_metadata"] = metadata[0] if len(metadata) > 0 else ""
+                                metadata_index[reference["cited"]] = metadata[0] if len(metadata) > 0 else ""
+                            else:
+                                reference["cited_metadata"] = ""
+                        else:
+                            reference["cited_metadata"] = metadata_index[reference["cited"]]
+                        references_with_metadata.append(reference)
+                    total_references[item["DOI"]] = references_with_metadata
                 pbar.update(1)
         pbar.close()
         with open(path, 'w') as outfile:
