@@ -54,29 +54,215 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (10/03/2020)</h2>
+                    <h2>Prossimo incontro (17/03/2020)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                 <ul>
-                    <li>Ho letto:</li>
+                    <li>Ho riorganizzato il codice utilizzando la programmazione a oggetti per rendere lo sviluppo più
+                        mantenibile.</li>
+                    <li>Utilizzando il parametro <em>cursor</em>, ho aumentato da 20 a 6065 il numero di works contenuti
+                        in "Scientometrics" ritornati tramite Crossref. Ora ci sono tutti.</li>
+                    <li>Ho generato 3 output corrispondenti a 3 grafi, di cui si elencano i rispettivi metadati
+                        considerati:</li>
                     <ul>
-                        <li>Peroni, S., Shotton, D., Vitali, F. (2016). <em>A document-inspired way for tracking changes
-                                of RDF data</em>. <a href="https://w3id.org/oc/paper/occ-driftalod2016.html"
-                                alt="Link to the paper">https://w3id.org/oc/paper/occ-driftalod2016.html</a>. </li>
-                        <li>Daquino, M., Peroni, S., Shotton D. (2020). <em>The OpenCitations Data Model</em>. <a
-                                href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7"
-                                alt="Link to the OpenCitations Data Model documentation">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>
-                        </li>
-                        <li>Documentazione delle seguenti librerie e API: <em>Crossref REST API</em>, <em>REST API for
-                                COCI</em>, <em>oc_ocdm</em>.</li>
-                        <li>Ho sfogliato il lavoro fin qui svolto da Arianna Moretti.</li>
+                        <li>MetadataSet (dcat:Dataset)</li>
+                        <ul>
+                            <li>Titolo (dcterms:title)</li>
+                            <li>Descrizione (dcterms:description)</li>
+                            <li>Data di modifica (dcterms:modified)</li>
+                        </ul>
+                        <li>Provenance (prov:Entity)</li>
+                        <ul>
+                            <li>Descrizione (dcterms:description)</li>
+                            <li>is snapshot of (prov:specializationOf)</li>
+                            <li>Attribuzione (prov:wasAttributedTo)</li>
+                            <li>Data di creazione (prov:generatedAtTime)</li>
+                        </ul>
+                        <li>Graphset (set di grafi sulle entità bibliografiche)</li>
+                        <ul>
+                            <li>BibliographicResource, per la rivista, i suoi articoli e gli articoli citati dai suoi
+                                articoli (fabio:Expression, fabio:Journal, fabio:JournalArticle)</li>
+                            <ul>
+                                <li>Tipo (rdf:type)</li>
+                                <li>Titolo (dcterms:title)</li>
+                                <li>Sottotitolo, laddove presente (fabio:hasSubtitle)</li>
+                                <li>Identificatore, DOI per gli articoli, ISSN per la rivista (datacite:hasIdentifier)
+                                </li>
+                                <li>Se articolo, autore (pro:isDocumentContextFor)</li>
+                                <li>Se articolo, data di pubblicazione, laddove presente (prism:publicationDate)</li>
+                                <li>Se articolo, rivista di appartenenza (frbr:partOf)</li>
+                                <li>Formato (frbr:embodiment)</li>
+                            </ul>
+                            <li>Citation (cito:Citation, cito:JournalSelfCitation, cito:AuthorSelfCitation,
+                                cito:DistantCitation)</li>
+                            <ul>
+                                <li>Tipo (rdf:type)</li>
+                                <li>Documento citante (cito:hasCitingEntity)</li>
+                                <li>Documento citato (cito:hasCitedEntity)</li>
+                                <li>Data di creazione (cito:hasCitationCreationDate)</li>
+                                <li>Time span (cito:hasCitationTimeSpan)</li>
+                            </ul>
+                            <li>ResourceEmbodiment (fabio:manifestation, fabio:DigitalManifestation, fabio:PrintObject)
+                            </li>
+                            <ul>
+                                <li>Tipo, laddove presente (rdf:type)</li>
+                                <li>Media type, laddove presente (dcterms:format)</li>
+                                <li>Pagina iniziale, laddove presente (prism:startingPage)</li>
+                                <li>Pagina finale, laddove presente (prism:endingPage)</li>
+                                <li>URL, laddove presente (frbr:exemplar)</li>
+                            </ul>
+                            <li>ResponsibleAgent (foaf:Agent)</li>
+                            <ul>
+                                <li>Tipo (rdf:type)</li>
+                                <li>Identificativo, ovvero ORCID, laddove presente (datacite:hasIdentifier)</li>
+                                <li>Nome, laddove presente (foaf:givenName)</li>
+                                <li>Cognome, laddove presente (foaf:familyName)</li>
+                                <li>Nome completo, laddove presente (foaf:name)</li>
+                            </ul>
+                            <li>AgentRole (pro:RoleInTime)</li>
+                            <ul>
+                                <li>Tipo (rdf:type)</li>
+                                <li>Tipo di ruolo (pro:withRole)</li>
+                                <li>Is held by (pro:isHeldBy)</li>
+                            </ul>
+                            <li>Identifier (datacite:Identifier)</li>
+                            <ul>
+                                <li>Tipo (rdf:type)</li>
+                                <li>Tipo di identificatore (datacite:usesIdentifierScheme)</li>
+                                <li>Stringa (literalreification:hasLiteralValue)</li>
+                            </ul>
+                        </ul>
                     </ul>
-                    <li>Ho scritto il seguente codice con lo scopo di comprendere il funzionamento di tutte le librerie e API su menzionate, nonché di produrre output utili in vista della realizzazione del dataset su "Scientometrics": <a href="https://github.com/arcangelo7/time_agnostic/blob/main/scientometrics.py" target="_blank" alt="Link to scientometrics.py">scientometrics.py</a>.</li>
-                    <div class="col-12 mt-3 mb-4">
-                        <div class="card bg-primary shadow-inset border-light">
-                            <div class="card-body p-5"> 
-                                <pre>
-                                    <code class="prettyprint">
+                    <li>La mappatura è avvenuta nel modo più generico e rivista-indipendente possibile. Dovrebbe essere
+                        possibile utilizzare lo stesso software per mappare seguendo l'ocdm qualunque rivista ritornata
+                        da Crossref.</li>
+                    <li>È stata implementata una barra di caricamento per mostrare all'utente quanto occorra aspettare
+                        per ricevere tutti i dati tramite le varie API.</li>
+                    <li>Il codice è disponibile alla seguente repository: <a
+                            href="https://github.com/arcangelo7/time_agnostic/blob/main/dataset_builder.py"
+                            target=_blank
+                            alt="Link to the Python script">https://github.com/arcangelo7/time_agnostic/blob/main/dataset_builder.py</a>.
+                        Purtroppo, non è stato possibile caricare gli output su GitHub date le loro dimensioni.</li>
+                </ul>
+                <h3>Cosa non ho capito</h3>
+                <ul>
+                    <li>Come faccio a esprimere che un certo issue fa parte di un certo volume utilizzando l'OCDM? Una
+                        BibliographicResource ha come metodo has_number, che però è generico.</li>
+                    <li>Un AgentRole ha tra i suoi metodi has_next. A questo proposito, la documentazione di oc_ocdm
+                        dice:
+                        <blockquote class="blockquote ml-5">The previous role in a sequence of agent roles of the same
+                            type associated with the same bibliographic resource (so as to define, for instance, an
+                            ordered list of authors).</blockquote>
+                        Tuttavia, il documento <em>The Open Citations Data Model</em> parla di "following role", non di
+                        "previous". Credo faccia quindi fede quest'ultimo. In ogni caso, non ho capito a cosa ci si sta
+                        riferendo, per ragioni affini a quelle della domanda successiva.
+                    </li>
+                    <li>Come faccio a collegare una BibliographicResource ai suoi ResponsibleAgents? È presente il
+                        metodo has_contributor, che però riceve come argomento un AgentRole, non un ResponsibleAgent.
+                        Devo quindi avere tanti AgentRoles quanti sono i ResponsibleAgents e usarli come intermediari
+                        tra la BibliographicResource e i ResponsibleAgents? Sembrerebbe di sì, dato che tale predicato
+                        viene mappato con pro:isDocumentContextFor, che presenta la stessa contorsione logica: è come se
+                        invece di dire "<em>The Open Citations Data Model</em> è scritto da Silvio Peroni" dicessi
+                        "<em>The Open Citations Data Model</em> è il contesto nel quale il ruolo di autore di Silvio
+                        Peroni si manifesta". </li>
+                    <li>Alcuni articoli di rivista hanno sia una data di pubblicazione a stampa, che una data per la
+                        pubblicazione digitale. Tuttavia, OCDM prevede un'unica data di pubblicazione attraverso il
+                        metodo has_pub_date. Quale uso delle due? Oltre a questo, come tipo di ResourceEmbodiment devo
+                        indicare sia il formato stampa che il formato digitale?</li>
+                    <li>Tra i predicati di una Citation c'è has_citation_characterization. A questo proposito, la
+                        documentazione dell'OCDM recita:
+                        <blockquote class="blockquote ml-5">The citation function characterizing the purpose of the
+                            citation.</blockquote>
+                        Tuttavia, non ho capito cosa voglia dire.
+                    </li>
+                    <li>Ogni articolo di Scientometrics cita altri articoli sia della rivista stessa che di riviste
+                        esterne. Devo creare una BibliograficResource per ciascuna degli articoli esterni a
+                        Scientometrics?</li>
+                    <li>Crossref riporta le reference di ciascun articolo indicando, tra gli altri, la "key". Che cosa
+                        indica? Ad esempio:
+                        <pre>
+                            <code class="prettyprint">
+{
+    "DOI": "10.1126/science.280.5364.698",
+    "author": "M. Heller",
+    "doi-asserted-by": "crossref",
+    "first-page": "698",
+    "journal-title": "Science",
+    <strong>"key"</strong>: "207_CR21",
+    "unstructured": "Heller, M., H. Eisenberg (1998), Can Patents Deter Innovation? The Anticommons in Biomedical Research, Science, 280: 698\u2013701.",
+    "volume": "280",
+    "year": "1998"
+}
+                            </code>
+                        </pre>
+                    </li>
+                    <li>I dati sulle reference riportati da Crossref e dall'API for COCI sono spesso uguali, ma non
+                        sempre: a volte il COCI riporta citazioni che Crossref non riporta e viceversa. Quale dei due fa
+                        fede? Entrambi?</li>
+                    <li>A causa dell'elevato numero di articoli, i tempi di risposta di Crossref e dell'API for COCI
+                        sono biblici, si parla di ore. Per questo motivo, una volta ottenuti i dati la prima volta, li
+                        ho messi in cache per non doverli più richiedere. Inoltre, attraverso un dizionario, ho evitato
+                        di chiedere due volte metadati già richiesti al COCI. Oltre a queste misure, c'è qualcosa che
+                        non so e che dovrei fare per rendere i tempi di esecuzione accettabili?</li>
+                    <li>Ammettendo che le esecuzioni dei GET a Crossref e COCI siano istantanee, la creazione del grafo
+                        vero e proprio avendo i dati occupa il 95% di 16 GB di RAM DDR4 a 3000 MHz e dura ugualmente uno
+                        sproposito (per rendere l'idea, aprire qualunque altro programma che non sia Python causa il
+                        crash dello script per out of memory). Inoltre, volendo esportare il risultato in json, questo
+                        pesa oltre 400 MB. Non è quindi caricabile su GitHub, neanche usando Git Large File Storage,
+                        perché andrei velocemente oltre il GB mensile gratuito consentito. Con questa mole di dati
+                        diventa insomma veramente complicato lavorare. Consigli?</li>
+                    <li>Idealmente, mi sarebbe piaciuto creare un software che, preso in input un ISSN, ritornasse in
+                        output il grafo relativo a quella rivista rispettando l'OCDM. Tuttavia, a causa dei lunghi tempi
+                        d'attesa, e quindi del rischio di crash lungo il percorso, sono stato costretto a spezzettare il
+                        processo su più funzioni da chiamare manualmente. È possibile realizzare l'ideale?</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section pb-5" id="past-meet">
+            <div class="container">
+                <div class="row justify-content-center mb-5">
+                    <h2>Archivio</h2>
+                </div>
+                <div class="accordion shadow-soft rounded" id="accordionExample1">
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-1" data-target="#panel-1" class="accordion-panel-header" data-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="panel-1">
+                            <span class="h6 mb-0 font-weight-bold">10/03/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-1">
+                            <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ul>
+                                    <li>Ho letto:</li>
+                                    <ul>
+                                        <li>Peroni, S., Shotton, D., Vitali, F. (2016). <em>A document-inspired way for
+                                                tracking changes
+                                                of RDF data</em>. <a
+                                                href="https://w3id.org/oc/paper/occ-driftalod2016.html"
+                                                alt="Link to the paper">https://w3id.org/oc/paper/occ-driftalod2016.html</a>.
+                                        </li>
+                                        <li>Daquino, M., Peroni, S., Shotton D. (2020). <em>The OpenCitations Data
+                                                Model</em>. <a
+                                                href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7"
+                                                alt="Link to the OpenCitations Data Model documentation">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>
+                                        </li>
+                                        <li>Documentazione delle seguenti librerie e API: <em>Crossref REST API</em>,
+                                            <em>REST API for
+                                                COCI</em>, <em>oc_ocdm</em>.</li>
+                                        <li>Ho sfogliato il lavoro fin qui svolto da Arianna Moretti.</li>
+                                    </ul>
+                                    <li>Ho scritto il seguente codice con lo scopo di comprendere il funzionamento di
+                                        tutte le librerie e API su menzionate, nonché di produrre output utili in vista
+                                        della realizzazione del dataset su "Scientometrics": <a
+                                            href="https://github.com/arcangelo7/time_agnostic/blob/main/scientometrics.py"
+                                            target="_blank" alt="Link to scientometrics.py">scientometrics.py</a>.</li>
+                                    <div class="col-12 mt-3 mb-4">
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <div class="card-body p-5">
+                                                <pre>
+                                                    <code class="prettyprint">
 import requests, requests_cache, json
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.storer import Storer
@@ -139,130 +325,6 @@ with open('data/references.json', 'w') as outfile:
     json.dump(all_references, outfile)
 storer = Storer(scientometrics_graphset)
 storer.store_graphs_in_file("data/graph.json", "./")                      
-                                    </code>
-                                </pre>
-                            </div>
-                        </div>
-                    </div>
-                    <li>Ho ottenuto in output tre file json:</li>
-                    <ul>
-                        <li>Una lista di 20 lavori (articoli, libri, atti di convegni, etc) presenti nella rivista "Scientometrics", con relativi metadati: <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/scientometrics.json" alt="Link to scientometrics.json" target="_blank">scientometrics.json</a>.</li>
-                        <li>I dati citazionali per tutti i riferimenti in uscita relativi ai DOI di 20 lavori presenti nella rivista "Scientometrics": <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/references.json" target="_blank" alt="Link to references.json">references.json</a>.</li>
-                        <li>Una lista di grafi conformi a OCDM v2.0.1 contenente 20 entità di tipo BibliographicResource relative a 20 lavori presenti in "Scientometrics", con metadati relativi a titolo e data di pubblicazione: <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/graph.json" target="_blank" alt="Link to the graph">graph.json</a>.</li>
-                    </ul>
-                </ul>
-                <h3>Cosa non ho capito</h3>
-                <ul>
-                    <li>Non posso accedere a <em>The OpenCitations Data Model</em> su SpringerLink (<a href="https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28" alt="Link to the OpenCitations Data Model docuemntation on Springer" target="_blank">https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28</a>) neanche tramite proxy Unibo. È diverso rispetto a quello pubblicato su figshare? (<a href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7" alt="Link to the OpenCitations Data Model documentation on Figshare">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>)</li>
-                    <li>Gli articoli di "Scientometrics" ritornati tramite GET a http://api.crossref.org/journals/{1588-2861}/works, dove 1588-2861 è l'ISSN web di "Scientometrics", sono 20 alla volta. Tramite il parametro rows è possibile aumentare questo numero a massimo 1000. Come faccio a ritornarli tutti?</li>
-                    <li>A quale ISSN di "Scientometrics" devo fare riferimento, quello web (1588-2861), quello stampa (0138-9130) o entrambi?</li>
-                    <li>Per creare una nuova entità di qualunque tipo, sia essa una Bibliographic Resource o una Citation, occorre passare in input al metodo corrispondente il responsible agent. Ad esempio, <code class="prettyprint">scientometrics_graphset.add_br(responsible_agent)</code>. Dato che l'OCDM prevede il Responsible agent come tipo, credo ci si riferisca ad esso. Su questo ho due dubbi:
-                        <ol>
-                            <li>Nel grafo finale non vedo il collegamento tra i Responsible Agents e le corrispondenti Bibliographic Resources. Entrambi vengono indicati da un URL nella forma [dataset URL][entity dataset identifier] - ad esempio https://arcangelo7.github.io/time_agnostic/ra/6 - ma il grafo non riporta qual è la Bibliographic Resource corrispondente. Fa fede il numero? Ovvero il Responsible Agent 6 è responsabile della Bibliographic Resource 6?</li>
-                            <li>Di alcuni autori viene riportato l'ORCID, di altri no. Suggerimenti su come gestire le omonimie?</li>
-                        </ol>
-                    </li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="section pb-5" id="past-meet">
-            <div class="container">
-                <div class="row justify-content-center mb-5">
-                    <h2>Archivio</h2>
-                </div>
-                <div class="accordion shadow-soft rounded" id="accordionExample1">
-                    <div class="card card-sm card-body bg-primary border-light mb-0">
-                        <a href="#panel-1" data-target="#panel-1" class="accordion-panel-header" data-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="panel-1">
-                            <span class="h6 mb-0 font-weight-bold">10/03/2021</span>
-                            <span class="icon"><span class="fas fa-plus"></span></span>
-                        </a>
-                        <div class="collapse" id="panel-1">
-                            <div class="pt-3">
-                                <h3>Cosa ho fatto</h3>
-                                <ul>
-                                    <li>Ho letto:</li>
-                                    <ul>
-                                        <li>Peroni, S., Shotton, D., Vitali, F. (2016). <em>A document-inspired way for tracking changes
-                                                of RDF data</em>. <a href="https://w3id.org/oc/paper/occ-driftalod2016.html"
-                                                alt="Link to the paper">https://w3id.org/oc/paper/occ-driftalod2016.html</a>. </li>
-                                        <li>Daquino, M., Peroni, S., Shotton D. (2020). <em>The OpenCitations Data Model</em>. <a
-                                                href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7"
-                                                alt="Link to the OpenCitations Data Model documentation">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>
-                                        </li>
-                                        <li>Documentazione delle seguenti librerie e API: <em>Crossref REST API</em>, <em>REST API for
-                                                COCI</em>, <em>oc_ocdm</em>.</li>
-                                        <li>Ho sfogliato il lavoro fin qui svolto da Arianna Moretti.</li>
-                                    </ul>
-                                    <li>Ho scritto il seguente codice con lo scopo di comprendere il funzionamento di tutte le librerie e API su menzionate, nonché di produrre output utili in vista della realizzazione del dataset su "Scientometrics": <a href="https://github.com/arcangelo7/time_agnostic/blob/main/scientometrics.py" target="_blank" alt="Link to scientometrics.py">scientometrics.py</a>.</li>
-                                    <div class="col-12 mt-3 mb-4">
-                                        <div class="card bg-primary shadow-inset border-light">
-                                            <div class="card-body p-5"> 
-                                                <pre>
-                                                    <code class="prettyprint">
-                import requests, requests_cache, json
-                from oc_ocdm.graph import GraphSet
-                from oc_ocdm.storer import Storer
-                from oc_ocdm.support import create_date
-                from rdflib import URIRef
-                
-                
-                def get_journal_data(journal_issn, i_am_polite):
-                    journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?mailto={i_am_polite}')
-                    journal_data_json = journal_data.json()
-                    return journal_data_json
-                
-                
-                def get_all_references_from_journal(journal_data_json):
-                    journal_data_items = journal_data_json["message"]["items"]
-                    all_references = list()
-                    for item in journal_data_items:
-                        references = requests.get(url = f'https://w3id.org/oc/index/coci/api/v1/references/{item["DOI"]}?format=json')
-                        references_json = references.json()
-                        all_references.append(references_json)
-                    return all_references
-                
-                
-                def update_graph(journal_data_json, graphset):
-                    journal_data_items = journal_data_json["message"]["items"]
-                    for item in journal_data_items:
-                        try:
-                            # a volte gli articoli ritornati da crossref non hanno il campo "author". È molto raro, ma accade.
-                            responsible_agent_name = item["author"][0]["given"] + " " + item["author"][0]["family"]
-                            responsible_agent = scientometrics_graphset.add_ra(responsible_agent_name)
-                            responsible_agent.has_given_name(item["author"][0]["given"])
-                            responsible_agent.has_family_name(item["author"][0]["family"])
-                            # non ho ancora gestito il problema dell'omonimia, ma sono consapevole che vada gestito
-                            scientometrics_br = scientometrics_graphset.add_br(responsible_agent)
-                            scientometrics_br.has_title(item["title"][0])
-                            iso_date_string = create_date([item["published-print"]["date-parts"][0][0]])
-                            scientometrics_br.has_pub_date(iso_date_string)
-                        except KeyError:
-                            pass
-                    graphset.commit_changes()
-                
-                
-                # Crossref test
-                requests_cache.install_cache('cache')
-                issn_web_scientometrics = "1588-2861"
-                my_mail = "arcangelo.massari@studio.unibo.it"
-                journal_data = get_journal_data(issn_web_scientometrics, my_mail)
-                
-                # REST API for COCI test
-                all_references = get_all_references_from_journal(journal_data)
-                
-                # oc_ocdm test
-                scientometrics_graphset = GraphSet("https://arcangelo7.github.io/time_agnostic/")
-                update_graph(journal_data, scientometrics_graphset)
-                
-                # Retrieved data dump
-                with open('data/scientometrics.json', 'w') as outfile:
-                    json.dump(journal_data, outfile)
-                with open('data/references.json', 'w') as outfile:
-                    json.dump(all_references, outfile)
-                storer = Storer(scientometrics_graphset)
-                storer.store_graphs_in_file("data/graph.json", "./")                      
                                                     </code>
                                                 </pre>
                                             </div>
@@ -270,20 +332,54 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                     </div>
                                     <li>Ho ottenuto in output tre file json:</li>
                                     <ul>
-                                        <li>Una lista di 20 lavori (articoli, libri, atti di convegni, etc) presenti nella rivista "Scientometrics", con relativi metadati: <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/scientometrics.json" alt="Link to scientometrics.json" target="_blank">scientometrics.json</a>.</li>
-                                        <li>I dati citazionali per tutti i riferimenti in uscita relativi ai DOI di 20 lavori presenti nella rivista "Scientometrics": <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/references.json" target="_blank" alt="Link to references.json">references.json</a>.</li>
-                                        <li>Una lista di grafi conformi a OCDM v2.0.1 contenente 20 entità di tipo BibliographicResource relative a 20 lavori presenti in "Scientometrics", con metadati relativi a titolo e data di pubblicazione: <a href="https://github.com/arcangelo7/time_agnostic/blob/main/data/graph.json" target="_blank" alt="Link to the graph">graph.json</a>.</li>
+                                        <li>Una lista di 20 lavori (articoli, libri, atti di convegni, etc) presenti
+                                            nella rivista "Scientometrics", con relativi metadati: <a
+                                                href="https://github.com/arcangelo7/time_agnostic/blob/main/data/scientometrics.json"
+                                                alt="Link to scientometrics.json"
+                                                target="_blank">scientometrics.json</a>.</li>
+                                        <li>I dati citazionali per tutti i riferimenti in uscita relativi ai DOI di 20
+                                            lavori presenti nella rivista "Scientometrics": <a
+                                                href="https://github.com/arcangelo7/time_agnostic/blob/main/data/references.json"
+                                                target="_blank" alt="Link to references.json">references.json</a>.</li>
+                                        <li>Una lista di grafi conformi a OCDM v2.0.1 contenente 20 entità di tipo
+                                            BibliographicResource relative a 20 lavori presenti in "Scientometrics", con
+                                            metadati relativi a titolo e data di pubblicazione: <a
+                                                href="https://github.com/arcangelo7/time_agnostic/blob/main/data/graph.json"
+                                                target="_blank" alt="Link to the graph">graph.json</a>.</li>
                                     </ul>
                                 </ul>
                                 <h3>Cosa non ho capito</h3>
                                 <ul>
-                                    <li>Non posso accedere a <em>The OpenCitations Data Model</em> su SpringerLink (<a href="https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28" alt="Link to the OpenCitations Data Model docuemntation on Springer" target="_blank">https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28</a>) neanche tramite proxy Unibo. È diverso rispetto a quello pubblicato su figshare? (<a href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7" alt="Link to the OpenCitations Data Model documentation on Figshare">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>)</li>
-                                    <li>Gli articoli di "Scientometrics" ritornati tramite GET a http://api.crossref.org/journals/{1588-2861}/works, dove 1588-2861 è l'ISSN web di "Scientometrics", sono 20 alla volta. Tramite il parametro rows è possibile aumentare questo numero a massimo 1000. Come faccio a ritornarli tutti?</li>
-                                    <li>A quale ISSN di "Scientometrics" devo fare riferimento, quello web (1588-2861), quello stampa (0138-9130) o entrambi?</li>
-                                    <li>Per creare una nuova entità di qualunque tipo, sia essa una Bibliographic Resource o una Citation, occorre passare in input al metodo corrispondente il responsible agent. Ad esempio, <code class="prettyprint">scientometrics_graphset.add_br(responsible_agent)</code>. Dato che l'OCDM prevede il Responsible agent come tipo, credo ci si riferisca ad esso. Su questo ho due dubbi:
+                                    <li>Non posso accedere a <em>The OpenCitations Data Model</em> su SpringerLink (<a
+                                            href="https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28"
+                                            alt="Link to the OpenCitations Data Model docuemntation on Springer"
+                                            target="_blank">https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28</a>)
+                                        neanche tramite proxy Unibo. È diverso rispetto a quello pubblicato su figshare?
+                                        (<a href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7"
+                                            alt="Link to the OpenCitations Data Model documentation on Figshare">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>)
+                                    </li>
+                                    <li>Gli articoli di "Scientometrics" ritornati tramite GET a
+                                        http://api.crossref.org/journals/{1588-2861}/works, dove 1588-2861 è l'ISSN web
+                                        di "Scientometrics", sono 20 alla volta. Tramite il parametro rows è possibile
+                                        aumentare questo numero a massimo 1000. Come faccio a ritornarli tutti?</li>
+                                    <li>A quale ISSN di "Scientometrics" devo fare riferimento, quello web (1588-2861),
+                                        quello stampa (0138-9130) o entrambi?</li>
+                                    <li>Per creare una nuova entità di qualunque tipo, sia essa una Bibliographic
+                                        Resource o una Citation, occorre passare in input al metodo corrispondente il
+                                        responsible agent. Ad esempio, <code
+                                            class="prettyprint">scientometrics_graphset.add_br(responsible_agent)</code>.
+                                        Dato che l'OCDM prevede il Responsible agent come tipo, credo ci si riferisca ad
+                                        esso. Su questo ho due dubbi:
                                         <ol>
-                                            <li>Nel grafo finale non vedo il collegamento tra i Responsible Agents e le corrispondenti Bibliographic Resources. Entrambi vengono indicati da un URL nella forma [dataset URL][entity dataset identifier] - ad esempio https://arcangelo7.github.io/time_agnostic/ra/6 - ma il grafo non riporta qual è la Bibliographic Resource corrispondente. Fa fede il numero? Ovvero il Responsible Agent 6 è responsabile della Bibliographic Resource 6?</li>
-                                            <li>Di alcuni autori viene riportato l'ORCID, di altri no. Suggerimenti su come gestire le omonimie?</li>
+                                            <li>Nel grafo finale non vedo il collegamento tra i Responsible Agents e le
+                                                corrispondenti Bibliographic Resources. Entrambi vengono indicati da un
+                                                URL nella forma [dataset URL][entity dataset identifier] - ad esempio
+                                                https://arcangelo7.github.io/time_agnostic/ra/6 - ma il grafo non
+                                                riporta qual è la Bibliographic Resource corrispondente. Fa fede il
+                                                numero? Ovvero il Responsible Agent 6 è responsabile della Bibliographic
+                                                Resource 6?</li>
+                                            <li>Di alcuni autori viene riportato l'ORCID, di altri no. Suggerimenti su
+                                                come gestire le omonimie?</li>
                                         </ol>
                                     </li>
                                 </ul>
@@ -298,7 +394,179 @@ storer.store_graphs_in_file("data/graph.json", "./")
                         </a>
                         <div class="collapse" id="panel-2">
                             <div class="pt-3">
-                                <p class="mb-0"></p>
+                                <h3>Cosa ho fatto</h3>
+                                <ul>
+                                    <li>Ho riorganizzato il codice utilizzando la programmazione a oggetti per rendere
+                                        lo sviluppo più mantenibile.</li>
+                                    <li>Utilizzando il parametro <em>cursor</em>, ho aumentato da 20 a 6065 il numero di
+                                        works contenuti in "Scientometrics" ritornati tramite Crossref. Ora ci sono
+                                        tutti.</li>
+                                    <li>Ho generato 3 output corrispondenti a 3 grafi, di cui si elencano i rispettivi
+                                        metadati considerati:</li>
+                                    <ul>
+                                        <li>MetadataSet (dcat:Dataset)</li>
+                                        <ul>
+                                            <li>Titolo (dcterms:title)</li>
+                                            <li>Descrizione (dcterms:description)</li>
+                                            <li>Data di modifica (dcterms:modified)</li>
+                                        </ul>
+                                        <li>Provenance (prov:Entity)</li>
+                                        <ul>
+                                            <li>Descrizione (dcterms:description)</li>
+                                            <li>is snapshot of (prov:specializationOf)</li>
+                                            <li>Attribuzione (prov:wasAttributedTo)</li>
+                                            <li>Data di creazione (prov:generatedAtTime)</li>
+                                        </ul>
+                                        <li>Graphset (set di grafi sulle entità bibliografiche)</li>
+                                        <ul>
+                                            <li>BibliographicResource, per la rivista, i suoi articoli e gli articoli
+                                                citati dai suoi articoli (fabio:Expression, fabio:Journal,
+                                                fabio:JournalArticle)</li>
+                                            <ul>
+                                                <li>Tipo (rdf:type)</li>
+                                                <li>Titolo (dcterms:title)</li>
+                                                <li>Sottotitolo, laddove presente (fabio:hasSubtitle)</li>
+                                                <li>Identificatore, DOI per gli articoli, ISSN per la rivista
+                                                    (datacite:hasIdentifier)</li>
+                                                <li>Se articolo, autore (pro:isDocumentContextFor)</li>
+                                                <li>Se articolo, data di pubblicazione, laddove presente
+                                                    (prism:publicationDate)</li>
+                                                <li>Se articolo, rivista di appartenenza (frbr:partOf)</li>
+                                                <li>Formato (frbr:embodiment)</li>
+                                            </ul>
+                                            <li>Citation (cito:Citation, cito:JournalSelfCitation,
+                                                cito:AuthorSelfCitation, cito:DistantCitation)</li>
+                                            <ul>
+                                                <li>Tipo (rdf:type)</li>
+                                                <li>Documento citante (cito:hasCitingEntity)</li>
+                                                <li>Documento citato (cito:hasCitedEntity)</li>
+                                                <li>Data di creazione (cito:hasCitationCreationDate)</li>
+                                                <li>Time span (cito:hasCitationTimeSpan)</li>
+                                            </ul>
+                                            <li>ResourceEmbodiment (fabio:manifestation, fabio:DigitalManifestation,
+                                                fabio:PrintObject)</li>
+                                            <ul>
+                                                <li>Tipo, laddove presente (rdf:type)</li>
+                                                <li>Media type, laddove presente (dcterms:format)</li>
+                                                <li>Pagina iniziale, laddove presente (prism:startingPage)</li>
+                                                <li>Pagina finale, laddove presente (prism:endingPage)</li>
+                                                <li>URL, laddove presente (frbr:exemplar)</li>
+                                            </ul>
+                                            <li>ResponsibleAgent (foaf:Agent)</li>
+                                            <ul>
+                                                <li>Tipo (rdf:type)</li>
+                                                <li>Identificativo, ovvero ORCID, laddove presente
+                                                    (datacite:hasIdentifier)</li>
+                                                <li>Nome, laddove presente (foaf:givenName)</li>
+                                                <li>Cognome, laddove presente (foaf:familyName)</li>
+                                                <li>Nome completo, laddove presente (foaf:name)</li>
+                                            </ul>
+                                            <li>AgentRole (pro:RoleInTime)</li>
+                                            <ul>
+                                                <li>Tipo (rdf:type)</li>
+                                                <li>Tipo di ruolo (pro:withRole)</li>
+                                                <li>Is held by (pro:isHeldBy)</li>
+                                            </ul>
+                                            <li>Identifier (datacite:Identifier)</li>
+                                            <ul>
+                                                <li>Tipo (rdf:type)</li>
+                                                <li>Tipo di identificatore (datacite:usesIdentifierScheme)</li>
+                                                <li>Stringa (literalreification:hasLiteralValue)</li>
+                                            </ul>
+                                        </ul>
+                                    </ul>
+                                    <li>La mappatura è avvenuta nel modo più generico e rivista-indipendente possibile.
+                                        Dovrebbe essere possibile utilizzare lo stesso software per mappare seguendo
+                                        l'ocdm qualunque rivista ritornata da Crossref.</li>
+                                    <li>È stata implementata una barra di caricamento per mostrare all'utente quanto
+                                        occorra aspettare per ricevere tutti i dati tramite le varie API.</li>
+                                    <li>Il codice è disponibile alla seguente repository: <a
+                                            href="https://github.com/arcangelo7/time_agnostic/blob/main/dataset_builder.py"
+                                            target=_blank
+                                            alt="Link to the Python script">https://github.com/arcangelo7/time_agnostic/blob/main/dataset_builder.py</a>.
+                                        Purtroppo, non è stato possibile caricare gli output su GitHub date le loro
+                                        dimensioni.</li>
+                                </ul>
+                                <h3>Cosa non ho capito</h3>
+                                <ul>
+                                    <li>Come faccio a esprimere che un certo issue fa parte di un certo volume
+                                        utilizzando l'OCDM? Una BibliographicResource ha come metodo has_number, che
+                                        però è generico.</li>
+                                    <li>Un AgentRole ha tra i suoi metodi has_next. A questo proposito, la
+                                        documentazione di oc_ocdm dice:
+                                        <blockquote class="blockquote ml-5">The previous role in a sequence of agent
+                                            roles of the same type associated with the same bibliographic resource (so
+                                            as to define, for instance, an ordered list of authors).</blockquote>
+                                        Tuttavia, il documento <em>The Open Citations Data Model</em> parla di
+                                        "following role", non di "previous". Credo faccia quindi fede quest'ultimo. In
+                                        ogni caso, non ho capito a cosa ci si sta riferendo, per ragioni affini a quelle
+                                        della domanda successiva.
+                                    </li>
+                                    <li>Come faccio a collegare una BibliographicResource ai suoi ResponsibleAgents? È
+                                        presente il metodo has_contributor, che però riceve come argomento un AgentRole,
+                                        non un ResponsibleAgent. Devo quindi avere tanti AgentRoles quanti sono i
+                                        ResponsibleAgents e usarli come intermediari tra la BibliographicResource e i
+                                        ResponsibleAgents? Sembrerebbe di sì, dato che tale predicato viene mappato con
+                                        pro:isDocumentContextFor, che presenta la stessa contorsione logica: è come se
+                                        invece di dire "<em>The Open Citations Data Model</em> è scritto da Silvio
+                                        Peroni" dicessi "<em>The Open Citations Data Model</em> è il contesto nel quale
+                                        il ruolo di autore di Silvio Peroni si manifesta". </li>
+                                    <li>Alcuni articoli di rivista hanno sia una data di pubblicazione a stampa, che una
+                                        data per la pubblicazione digitale. Tuttavia, OCDM prevede un'unica data di
+                                        pubblicazione attraverso il metodo has_pub_date. Quale uso delle due? Oltre a
+                                        questo, come tipo di ResourceEmbodiment devo indicare sia il formato stampa che
+                                        il formato digitale?</li>
+                                    <li>Tra i predicati di una Citation c'è has_citation_characterization. A questo
+                                        proposito, la documentazione dell'OCDM recita:
+                                        <blockquote class="blockquote ml-5">The citation function characterizing the
+                                            purpose of the citation.</blockquote>
+                                        Tuttavia, non ho capito cosa voglia dire.
+                                    </li>
+                                    <li>Ogni articolo di Scientometrics cita altri articoli sia della rivista stessa che
+                                        di riviste esterne. Devo creare una BibliograficResource per ciascuna degli
+                                        articoli esterni a Scientometrics?</li>
+                                    <li>Crossref riporta le reference di ciascun articolo indicando, tra gli altri, la
+                                        "key". Che cosa indica? Ad esempio:
+                                        <pre>
+                                            <code class="prettyprint">
+{
+    "DOI": "10.1126/science.280.5364.698",
+    "author": "M. Heller",
+    "doi-asserted-by": "crossref",
+    "first-page": "698",
+    "journal-title": "Science",
+    <strong>"key"</strong>: "207_CR21",
+    "unstructured": "Heller, M., H. Eisenberg (1998), Can Patents Deter Innovation? The Anticommons in Biomedical Research, Science, 280: 698\u2013701.",
+    "volume": "280",
+    "year": "1998"
+}
+                                            </code>
+                                        </pre>
+                                    </li>
+                                    <li>I dati sulle reference riportati da Crossref e dall'API for COCI sono spesso
+                                        uguali, ma non sempre: a volte il COCI riporta citazioni che Crossref non
+                                        riporta e viceversa. Quale dei due fa fede? Entrambi?</li>
+                                    <li>A causa dell'elevato numero di articoli, i tempi di risposta di Crossref e
+                                        dell'API for COCI sono biblici, si parla di ore. Per questo motivo, una volta
+                                        ottenuti i dati la prima volta, li ho messi in cache per non doverli più
+                                        richiedere. Inoltre, attraverso un dizionario, ho evitato di chiedere due volte
+                                        metadati già richiesti al COCI. Oltre a queste misure, c'è qualcosa che non so e
+                                        che dovrei fare per rendere i tempi di esecuzione accettabili?</li>
+                                    <li>Ammettendo che le esecuzioni dei GET a Crossref e COCI siano istantanee, la
+                                        creazione del grafo vero e proprio avendo i dati occupa il 95% di 16 GB di RAM
+                                        DDR4 a 3000 MHz e dura ugualmente uno sproposito (per rendere l'idea, aprire
+                                        qualunque altro programma che non sia Python causa il crash dello script per out
+                                        of memory). Inoltre, volendo esportare il risultato in json, questo pesa oltre
+                                        400 MB. Non è quindi caricabile su GitHub, neanche usando Git Large File
+                                        Storage, perché andrei velocemente oltre il GB mensile gratuito consentito. Con
+                                        questa mole di dati diventa insomma veramente complicato lavorare. Consigli?
+                                    </li>
+                                    <li>Idealmente, mi sarebbe piaciuto creare un software che, preso in input un ISSN,
+                                        ritornasse in output il grafo relativo a quella rivista rispettando l'OCDM.
+                                        Tuttavia, a causa dei lunghi tempi d'attesa, e quindi del rischio di crash lungo
+                                        il percorso, sono stato costretto a spezzettare il processo su più funzioni da
+                                        chiamare manualmente. È possibile realizzare l'ideale?</li>
+                                </ul>
                             </div>
                         </div>
                     </div>

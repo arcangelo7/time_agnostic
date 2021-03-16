@@ -1,9 +1,12 @@
 import requests, requests_cache, json, urllib
-from oc_ocdm.graph import GraphSet
+from oc_ocdm.graph import GraphSet, GraphEntity
 from oc_ocdm.storer import Storer
+from oc_ocdm.prov import ProvSet
 from oc_ocdm.support import create_date
+from oc_ocdm.metadata import MetadataSet
 from rdflib import URIRef
 from tqdm import tqdm
+from datetime import datetime
 
 class DatasetBuilder(object):
     def get_journal_data_from_crossref(self, journal_issn, your_email, path, small=False):
@@ -97,6 +100,21 @@ class DatasetBuilder(object):
             reference_ci.has_citation_creation_date(reference["creation"])
             reference_ci.has_citation_time_span(reference["timespan"])
     
+    def _manage_provenance(self, graphset):
+        provset = ProvSet(graphset, "https://arcangelo7.github.io/time_agnostic/")
+        provset.generate_provenance()
+        return provset
+    
+    def create_dataset(self, title, description=None):
+        metadataset = MetadataSet("https://arcangelo7.github.io/time_agnostic/")
+        dataset = metadataset.add_dataset(title, "https://arcangelo7.github.io/time_agnostic/")
+        dataset.has_title(title)
+        if description is not None:
+            dataset.has_description(description)
+        timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        dataset.has_modification_date(timestamp)
+        return metadataset
+    
     def create_graph(self, journal_data_path, citation_data_path, your_orcid):
         journal_graphset = GraphSet("https://arcangelo7.github.io/time_agnostic/")
         with open(journal_data_path) as journal_data, open(citation_data_path) as citation_data:
@@ -168,9 +186,10 @@ class DatasetBuilder(object):
                         item_br.has_contributor(author_ar)
                 self._manage_citations(references, journal_graphset, item, item_br, your_orcid)
                 pbar.update(1)
-        journal_graphset.commit_changes()
+        provenance_graphset = self._manage_provenance(journal_graphset)
+        # journal_graphset.commit_changes()
         pbar.close()
-        return journal_graphset
+        return journal_graphset, provenance_graphset
     
     def dump_dataset(self, data, path):
         storer = Storer(data)
