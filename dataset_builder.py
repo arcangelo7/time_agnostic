@@ -9,6 +9,10 @@ from tqdm import tqdm
 from datetime import datetime
 
 class DatasetBuilder(object):
+    def __init__(self, base_uri, your_orcid):
+        self.base_uri = base_uri
+        self.your_orcid = your_orcid
+
     def get_journal_data_from_crossref(self, journal_issn, your_email, path, small=False):
         requests_cache.install_cache('cache/crossref_cache')
         if requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}').status_code != 200:
@@ -34,44 +38,48 @@ class DatasetBuilder(object):
             print("Writing to file...")
             json.dump(journal_data, outfile, sort_keys=True, indent=4)
     
-    def get_citation_data_from_coci(self, journal_data_path, path):
-        total_references = dict()
-        metadata_index = dict()
-        requests_cache.install_cache('cache/coci_cache')
-        with open(journal_data_path) as journal_data:
-            journal_item = json.load(journal_data)["message"]["items"]
-            pbar = tqdm(total=len(journal_item))
-            for item in journal_item:
-                references_data = requests.get(url = f'https://w3id.org/oc/index/coci/api/v1/references/{item["DOI"]}?format=json')
-                if references_data.status_code == 200:
-                    references = references_data.json()
-                    references_with_metadata = list()
-                    for reference in references:
-                        if reference["cited"] not in metadata_index: # To avoid asking twice for the same resource
-                            metadata_data = requests.get(url = f'https://w3id.org/oc/index/coci/api/v1/metadata/{reference["cited"]}?format=json')
-                            if metadata_data.status_code == 200:
-                                metadata = metadata_data.json()
-                                reference["cited_metadata"] = metadata[0] if len(metadata) > 0 else ""
-                                metadata_index[reference["cited"]] = metadata[0] if len(metadata) > 0 else ""
-                            else:
-                                reference["cited_metadata"] = ""
-                        else:
-                            reference["cited_metadata"] = metadata_index[reference["cited"]]
-                        references_with_metadata.append(reference)
-                    total_references[item["DOI"]] = references_with_metadata
-                pbar.update(1)
-        pbar.close()
-        with open(path, 'w') as outfile:
-            print("Writing to file...")
-            json.dump(total_references, outfile, sort_keys=True, indent=4)
+    def _manage_volume_issue(self, graphset, journal_br, item):
+        if "volume" in item:
+            volume_br = graphset.add_br(self.your_orcid)
+            volume_br.create_volume()
+            volume_br.has_number(item["volume"])
+            volume_br.is_part_of(journal_br)
+        if "issue" in item:
+            issue_br = graphset.add_br(self.your_orcid)
+            issue_br.create_issue()
+            issue_br.has_number(item["issue"])
+            issue_br.is_part_of(volume_br)
 
-    def _manage_citations(self, references, graphset, item, citing_entity, your_orcid):
+    def _manage_resource_embodiment(self, graphset, item, item_br, digital_format):
+        if not digital_format:
+            item_re = graphset.add_re(self.your_orcid)
+            item_re.create_print_embodiment()
+            if "page" in item:
+                item_re.has_starting_page(item["page"].split("-")[0])
+                item_re.has_ending_page(item["page"].split("-")[1])  
+            item_br.has_format(item_re)          
+        elif digital_format and "link" in item:
+            URLs_found = set()
+            for link in item["link"]:
+                if link["URL"] not in URLs_found and link["content-type"] != "unspecified":
+                    item_re = graphset.add_re(self.your_orcid)
+                    item_re.create_digital_embodiment()
+                    item_re.has_media_type(URIRef("https://w3id.org/spar/mediatype/" + link["content-type"]))
+                    item_re.has_url(URIRef(link["URL"]))
+                    URLs_found.add(link["URL"])
+                    item_br.has_format(item_re)
+        elif digital_format and not "link" in item:
+            item_re = graphset.add_re(self.your_orcid)
+            item_re.create_digital_embodiment()
+            item_br.has_format(item_re)
+
+    def _manage_citations(self, references, graphset, item, citing_entity):
         for reference in references[item["DOI"]]:
             # Identifier
-            reference_id = graphset.add_id(your_orcid)
+            reference_id = graphset.add_id(self.your_orcid)
             reference_id.create_doi(reference["cited"])
             # BibliographicResource
-            reference_br = graphset.add_br(your_orcid)
+            reference_br = graphset.add_br(self.your_orcid)
             reference_br.create_journal_article()
             reference_br.has_identifier(reference_id)
             reference_br.has_title(reference["cited_metadata"]["title"])
@@ -80,7 +88,7 @@ class DatasetBuilder(object):
                 reference_br.has_pub_date(iso_date_string)
             citing_entity.has_citation(reference_br)
             # ResourceEmbodiment
-            reference_re = graphset.add_re(your_orcid)
+            reference_re = graphset.add_re(self.your_orcid)
             if len(reference["cited_metadata"]["page"]) > 0:
                 reference_re.has_starting_page(reference["cited_metadata"]["page"].split("-")[0])
                 reference_re.has_ending_page(reference["cited_metadata"]["page"].split("-")[1])
@@ -88,7 +96,7 @@ class DatasetBuilder(object):
                 reference_re.has_url(URIRef(reference["cited_metadata"]["oa_link"]))
             reference_br.has_format(reference_re)
             # Citation
-            reference_ci = graphset.add_ci(your_orcid)
+            reference_ci = graphset.add_ci(self.your_orcid)
             if reference["author_sc"] == "yes":
                 reference_ci.create_author_self_citation()
             if reference["journal_sc"] == "yes":
@@ -101,13 +109,13 @@ class DatasetBuilder(object):
             reference_ci.has_citation_time_span(reference["timespan"])
     
     def _manage_provenance(self, graphset):
-        provset = ProvSet(graphset, "https://arcangelo7.github.io/time_agnostic/")
+        provset = ProvSet(graphset, self.base_uri)
         provset.generate_provenance()
         return provset
     
     def create_dataset(self, title, description=None):
-        metadataset = MetadataSet("https://arcangelo7.github.io/time_agnostic/")
-        dataset = metadataset.add_dataset(title, "https://arcangelo7.github.io/time_agnostic/")
+        metadataset = MetadataSet(self.base_uri)
+        dataset = metadataset.add_dataset(title, self.base_uri)
         dataset.has_title(title)
         if description is not None:
             dataset.has_description(description)
@@ -115,62 +123,52 @@ class DatasetBuilder(object):
         dataset.has_modification_date(timestamp)
         return metadataset
     
-    def create_graph(self, journal_data_path, citation_data_path, your_orcid):
-        journal_graphset = GraphSet("https://arcangelo7.github.io/time_agnostic/")
-        with open(journal_data_path) as journal_data, open(citation_data_path) as citation_data:
-            references = json.load(citation_data)
+    def create_graph(self, journal_data_path):
+        journal_graphset = GraphSet(self.base_uri)
+        with open(journal_data_path) as journal_data:
             journal_data_items = json.load(journal_data)["message"]["items"]
             journal_item = next((item for item in journal_data_items if item["type"] == "journal"), None)
             if journal_item is not None:
-                journal_br = journal_graphset.add_br(your_orcid)
+                journal_br = journal_graphset.add_br(self.your_orcid)
                 journal_br.create_journal()
-                journal_id = journal_graphset.add_id(your_orcid)
+                journal_id = journal_graphset.add_id(self.your_orcid)
                 journal_id.create_issn(journal_item["ISSN"][0])
                 journal_br.has_identifier(journal_id)
                 journal_br.has_title(journal_item["title"][0])
-                journal_re = journal_graphset.add_re(your_orcid)
-                journal_re.create_print_embodiment()
-                journal_re.create_digital_embodiment()
-                journal_re.has_url(URIRef(journal_item["URL"]))
-                journal_br.has_format(journal_re)
+                self._manage_resource_embodiment(journal_graphset, journal_item, journal_br, digital_format=True)
+                self._manage_resource_embodiment(journal_graphset, journal_item, journal_br, digital_format=False)
             pbar = tqdm(total=len(journal_data_items))
             for item in journal_data_items:
                 # Identifier
-                item_id = journal_graphset.add_id(your_orcid)
+                item_id = journal_graphset.add_id(self.your_orcid)
                 item_id.create_doi(item["DOI"])
                 # BibliographicResource
                 if item["type"] != "journal":
-                    item_br = journal_graphset.add_br(your_orcid)  
+                    item_br = journal_graphset.add_br(self.your_orcid)  
                     item_br.create_journal_article()
                     item_br.has_identifier(item_id)
                     item_br.has_title(item["title"][0])
                     if "subtitle" in item:
                         item_br.has_subtitle(item["subtitle"][0])
+                    self._manage_volume_issue(journal_graphset, journal_br, item)
                     # ResourceEmbodiment
-                    item_re = journal_graphset.add_re(your_orcid)
                     if "published-online" in item:
-                        pub_date = item["published-online"]["date-parts"][0][0]
-                        item_re.create_digital_embodiment()
+                        self._manage_resource_embodiment(journal_graphset, item, item_br, digital_format=True)     
                     if "published-print" in item:
-                        pub_date = item["published-print"]["date-parts"][0][0]
-                        item_re.create_print_embodiment()
-                    if "link" in item:
-                        item_re.has_media_type(URIRef("https://www.iana.org/assignments/media-types/" + item["link"][0]["content-type"]))
-                    if "page" in item:
-                        item_re.has_starting_page(item["page"].split("-")[0])
-                        item_re.has_ending_page(item["page"].split("-")[1])
-                    item_re.has_url(URIRef(item["URL"]))
-                    iso_date_string = create_date([pub_date])
-                    item_br.has_pub_date(iso_date_string)
+                        self._manage_resource_embodiment(journal_graphset, item, item_br, digital_format=False)     
+                    if "issued" in item:
+                        pub_date = item["issued"]["date-parts"][0][0]
+                        iso_date_string = create_date([pub_date])
+                        item_br.has_pub_date(iso_date_string)
                     if journal_item is not None:
                         item_br.is_part_of(journal_br)
-                    item_br.has_format(item_re)
                 # ResponsibleAgent
                 if "author" in item:
+                    authorAgentRoles = list()
                     for author in item["author"]:
-                        item_ra = journal_graphset.add_ra(your_orcid)
+                        item_ra = journal_graphset.add_ra(self.your_orcid)
                         if "ORCID" in author:
-                            author_id = journal_graphset.add_id(your_orcid)
+                            author_id = journal_graphset.add_id(self.your_orcid)
                             author_id.create_orcid(author["ORCID"])
                             item_ra.has_identifier(author_id)
                         if "given" in author:
@@ -180,11 +178,15 @@ class DatasetBuilder(object):
                         if "given" in author and "family" in author:
                             item_ra.has_name(author["given"] + " " + author["family"])
                         # AgentRole
-                        author_ar = journal_graphset.add_ar(your_orcid)
+                        author_ar = journal_graphset.add_ar(self.your_orcid)
                         author_ar.create_author()
                         author_ar.is_held_by(item_ra)
                         item_br.has_contributor(author_ar)
-                self._manage_citations(references, journal_graphset, item, item_br, your_orcid)
+                        authorAgentRoles.append(author_ar)
+                    for index, authorAgentRole in enumerate(authorAgentRoles):
+                        if index+1 < len(authorAgentRoles):
+                            authorAgentRole.has_next(authorAgentRoles[index+1])
+                # self._manage_citations(references, journal_graphset, item, item_br)
                 pbar.update(1)
         provenance_graphset = self._manage_provenance(journal_graphset)
         # journal_graphset.commit_changes()
