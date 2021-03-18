@@ -1,4 +1,4 @@
-import requests, requests_cache, json, urllib
+import requests, requests_cache, json, urllib, re, os, zipfile
 from oc_ocdm.graph import GraphSet, GraphEntity
 from oc_ocdm.storer import Storer
 from oc_ocdm.prov import ProvSet
@@ -21,7 +21,6 @@ class DatasetBuilder(object):
             journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?mailto={your_email}').json()
         else:
             journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor=*&mailto={your_email}').json()
-            journal_data = journal_data.json()
             next_cursor = journal_data["message"]["next-cursor"]
             total_results = journal_data["message"]["total-results"]
             pbar = tqdm(total=total_results)
@@ -38,12 +37,13 @@ class DatasetBuilder(object):
             print("Writing to file...")
             json.dump(journal_data, outfile, sort_keys=True, indent=4)
     
-    def _manage_volume_issue(self, graphset, journal_br, item):
+    def _manage_volume_issue(self, graphset, item, journal_br):
         if "volume" in item:
             volume_br = graphset.add_br(self.your_orcid)
             volume_br.create_volume()
             volume_br.has_number(item["volume"])
-            volume_br.is_part_of(journal_br)
+            if journal_br is not None:
+                volume_br.is_part_of(journal_br)
         if "issue" in item:
             issue_br = graphset.add_br(self.your_orcid)
             issue_br.create_issue()
@@ -55,8 +55,10 @@ class DatasetBuilder(object):
             item_re = graphset.add_re(self.your_orcid)
             item_re.create_print_embodiment()
             if "page" in item:
-                item_re.has_starting_page(item["page"].split("-")[0])
-                item_re.has_ending_page(item["page"].split("-")[1])  
+                starting_page = item["page"].split("-")[0] if "-" in item["page"] else item["page"]
+                ending_page = item["page"].split("-")[1] if "-" in item["page"] else item["page"]
+                item_re.has_starting_page(starting_page)
+                item_re.has_ending_page(ending_page)  
             item_br.has_format(item_re)          
         elif digital_format and "link" in item:
             URLs_found = set()
@@ -73,41 +75,30 @@ class DatasetBuilder(object):
             item_re.create_digital_embodiment()
             item_br.has_format(item_re)
 
-    def _manage_citations(self, references, graphset, item, citing_entity):
-        for reference in references[item["DOI"]]:
-            # Identifier
-            reference_id = graphset.add_id(self.your_orcid)
-            reference_id.create_doi(reference["cited"])
-            # BibliographicResource
-            reference_br = graphset.add_br(self.your_orcid)
-            reference_br.create_journal_article()
-            reference_br.has_identifier(reference_id)
-            reference_br.has_title(reference["cited_metadata"]["title"])
-            if len(reference["cited_metadata"]["year"]) > 0:
-                iso_date_string = create_date([int(reference["cited_metadata"]["year"])])
-                reference_br.has_pub_date(iso_date_string)
-            citing_entity.has_citation(reference_br)
-            # ResourceEmbodiment
-            reference_re = graphset.add_re(self.your_orcid)
-            if len(reference["cited_metadata"]["page"]) > 0:
-                reference_re.has_starting_page(reference["cited_metadata"]["page"].split("-")[0])
-                reference_re.has_ending_page(reference["cited_metadata"]["page"].split("-")[1])
-            if len(reference["cited_metadata"]["oa_link"]) > 0:
-                reference_re.has_url(URIRef(reference["cited_metadata"]["oa_link"]))
-            reference_br.has_format(reference_re)
-            # Citation
-            reference_ci = graphset.add_ci(self.your_orcid)
-            if reference["author_sc"] == "yes":
-                reference_ci.create_author_self_citation()
-            if reference["journal_sc"] == "yes":
-                reference_ci.create_journal_self_citation()
-            if reference["author_sc"] == "no" and reference["journal_sc"] == "no":
-                reference_ci.create_distant_citation()
-            reference_ci.has_citing_entity(citing_entity)
-            reference_ci.has_cited_entity(reference_br)
-            reference_ci.has_citation_creation_date(reference["creation"])
-            reference_ci.has_citation_time_span(reference["timespan"])
-    
+    def _manage_citations(self, graphset, item, citing_entity):
+        if "reference" in item:
+            for reference in item["reference"]:
+                if "DOI" in reference:
+                    # Identifier
+                    reference_id = graphset.add_id(self.your_orcid)
+                    reference_id.create_doi(reference["DOI"])
+                    # BibliographicResource
+                    reference_br = graphset.add_br(self.your_orcid)
+                    reference_br.create_journal_article()
+                    reference_br.has_identifier(reference_id)
+                    citing_entity.has_citation(reference_br)
+                    # Citation
+                    reference_ci = graphset.add_ci(self.your_orcid)
+                    reference_ci.has_citing_entity(citing_entity)
+                    reference_ci.has_cited_entity(reference_br)
+                    creation_date = citing_entity.get_pub_date()
+                    reference_ci.has_citation_creation_date(creation_date)
+                    #BibliographicReference
+                    reference_be = graphset.add_be(self.your_orcid)
+                    reference_be.has_content(reference["unstructured"])
+                    reference_be.references_br(citing_entity)
+                    citing_entity.contains_in_reference_list(reference_be)
+
     def _manage_provenance(self, graphset):
         provset = ProvSet(graphset, self.base_uri)
         provset.generate_provenance()
@@ -135,8 +126,12 @@ class DatasetBuilder(object):
                 journal_id.create_issn(journal_item["ISSN"][0])
                 journal_br.has_identifier(journal_id)
                 journal_br.has_title(journal_item["title"][0])
-                self._manage_resource_embodiment(journal_graphset, journal_item, journal_br, digital_format=True)
-                self._manage_resource_embodiment(journal_graphset, journal_item, journal_br, digital_format=False)
+                if "issn-type" in journal_item:
+                    for issn_type in journal_item["issn-type"]:
+                        digital_format = True if issn_type["type"] == "electronic" else False
+                        self._manage_resource_embodiment(journal_graphset, journal_item, journal_br, digital_format)
+            else: 
+                journal_br = None
             pbar = tqdm(total=len(journal_data_items))
             for item in journal_data_items:
                 # Identifier
@@ -147,10 +142,11 @@ class DatasetBuilder(object):
                     item_br = journal_graphset.add_br(self.your_orcid)  
                     item_br.create_journal_article()
                     item_br.has_identifier(item_id)
-                    item_br.has_title(item["title"][0])
+                    if "title" in item:
+                        item_br.has_title(item["title"][0])
                     if "subtitle" in item:
                         item_br.has_subtitle(item["subtitle"][0])
-                    self._manage_volume_issue(journal_graphset, journal_br, item)
+                    self._manage_volume_issue(journal_graphset, item, journal_br)
                     # ResourceEmbodiment
                     if "published-online" in item:
                         self._manage_resource_embodiment(journal_graphset, item, item_br, digital_format=True)     
@@ -186,7 +182,8 @@ class DatasetBuilder(object):
                     for index, authorAgentRole in enumerate(authorAgentRoles):
                         if index+1 < len(authorAgentRoles):
                             authorAgentRole.has_next(authorAgentRoles[index+1])
-                # self._manage_citations(references, journal_graphset, item, item_br)
+                # Citation
+                self._manage_citations(journal_graphset, item, item_br)
                 pbar.update(1)
         provenance_graphset = self._manage_provenance(journal_graphset)
         # journal_graphset.commit_changes()
@@ -196,3 +193,14 @@ class DatasetBuilder(object):
     def dump_dataset(self, data, path):
         storer = Storer(data)
         storer.store_graphs_in_file(path, "./")
+    
+    def _zipdir(self, path, ziph):
+        for root, dirs, files in os.walk(path):
+            dirs[:] = [d for d in dirs if d != "small"]
+            for file in files:
+                ziph.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), os.path.join(path, '..')))
+    
+    def zip_data(self, path):
+        zipf = zipfile.ZipFile('output.zip', 'w', zipfile.ZIP_DEFLATED)
+        self._zipdir(path, zipf)
+        zipf.close()
