@@ -1,3 +1,6 @@
 /data
 /cache
 /__pycache__
+*.ipynb
+scientometrics.py
+prova.json
