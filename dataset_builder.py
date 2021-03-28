@@ -1,4 +1,4 @@
-import requests, requests_cache, json, urllib, re
+import requests, requests_cache, json, urllib, re, os
 from oc_ocdm.graph import GraphSet, GraphEntity
 from oc_ocdm.prov import ProvSet
 from oc_ocdm.support import create_date
@@ -15,29 +15,33 @@ class DatasetBuilder(object):
         self.base_uri = base_uri
         self.resp_agent = resp_agent
 
-    def get_journal_data_from_crossref(self, journal_issn, your_email, path, small=False):
-        requests_cache.install_cache('cache/crossref_cache')
+    def get_journal_data_from_crossref(self, journal_issn, your_email, path, small=False, logs=False):
+        error_log_dict = dict()
+        if not os.path.exists("./cache/"):
+            os.makedirs("./cache/")
         if requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}').status_code != 200:
             raise("ISSN not found!")
         if small:
-            journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?rows=200&mailto={your_email}').json()
+            journal_data = Support().handle_request(f"http://api.crossref.org/journals/{{{journal_issn}}}/works?rows=200&mailto={your_email}", "./cache/crossref_cache", error_log_dict)
         else:
-            journal_data = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor=*&mailto={your_email}').json()
+            journal_data = Support().handle_request(f"http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor=*&mailto={your_email}", "./cache/crossref_cache", error_log_dict)
             next_cursor = journal_data["message"]["next-cursor"]
             total_results = journal_data["message"]["total-results"]
             pbar = tqdm(total=total_results)
             cursors = set()
             while next_cursor not in cursors:
                 cursors.add(next_cursor)
-                next_chunk = requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor={urllib.parse.quote(next_cursor)}&mailto={your_email}').json()
+                next_chunk = Support().handle_request(f"http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor={urllib.parse.quote(next_cursor)}&mailto={your_email}", "./cache/crossref_cache", error_log_dict)
                 next_cursor = next_chunk["message"]["next-cursor"]
                 items_retrieved = next_chunk["message"]["items"]
                 journal_data["message"]["items"].extend(items_retrieved)
                 pbar.update(20)
             pbar.close()
-        with open(path, 'w') as outfile:
-            print("Writing to file...")
-            json.dump(journal_data, outfile, sort_keys=True, indent=4)
+        Support().dump_json(journal_data, path)
+        if logs:
+            if not os.path.exists("./logs/"):
+                os.makedirs("./logs/")
+            Support().dump_json(json.dumps(error_log_dict), f"./logs/{journal_issn}_crossref_error_logs")
     
     def _manage_volume_issue(self, graphset, item, journal_br):
         if "volume" in item:
@@ -182,7 +186,7 @@ class DatasetBuilder(object):
             # Citation
             self._manage_citations(journal_graphset, item, item_br)
             pbar.update(1)
-        journal_graphset.commit_changes()
+        # journal_graphset.commit_changes()
         pbar.close()
         return journal_graphset
     
@@ -190,7 +194,3 @@ class DatasetBuilder(object):
         provset = ProvSet(graphset, self.base_uri)
         provset.generate_provenance()
         return provset
-    
-    def upload_to_triplestore(self, data, triplestore_url):
-        storer = Storer(data)
-        storer.upload_all(triplestore_url)
