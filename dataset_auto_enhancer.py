@@ -1,4 +1,4 @@
-import re, sparql, rdflib, json
+import re, rdflib, json
 from support import Support
 from tqdm import tqdm
 from rdflib import URIRef, Namespace, ConjunctiveGraph, Graph

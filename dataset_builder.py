@@ -43,7 +43,8 @@ class DatasetBuilder(object):
                 os.makedirs("./logs/")
             Support().dump_json(json.dumps(error_log_dict), f"./logs/{journal_issn}_crossref_error_logs")
     
-    def _manage_volume_issue(self, graphset, item, journal_br):
+    def _manage_volume_issue(self, graphset, journal_br, item_br, item):
+        volume_br = None
         if "volume" in item:
             volume_br = graphset.add_br(self.resp_agent)
             volume_br.create_volume()
@@ -54,7 +55,15 @@ class DatasetBuilder(object):
             issue_br = graphset.add_br(self.resp_agent)
             issue_br.create_issue()
             issue_br.has_number(item["issue"])
-            issue_br.is_part_of(volume_br)
+            if volume_br is not None:
+                issue_br.is_part_of(volume_br)
+            else:
+                issue_br.is_part_of(journal_br)
+            item_br.is_part_of(issue_br)
+        elif "issue" not in item and volume_br is not None:
+            item_br.is_part_of(volume_br)
+        if "volume" not in item and "issue" not in item and journal_br is not None:
+            item_br.is_part_of(journal_br)
 
     def _manage_resource_embodiment(self, graphset, item, item_br, digital_format):
         if not digital_format:
@@ -147,7 +156,7 @@ class DatasetBuilder(object):
                     item_br.has_title(item["title"][0])
                 if "subtitle" in item:
                     item_br.has_subtitle(item["subtitle"][0])
-                self._manage_volume_issue(journal_graphset, item, journal_br)
+                self._manage_volume_issue(journal_graphset, journal_br, item_br, item)
                 # ResourceEmbodiment
                 if "published-online" in item:
                     self._manage_resource_embodiment(journal_graphset, item, item_br, digital_format=True)     
@@ -157,8 +166,6 @@ class DatasetBuilder(object):
                     pub_date = item["issued"]["date-parts"][0][0]
                     iso_date_string = create_date([pub_date])
                     item_br.has_pub_date(iso_date_string)
-                if journal_item is not None:
-                    item_br.is_part_of(journal_br)
             # ResponsibleAgent
             if "author" in item:
                 authorAgentRoles = list()
