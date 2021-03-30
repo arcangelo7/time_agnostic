@@ -729,7 +729,107 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-4">
                             <div class="pt-3">
-                                <p class="mb-0"></p>
+                                <h3>Cosa ho fatto</h3>
+                                <ul>
+                                    <li>Ho caricato dati e provenance su Blazegraph.</li>
+                                    <li>Ho implementato:
+                                        <ul>
+                                            <li>un sistema di gestione delle richieste tramite api più raffinato, con un timeout, un numero
+                                                massimo di tentativi separati da intervalli progressivamente crescenti tramite backoff factor e
+                                                con la possibilità di salvare gli errori in un file di log;</li>
+                                            <li>una funzione che effettua query SPARQL su un triplestore al fine di verificare l'esistenza di
+                                                entità associate allo stesso id. Nel caso le trovi, recupera i grafi associati e li unisce;</li>
+                                            <li>una funzione che effettua query SPARQL su un triplestore al fine di ottenere tutti i DOI degli
+                                                articoli appartenenti a una determinata rivista e i DOI di tutti gli articoli da essi citati.
+                                                Dopodiché, controlla se su COCI sono presenti altri DOI di articoli citati e, se li trova,
+                                                recupera il grafo dell'entità citante e gli aggancia le varie entità relative alla risorsa
+                                                citata, ovvero l'Identifier, la BibliographicResource e la Citation (data di creazione,
+                                                timespan, journal o author self-citation). Per quanto riguarda i DOI degli articoli citati già
+                                                presenti sul triplestore, vengono aggiunte alle rispettive entità Citation il timespan e se sono
+                                                autocitazioni della rivista o dell'autore;</li>
+                                            <li>una gestione più sofisticata di volume, issue e articoli:
+                                                <ul>
+                                                    <li>se ci sono sia volume che issue l'articolo fa parte dell'issue, l'issue del volume e il
+                                                        volume della rivista;</li>
+                                                    <li>se c'è solo il volume, l'articolo fa parte del volume e il volume della rivista;</li>
+                                                    <li>se c'è solo l'issue, l'articolo fa parte dell'issue e l'issue della rivista;</li>
+                                                    <li>se non ci sono né issue né volume l'articolo fa parte della rivista. </li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>Ho aperto i seguenti issue:
+                                        <ul>
+                                            <li><a href="https://github.com/opencitations/oc_ocdm/issues/4" target="_blank"
+                                                    alt="Link to the GitHub issue">https://github.com/opencitations/oc_ocdm/issues/4</a></li>
+                                            <li><a href="https://github.com/opencitations/oc_ocdm/issues/5" target="_blank"
+                                                    alt="Link to the GitHub issue">https://github.com/opencitations/oc_ocdm/issues/5</a></li>
+                                        </ul>
+                                    </li>
+                                    <li>Ho letto:
+                                        <ul>
+                                            <li>International DOI Foundation. (2019). DOI® Handbook. https://doi.org/10.1000/182.
+                                                <ul>
+                                                    <li>Sì, ho seriamente letto tutto l'handbook.</li>
+                                                </ul>
+                                            </li>
+                                            <li>Fecher, B., & Friesike, S. (2014). Open Science: One Term, Five Schools of Thought. In S.
+                                                Bartling & S. Friesike (Eds.), Opening Science (pp. 17–47). Springer International Publishing.
+                                                https://doi.org/10.1007/978-3-319-00026-8_2.</li>
+                                            <li>Kramer, B., & Bosman, J. (2015, June 18). The good, the efficient and the open—Changing research
+                                                workflows and the need to move from Open Access to Open Science. CERN Workshop on Innovations in
+                                                Scholarly Communication (OAI9), University of Geneva, Geneva, Switzerland.
+                                                https://www.slideshare.net/bmkramer/the-good-the-efficient-and-the-open-oai9.</li>
+                                            <li>Woelfle, M., Olliaro, P., & Todd, M. H. (2011). Open science is a research accelerator. Nature
+                                                Chemistry, 3(10), 745–748. https://doi.org/10.1038/nchem.1149.</li>
+                                            <li>UNESCO. (2020). First draft of the UNESCO Recommendation on Open Science (Programme and Meeting
+                                                Document SC-PCB-SPP/2020/OS/R1; p. 16). https://unesdoc.unesco.org/ark:/48223/pf0000374837.</li>
+                                            <li>Documentazione di rdflib.</li>
+                                        </ul>
+                                    </li>
+                                    <li>Ho seguito il corso Semantic Web Technologies del Prof. Harald Sack, reperibile all'indirizzo <a
+                                            href="https://open.hpi.de/courses/semanticweb" target="_blank"
+                                            alt="Link to the Semantic Web course">https://open.hpi.de/courses/semanticweb</a>, al fine di
+                                        approfondire la mia conoscenza di SPARQL 1.1.</li>
+                                </ul>
+                                <h3>Cosa non ho capito</h3>
+                                <ul>
+                                    <li>
+                                        Allo scopo di ottenere tutte le triple di cui un'entità è soggetto da un triplestore, oc_ocdm fornisce
+                                        il metodo import_entity_from_triplestore della classe Reader. Ecco un esempio di come ho provato a
+                                        utilizzarla:
+                                        <pre><code class="prettyprint">
+g = GraphSet("https://github.com/arcangelo7/time_agnostic/")
+qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegraph/sparql", URIRef("https://github.com/arcangelo7/time_agnostic/br/1"),"https://orcid.org/0000-0002-8420-0696")
+                                                            </code></pre>
+                                        Nonostante l'entità esista ottengo però un ValueError, con messaggio di errore: "The required entity was
+                                        not found or was not recognised as a proper OCDM entity". Dico che l'entità esiste perché facendo il
+                                        medesimo CONSTRUCT tramite endpoint SPARQL ottengo i risultati attesi. Sto utilizzando correttamente il
+                                        metodo? Ho infine risolto il problema utilizzando la classe SPARQLStore di rdflib o SPARQLWrapper, ma
+                                        visto che oc_ocdm fornisce già uno shortcut preferirei utilizzare quello.
+                                    </li>
+                                    <li>La documentazione della classe SPARQLStore di rdflib, reperibile a <a
+                                            href="https://rdflib.readthedocs.io/en/stable/apidocs/rdflib.plugins.stores.html#rdflib.plugins.stores.sparqlstore.SPARQLStore"
+                                            target="_blank" alt="SPARQLStore class documentation">questo indirizzo</a>, afferma:
+                                        <blockquote class="blockquote ml-5 mt-3">
+                                            An RDFLib store around a SPARQL endpoint
+                                            This is context-aware and should work as expected
+                                            when a context is specified.
+                                            For ConjunctiveGraphs, reading is done from the "default graph". Exactly
+                                            what this means depends on your endpoint, because SPARQL does not offer a
+                                            simple way to query the union of all graphs as it would be expected for a
+                                            ConjuntiveGraph. This is why we recommend using Dataset instead, which is
+                                            motivated by the SPARQL 1.1.
+                                        </blockquote>
+                                        Non ho capito cosa intenda dire.
+                                    </li>
+                                    <li>Dopo avere unito le entità associate agli stessi id è necessario caricare le modifiche sul triplestore.
+                                        Dal codice di oc_ocdm ho inteso che la libreria si occupa di elaborare la query di update, definendo
+                                        cosa vada cancellato e cosa aggiunto, ma dai tentativi fatti mi continuano a risultare 0 modifiche, per
+                                        cui la query non viene lanciata. Sospetto c'entri qualcosa il metodo commit_changes(), il cui
+                                        funzionamento mi risulta però oscuro.</li>
+                                    <li>Non sono riuscito ad aggiornare la provenance a partire da un grafo di provenance preesistente.</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
