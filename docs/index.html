@@ -54,7 +54,7 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (23/03/2021)</h2>
+                    <h2>Prossimo incontro (31/03/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                     <ul>
@@ -104,7 +104,7 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                         </code></pre>
                         Nonostante l'entità esista ottengo però un ValueError, con messaggio di errore: "The required entity was not found or was not recognised as a proper OCDM entity". Dico che l'entità esiste perché facendo il medesimo CONSTRUCT tramite endpoint SPARQL ottengo i risultati attesi. Sto utilizzando correttamente il metodo? Ho infine risolto il problema utilizzando la classe SPARQLStore di rdflib o SPARQLWrapper, ma visto che oc_ocdm fornisce già uno shortcut preferirei utilizzare quello.
                     </li>
-                    <li>La documentazione della classe SPARQLStore di rdflib afferma:
+                    <li>La documentazione della classe SPARQLStore di rdflib, reperibile a <a href="https://rdflib.readthedocs.io/en/stable/apidocs/rdflib.plugins.stores.html#rdflib.plugins.stores.sparqlstore.SPARQLStore" target="_blank" alt="SPARQLStore class documentation">questo indirizzo</a>, afferma:
                         <blockquote class="blockquote ml-5 mt-3">
                             An RDFLib store around a SPARQL endpoint
                             This is context-aware and should work as expected
@@ -115,9 +115,9 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                             ConjuntiveGraph. This is why we recommend using Dataset instead, which is
                             motivated by the SPARQL 1.1.
                         </blockquote>
-                        Non ho capito cosa intenda dire.
+                        Non ho capito cosa intenda dire. 
                     </li>
-                    <li>Dopo aver unito le entità associate agli stessi id è necessario caricare le modifiche sul triplestore. Dal codice di oc_ocdm ho inteso che la libreria si occupa di elaborare la query di update, definendo cosa vada cancellato e cosa aggiunto, ma dai tentativi fatti mi continuano a risultare 0 modifiche, per cui la query non viene lanciata. Sospetto c'entri qualcosa il metodo commit_changes(), il cui funzionamento mi risulta però oscuro.</li>
+                    <li>Dopo avere unito le entità associate agli stessi id è necessario caricare le modifiche sul triplestore. Dal codice di oc_ocdm ho inteso che la libreria si occupa di elaborare la query di update, definendo cosa vada cancellato e cosa aggiunto, ma dai tentativi fatti mi continuano a risultare 0 modifiche, per cui la query non viene lanciata. Sospetto c'entri qualcosa il metodo commit_changes(), il cui funzionamento mi risulta però oscuro.</li>
                     <li>Non sono riuscito ad aggiornare la provenance a partire da un grafo di provenance preesistente.</li>
                 </ul>
             </div>
@@ -724,10 +724,22 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-4" data-target="#panel-4" class="accordion-panel-header" data-toggle="collapse"
                             role="button" aria-expanded="false" aria-controls="panel-4">
-                            <span class="h6 mb-0 font-weight-bold">23/03/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">31/03/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-4">
+                            <div class="pt-3">
+                                <p class="mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-5" data-target="#panel-5" class="accordion-panel-header" data-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="panel-5">
+                            <span class="h6 mb-0 font-weight-bold">06/04/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-5">
                             <div class="pt-3">
                                 <p class="mb-0"></p>
                             </div>
