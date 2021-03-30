@@ -65,7 +65,7 @@ class Support(object):
         storer.store_graphs_in_file(path, "./")
         # data.commit_changes()
     
-    def upload_dataset(self, data, ts_url):
+    def upload_dataset(self, data, ts_url="http://localhost:9999/blazegraph/sparql"):
         storer = Storer(data)
         storer.upload_all(ts_url)
     

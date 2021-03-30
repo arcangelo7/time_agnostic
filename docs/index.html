@@ -57,208 +57,69 @@
                     <h2>Prossimo incontro (23/03/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
-                <ul>
-                    <li>Ho letto:</li>
                     <ul>
-                        <li>Peroni, S., Shotton, D., Vitali, F. (2012). Scholarly publishing and Linked Data: describing
-                            roles, statuses, temporal and contextual extents. Association for Computing Machinery, New
-                            York. Retrieved from <a href="https://doi.org/10.1145/2362499.2362502"
-                                alt="Link to the article" target="_blank">https://doi.org/10.1145/2362499.2362502</a>.
+                        <li>Ho caricato dati e provenance su Blazegraph.</li>
+                        <li>Ho implementato:
+                            <ul>
+                                <li>un sistema di gestione delle richieste tramite api più raffinato, con un timeout, un numero massimo di tentativi separati da intervalli progressivamente crescenti tramite backoff factor e con la possibilità di salvare gli errori in un file di log;</li>
+                                <li>una funzione che effettua query SPARQL su un triplestore al fine di verificare l'esistenza di entità associate allo stesso id. Nel caso le trovi, recupera i grafi associati e li unisce;</li>
+                                <li>una funzione che effettua query SPARQL su un triplestore al fine di ottenere tutti i DOI degli articoli appartenenti a una determinata rivista e i DOI di tutti gli articoli da essi citati. Dopodiché, controlla se su COCI sono presenti altri DOI di articoli citati e, se li trova, recupera il grafo dell'entità citante e gli aggancia le varie entità relative alla risorsa citata, ovvero l'Identifier, la BibliographicResource e la Citation (data di creazione, timespan, journal o author self-citation).  Per quanto riguarda i DOI degli articoli citati già presenti sul triplestore, vengono aggiunte alle rispettive entità Citation il timespan e se sono autocitazioni della rivista o dell'autore;</li>
+                                <li>una gestione più sofisticata di volume, issue e articoli:
+                                    <ul>
+                                        <li>se ci sono sia volume che issue l'articolo fa parte dell'issue, l'issue del volume e il volume della rivista;</li>
+                                        <li>se c'è solo il volume, l'articolo fa parte del volume e il volume della rivista;</li>
+                                        <li>se c'è solo l'issue, l'articolo fa parte dell'issue e l'issue della rivista;</li>
+                                        <li>se non ci sono né issue né volume l'articolo fa parte della rivista. </li>
+                                    </ul>
+                                </li>
+                            </ul>
                         </li>
-                        <ul>
-                            <li>Vi ho appreso con entusiasmo che dietro l'entità apparentemente contorta pro:RoleInTime
-                                si cela invece la possibilità di definire feature tempo e contesto-dipendenti e di
-                                effettuare query più profonde.</li>
-                        </ul>
-                        <li>Peroni, S., Shotton, D. (2012). FaBiO and CiTO: Ontologies for describing bibliographic
-                            resources and citations. Journal of Web Semantics, Volume 17, Pages 33-43.
-                            Retrieved from <a href="https://doi.org/10.1016/j.websem.2012.08.001"
-                                alt="Link to the article"
-                                target="_blank">https://doi.org/10.1016/j.websem.2012.08.001</a>.</li>
-                        <ul>
-                            <li>Ne ho tratto informazioni sulla genesi di FaBio E CiTO e in particolare sul valore del
-                                predicato cito:hasCitationCharacterization.</li>
-                        </ul>
-                        <li>Documentazione di Blazegraph.</li>
+                        <li>Ho aperto i seguenti issue:
+                            <ul>
+                                <li><a href="https://github.com/opencitations/oc_ocdm/issues/4" target="_blank" alt="Link to the GitHub issue">https://github.com/opencitations/oc_ocdm/issues/4</a></li>
+                                <li><a href="https://github.com/opencitations/oc_ocdm/issues/5" target="_blank" alt="Link to the GitHub issue">https://github.com/opencitations/oc_ocdm/issues/5</a></li>
+                            </ul>
+                        </li>
+                        <li>Ho letto:
+                            <ul>
+                                <li>International DOI Foundation. (2019). DOI® Handbook. https://doi.org/10.1000/182.
+                                    <ul><li>Sì, ho seriamente letto tutto l'handbook.</li></ul>
+                                </li>
+                                <li>Fecher, B., & Friesike, S. (2014). Open Science: One Term, Five Schools of Thought. In S. Bartling & S. Friesike (Eds.), Opening Science (pp. 17–47). Springer International Publishing. https://doi.org/10.1007/978-3-319-00026-8_2.</li>
+                                <li>Kramer, B., & Bosman, J. (2015, June 18). The good, the efficient and the open—Changing research workflows and the need to move from Open Access to Open Science. CERN Workshop on Innovations in Scholarly Communication (OAI9), University of Geneva, Geneva, Switzerland. https://www.slideshare.net/bmkramer/the-good-the-efficient-and-the-open-oai9.</li>
+                                <li>Woelfle, M., Olliaro, P., & Todd, M. H. (2011). Open science is a research accelerator. Nature Chemistry, 3(10), 745–748. https://doi.org/10.1038/nchem.1149.</li>
+                                <li>UNESCO. (2020). First draft of the UNESCO Recommendation on Open Science (Programme and Meeting Document SC-PCB-SPP/2020/OS/R1; p. 16). https://unesdoc.unesco.org/ark:/48223/pf0000374837.</li>
+                                <li>Documentazione di rdflib.</li>
+                            </ul>
+                        </li>
+                        <li>Ho seguito il corso Semantic Web Technologies del Prof. Harald Sack, reperibile all'indirizzo <a href="https://open.hpi.de/courses/semanticweb" target="_blank" alt="Link to the Semantic Web course">https://open.hpi.de/courses/semanticweb</a>, al fine di approfondire la mia conoscenza di SPARQL 1.1.</li>
                     </ul>
-                    <li>Il Graphset contiene adesso informazioni sui volumi e sugli issues, rappresentati come
-                        BibliographicResources rispettivamente di tipo JournalVolume e JournalIssue, aventi come
-                        predicati fabio:hasSequenceIdentifier e frbr:partOf.</li>
-                    <li>Gli AgentRoles (pro:RoleInTime) presentano adesso il predicato oco:hasNext, avente come oggetto
-                        il ruolo successivo in una sequenza di agent roles dello stesso tipo associati alla stessa
-                        risorsa bibliografica, allo scopo di definire, ad esempio, una lista ordinata di autori.</li>
-                    <li>La data di pubblicazione considerata (prism:publicationDate) è adesso quella contenuta nel campo
-                        "issued". Sono stati inoltre creati tanti ResourceEmbodiment quante sono le manifestazioni,
-                        indicando la pagina iniziale e finale per i formati a stampa, il media-type e l'URL per i
-                        formati digitali.</li>
-                    <li>Sono state aggiunte tante entità di tipo BibliographicReference quante sono le reference
-                        riportate da Crossref con un DOI. Il loro contenuto, proveniente dal campo "unstructured", è
-                        stato riportato tramite c40:hasContent. Ciascuna BibliographicReference è stata collegata alla
-                        rispettiva BibliographicResource tramite biro:references. Allo stesso tempo, ogni
-                        BiblographicResource è stata collegata alle rispettive BibliographicReferences tramie frbr:part.
-                    </li>
-                    <li>È stata create una nuova classe, DatasetAutoEnhancer, pensata per contenere metodi e proprietà
-                        che migliorino la qualità del dataset in maniera automatica. Al momento presenta:</li>
-                    <ul>
-                        <li>il metodo merge_by_id, il quale unisce due entità nel caso in cui gli identificativi ad esse
-                            associate coincidano. Nella fattispecie, unisce due BibliographicResources con lo stesso DOI
-                            e due ResponsibleAgents con lo stesso ORCID.</li>
-                        <li>Il metodo privato _generate_snaphot, che si occupa di aggiornare il grafo sulla provenance
-                            registrando i delta rispetto a quello precedente, in particolare:</li>
-                        <ul>
-                            <li>Crea lo snaphsot.</li>
-                            <li>Definisce la data di creazione (has_generation_time).</li>
-                            <li>Definisce di quale entità è lo snaphot (is_snapshot_of).</li>
-                            <li>Definisce l'azione di update effettuata tramite una SPARQL query (has_update_action). La
-                                SPARQL query è stata a sua volta generata tramite il metodo get_update_query del modulo
-                                support.query_utils di oc_ocdm.</li>
-                            <li>Associa allo snapshot precedente la data di invalidazione (has_invalidation_time).</li>
-                            <li>Collega lo snapshot a quello precedente (derives_from).</li>
-                            <li>Definisce la risorsa primaria da cui hanno origine i metadati nello snapshot, ovvero
-                                Crossref (has_primary_source).</li>
-                            <li>Definisce l'agente responsabile delle modifiche (has_resp_agent).</li>
-                        </ul>
-                    </ul>
-                    <li>È stata implementata una nuova classe, Support, che contiene i seguenti metodi:</li>
-                    <ul>
-                        <li>zip_data, per comprimere i dati in un archivio.</li>
-                        <li>minify_json, per minificare i file json in modo che siano parsabili dal metodo load della
-                            classe Reader di oc_ocdm.</li>
-                        <li>measure_runtime, per misurare i tempi di esecuzione delle varie funzioni.</li>
-                        <li>dump_dataset, per conservare i dataset in un file json.</li>
-                        <li>dump_json, per salvare gli oggetti json in un file.</li>
-                    </ul>
-                </ul>
                 <h3>Cosa non ho capito</h3>
                 <ul>
-                    <li>Non mi è mai capitato per "Scientometrics", ma come mi comporto se viene indicato l'issue e non
-                        il volume? Creo un entità Volume vuota e le collego l'issue?</li>
                     <li>
-                        <p>Con il seguente codice ho espresso la relazione oco:hasNext per tutti gli AgentRoles (riporto
-                            solo le parti del codice rilevanti)</p>
-                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                            <pre>
-                                    <code class="prettyprint">
-author_agent_roles = list()
-for author in item["author"]:
-        # [...]
-        author_ar = journal_graphset.add_ar(your_orcid)
-        author_ar.create_author()
-        author_ar.is_held_by(item_ra)
-        item_br.has_contributor(author_ar)
-        author_agent_roles.append(author_ar)
-for index, author_agent_role in enumerate(author_agent_roles):
-        if index+1 &lt; len(author_agent_roles):
-                author_agent_role.has_next(author_agent_roles[index+1])
-                                    </code>
-                                </pre>
-                        </div>
-                        A livello di AgentRole, il grafo finale riporta correttamente il successivo AgentRole. Tuttavia,
-                        guardando le proprietà pro:isDocumentContextFor delle BibliographicResources, la lista risulta
-                        disordinata. Sto sbagliando io o è un bug della libreria?
+                        Allo scopo di ottenere tutte le triple di cui un'entità è soggetto da un triplestore, oc_ocdm fornisce il metodo import_entity_from_triplestore della classe Reader. Ecco un esempio di come ho provato a utilizzarla:
+                        <pre><code class="prettyprint">
+g = GraphSet("https://github.com/arcangelo7/time_agnostic/")
+qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegraph/sparql", URIRef("https://github.com/arcangelo7/time_agnostic/br/1"),"https://orcid.org/0000-0002-8420-0696")
+                        </code></pre>
+                        Nonostante l'entità esista ottengo però un ValueError, con messaggio di errore: "The required entity was not found or was not recognised as a proper OCDM entity". Dico che l'entità esiste perché facendo il medesimo CONSTRUCT tramite endpoint SPARQL ottengo i risultati attesi. Sto utilizzando correttamente il metodo? Ho infine risolto il problema utilizzando la classe SPARQLStore di rdflib o SPARQLWrapper, ma visto che oc_ocdm fornisce già uno shortcut preferirei utilizzare quello.
                     </li>
-                    <li>Nel caso in cui per un articolo venga riportata una sola pagina e non un intervallo di pagine, è
-                        corretto indicare quella pagina sia come pagina iniziale che come pagina finale? Perché OCDM
-                        prevede solo i predicati per gli intervalli di pagine e non per le pagine singole.</li>
-                    <li>Una BibliographiResource ha tra i suoi predicati has_edition. La documentazione riporta:
+                    <li>La documentazione della classe SPARQLStore di rdflib afferma:
                         <blockquote class="blockquote ml-5 mt-3">
-                            An identifier for one of several alternative editions of a particular bibliographic
-                            resource.
+                            An RDFLib store around a SPARQL endpoint
+                            This is context-aware and should work as expected
+                            when a context is specified.
+                            For ConjunctiveGraphs, reading is done from the "default graph". Exactly
+                            what this means depends on your endpoint, because SPARQL does not offer a
+                            simple way to query the union of all graphs as it would be expected for a
+                            ConjuntiveGraph. This is why we recommend using Dataset instead, which is
+                            motivated by the SPARQL 1.1.
                         </blockquote>
-                        Non ho capito a cosa ci si riferisca.
+                        Non ho capito cosa intenda dire.
                     </li>
-                    <li>Sono riuscito ad avviare il NanoSparqlServer di Blazegraph utilizzando il comando: <code
-                            class="prettyprint">java -server -Xmx4g -jar blazegraph.jar</code>.
-                        In questo modo, la workbench è diventata disponibile all'indirizzo
-                        http://localhost:9999/blazegraph/.
-                        Tuttavia, non ho capito cosa passare come triplestore_url al metodo upload_all della classe
-                        Storer di oc_ocdm. Ho provato a passare sia http://localhost:9999/blazegraph/ che
-                        http://localhost:9999/bigdata/sparql e l'output del metodo è stato in entrambi i casi True, il
-                        che sembrerebbe incoraggiante, ma attraverso l'endpoint SPARQL della workbench mi sono accorto
-                        di non aver caricato alcuna tripla. A quale URL devo fare il POST?
-                    </li>
-                    <li>Allo scopo di aumentare la provenance, ho inizialmente provato ad aprire il grafo
-                        precedentemente creato utilizzando i metodi load e import_entities_from_graph della classe
-                        Reader di oc_ocdm. Tuttavia, il secondo metodo ritorna una lista di GraphEntity, che non mi
-                        permette di utilizzare metodi propri della classe GraphSet, come get_id() o get_br(),
-                        costringendomi a ciclare su tutti gli elementi della lista e controllare manualmente di che
-                        classe sono istanza. Inoltre, per qualche motivo che ignoro, il metodo
-                        import_entities_from_graph richiede notevolmente più tempo che creare il grafo da zero. Ho
-                        quindi deciso di aumentare la provenance direttamente durante la creazione del GraphSet, ovvero
-                        tramite più commit successivi. È corretto?</li>
-                    <li>Per quanto riguarda la creazione di uno snapshot, quanto deve essere esplicitato e quanto viene
-                        fatto in automatico? Mi spiego meglio: quando unisco un'entità a un'altra tramite il metodo
-                        merge, tutto ciò che ruota attorno a quelle entità rimane invariato. Ad esempio, se unisco due
-                        risorse bibliografiche dopo aver scoperto che hanno lo stesso DOI, le rispettive entità di tipo
-                        Identifier non vengono unite a loro volta. Confermi che io lo debba fare manualmente? Allo
-                        stesso tempo, la risorsa che è scomparsa dopo essere stata unita continua a essere richiamata in
-                        altre parti del grafo anche se non esiste più.</li>
-                    <li>Quando faccio un merge devo generare uno snapshost sia per la risorsa unita che per quella
-                        contenitore? Perché ho notato che così facendo si creano snapshot duplicati.</li>
-                    <li>Tra i metadati di uno snapshot c'è la sua descrizione. Per ottenerla devo parsare la stringa con
-                        la SPARQL query. Posso certamente farlo io da zero, ma non vorrei reinventare la ruota. Esistono
-                        delle librerie per farlo? Ne ho trovate alcune ma mi sembrano molto amatoriali.</li>
-                    <li>
-                        Allo scopo di ottenere i DOI a partire dal contenuto delle BibliographicReferences - ovvero il
-                        campo "unstructured" riportato da Crossref - ho provato a effetturare delle query su Crossref.
-                        Per fare un esempio:
-                        <pre class="mt-3">
-<code class="prettyprint">https://api.crossref.org/works?query.bibliographic=Carberry%2C+Josiah.+%E2%80%9CToward+a+Unified+Theory+of+High-Energy+Metaphysics%3A+Silly+String+Theory.%E2%80%9D+Journal+of+Psychoceramics+5.11+%282008%29%3A+1-3.</code>
-                            </pre>
-                        Dopodiché, ho controllato che il campo "score" contenesse un numero maggiore di 90 e, se sì, ho
-                        estratto il DOI dall'item. A questo proposito ho tre domande:
-                    </li>
-                    <ul>
-                        <li>Come funziona lo score? Perché ho notato che a volte risultati con score superiore a 100
-                            sono sbagliati.</li>
-                        <li>La query non ritorna solo il risultato migliore, ma un numero variabile di hits più o meno
-                            pertinenti. Come faccio a ottimizzare la ricerca perché ritorni solo il risultato più
-                            pertinente? Ho provato con il parametro enable-multiple-hits impostato a false (peraltro di
-                            default), ma senza successo.</li>
-                        <li>È questo il metodo migliore per ottenere un DOI da una reference non strutturata?</li>
-                    </ul>
-                    <li>Persiste il problema della memoria. Ho provato ad aggiungere due banchetti che avevo in un altro
-                        PC e portare la RAM a 32 GB, ho attivato l'X.M.P., l'ho overclockata e ho portato il file di
-                        paging a 8 GB, ma non è bastato, il processo di creazione ed esportazione dei grafi l'ha
-                        nuovamente saturata. Riporto uno screen del messaggio di errore:
-                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                            <img src="./assets/img/memory_error.png" alt="memory error image">
-                        </div>
-                        Utilizzando Jupyer Notebook e il monitoraggio risorse, ho potuto eseguire i vari passaggi
-                        singolarmente, per misurare quanta RAM occorresse a ciascuno:
-                        <ul>
-                            <li>
-                                <p>Creare il graphset ha occupato circa 18.4 GB</p>
-                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                    <img src="./assets/img/ram_after_graphset.png"
-                                        alt="RAM left after GraphSet creation">
-                                </div>
-                            </li>
-                            <li>
-                                <p>Creare il grafo sulla provenance ha portato la memoria occupata a circa 26.8 GB</p>
-                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                    <img src="./assets/img/ram_after_prov.png" alt="RAM left after Provenance creation">
-                                </div>
-                            </li>
-                            <li>Infine, il dump del dataset sulla provenance ha fatto crashare il programma.</li>
-                        </ul>
-                        Sono infine riuscito a risolvere portando il file di paging a 16 GB, ma in tutta onestà non la
-                        ritengo una soluzione valida, né filosoficamente né guardando al futuro prossimo in cui i dati
-                        saranno molti di più. Cosa ne pensi?
-                    </li>
-                    <li>Durante l'ultimo incontro hai fatto due riferimenti che sono rimasti in sospeso:
-                        <ul>
-                            <li>A proposito di OpenCitations Meta, hai menzionato un articolo che introduce a
-                                OpenCitations. Ho verificato di non averlo letto. Potresti inviarmelo?</li>
-                            <li>Hai menzionato alcune questioni di cui discutere dopo la risposta alle domande, che però
-                                non sono più state discusse.</li>
-                        </ul>
-                    </li>
+                    <li>Dopo aver unito le entità associate agli stessi id è necessario caricare le modifiche sul triplestore. Dal codice di oc_ocdm ho inteso che la libreria si occupa di elaborare la query di update, definendo cosa vada cancellato e cosa aggiunto, ma dai tentativi fatti mi continuano a risultare 0 modifiche, per cui la query non viene lanciata. Sospetto c'entri qualcosa il metodo commit_changes(), il cui funzionamento mi risulta però oscuro.</li>
+                    <li>Non sono riuscito ad aggiornare la provenance a partire da un grafo di provenance preesistente.</li>
                 </ul>
-                <h3>Note</h3>
-                <p>La documentazione del metodo import_entities_from_graph della classe Reader di oc_ocdm non è
-                    aggiornata. Il metodo vuole infatti tre argomenti obbligatori, non due: il GraphSet, il Graph e il
-                    responsible agent. Quest'ultimo non viene menzionato dalla documentazione.</p>
             </div>
         </section>
 

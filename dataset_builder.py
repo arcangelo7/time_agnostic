@@ -99,7 +99,7 @@ class DatasetBuilder(object):
                     reference_id.create_doi(reference["DOI"])
                     # BibliographicResource
                     reference_br = graphset.add_br(self.resp_agent)
-                    reference_br.create_journal_article()
+                    # reference_br.create_journal_article()
                     reference_br.has_identifier(reference_id)
                     citing_entity.has_citation(reference_br)
                     # Citation
