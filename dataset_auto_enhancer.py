@@ -13,9 +13,10 @@ from oc_ocdm.prov import ProvSet
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 
 class DatasetAutoEnhancer(object):
-    def __init__(self, base_uri, resp_agent, ts_url='http://localhost:9999/bigdata/sparql', dataset=None):
+    def __init__(self, base_uri, resp_agent, ts_url='http://localhost:9999/bigdata/sparql', dataset=None, info_dir:str=""):
         self.resp_agent = resp_agent
         self.base_uri = base_uri
+        self.info_dir = info_dir
         if dataset is not None:
             self.dataset = dataset
             self.dataset.commit_changes()
@@ -57,7 +58,7 @@ class DatasetAutoEnhancer(object):
         return self.dataset, self.provset
     
     def merge_triplestore_by_id(self, entities_set):
-        enhanced_graphset = GraphSet(self.base_uri)
+        enhanced_graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
         switcher = {
             "br": {
                 "class": "fabio:Expression",
@@ -68,10 +69,10 @@ class DatasetAutoEnhancer(object):
                 "add": enhanced_graphset.add_ra
                 }
         }
-        store = SPARQLStore(self.ts_url, returnFormat="json")
+        sparql = SPARQLWrapper(self.ts_url)
         for entity in entities_set:
             ids_found = dict()
-            query = f"""
+            queryString = f"""
                 PREFIX datacite: <http://purl.org/spar/datacite/>
                 PREFIX fabio: <http://purl.org/spar/fabio/>
                 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -83,32 +84,44 @@ class DatasetAutoEnhancer(object):
                         datacite:hasIdentifier/literal:hasLiteralValue ?literalValue.
                 }}
             """
-            qres = store.query(query)
-            for row in qres:
-                if str(row[1]) in ids_found:
+            sparql.setQuery(queryString)
+            sparql.setReturnFormat(JSON)
+            results = sparql.query().convert()
+            print(f"Merging entities of type {switcher[entity]['class']}...")
+            pbar = tqdm(total=len(results["results"]["bindings"]))
+            for result in results["results"]["bindings"]:
+                if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
                     query_duplicated_graph = f"""
-                        CONSTRUCT {{<{str(row[0])}> ?p ?o}}
-                        WHERE {{<{str(row[0])}> ?p ?o}}
+                        CONSTRUCT {{<{result["s"]["value"]}> ?p ?o}}
+                        WHERE {{<{result["s"]["value"]}> ?p ?o}}
                     """
                     query_preexisting_graph = f"""
-                        CONSTRUCT {{<{ids_found[str(row[1])]}> ?p ?o}}
-                        WHERE {{<{ids_found[str(row[1])]}> ?p ?o}}
+                        CONSTRUCT {{<{ids_found[result["literalValue"]["value"]]}> ?p ?o}}
+                        WHERE {{<{ids_found[result["literalValue"]["value"]]}> ?p ?o}}
                     """
-                    duplicated_data = store.query(query_duplicated_graph).serialize(format='json')
-                    duplicated_graph = Graph().parse(data=duplicated_data, format='json-ld')
-                    preexisting_data = store.query(query_preexisting_graph).serialize(format='json')
-                    preexisting_graph = Graph().parse(data=preexisting_data, format='json-ld')
-                    duplicated_entity = switcher[entity]["add"](self.resp_agent, res=URIRef(str(row[0])), preexisting_graph=duplicated_graph)
-                    preexisting_entity = switcher[entity]["add"](self.resp_agent, res=URIRef(ids_found[str(row[1])]), preexisting_graph=preexisting_graph)
-                    preexisting_entity.merge(duplicated_entity)
-                    # enhanced_graphset.commit_changes()
+                    sparql.setQuery(query_duplicated_graph)
+                    sparql.setReturnFormat(RDFXML)
+                    duplicated_data = sparql.query().convert()
+                    duplicated_graph = Graph().parse(data=duplicated_data.serialize(format='xml'), format='xml')
+                    sparql.setQuery(query_preexisting_graph)
+                    sparql.setReturnFormat(RDFXML)
+                    preexisting_data = sparql.query().convert()
+                    preexisting_graph = Graph().parse(data=preexisting_data.serialize(format='xml'), format='xml')
+                    duplicated_entity = switcher[entity]["add"](self.resp_agent, res=URIRef(result["s"]["value"]), preexisting_graph=duplicated_graph)
+                    preexisting_entity = switcher[entity]["add"](self.resp_agent, res=URIRef(ids_found[result["literalValue"]["value"]]), preexisting_graph=preexisting_graph)
+                    try:
+                        print(f'Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
+                        preexisting_entity.merge(duplicated_entity)
+                    except TypeError:
+                        pass
                 else:
-                    ids_found[str(row[1])] = str(row[0])
-        # enhanced_graphset.sync_with_triplestore(self.ts_url, self.resp_agent)
-        # Support().upload_dataset(enhanced_graphset, self.ts_url)
+                    ids_found[result["literalValue"]["value"]] = result["s"]["value"]
+                pbar.update(1)
+            pbar.close()
+        return enhanced_graphset
     
     def add_reference_data_from_coci(self, journal_issn):
-        graphset = GraphSet(self.base_uri)
+        graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
         queryString = f"""
             PREFIX dcterm: <http://purl.org/dc/terms/>
             PREFIX : <https://github.com/arcangelo7/time_agnostic/>
@@ -117,17 +130,17 @@ class DatasetAutoEnhancer(object):
             PREFIX datacite: <http://purl.org/spar/datacite/>
             PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
             PREFIX cito: <http://purl.org/spar/cito/>
-            SELECT ?citingDOI (GROUP_CONCAT(?citedDOI; SEPARATOR=", ") AS ?citedDOIs)
+            SELECT ?res ?citingDOI (GROUP_CONCAT(?citedDOI; SEPARATOR=", ") AS ?citedDOIs)
             WHERE {{
-                ?s a fabio:JournalArticle;
+                ?res a fabio:JournalArticle;
                     datacite:hasIdentifier ?doiEntity;
                     frbr:partOf+/datacite:hasIdentifier/literal:hasLiteralValue "{journal_issn}".
                 ?doiEntity literal:hasLiteralValue ?citingDOI.
                 OPTIONAL {{
-                    ?s cito:cites/datacite:hasIdentifier/literal:hasLiteralValue ?citedDOI.
+                    ?res cito:cites/datacite:hasIdentifier/literal:hasLiteralValue ?citedDOI.
                 }}
             }}
-            GROUP BY ?citingDOI
+            GROUP BY ?res ?citingDOI
         """
         sparql = SPARQLWrapper(self.ts_url)
         sparql.setQuery(queryString)
@@ -135,18 +148,22 @@ class DatasetAutoEnhancer(object):
         results = sparql.query().convert()
         results_dict = dict()
         for result in results["results"]["bindings"]:
-            results_dict[result["citingDOI"]["value"]] = result["citedDOIs"]["value"].split(", ")
+            results_dict[result["citingDOI"]["value"]] = {
+                "res": result["res"]["value"],
+                "citedDOIs": result["citedDOIs"]["value"].split(", ")
+                }
         logs = dict()
         pbar = tqdm(total=len(results_dict))
         for citing_doi in results_dict:
             references = Support().handle_request(f"https://w3id.org/oc/index/coci/api/v1/references/{citing_doi}", "./cache/coci_cache", logs)
             for reference in references:
-                if reference["cited"] not in results_dict[citing_doi]:
+                if reference["cited"] not in results_dict[citing_doi]["citedDOIs"]:
                     citing_entity_query = f"""
                         PREFIX datacite: <http://purl.org/spar/datacite/>
+                        PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
                         CONSTRUCT {{?s ?p ?o}}
                         WHERE {{
-                            <{self.base_uri + citing_doi}> ^datacite:hasIdentifier ?s.
+                            ?s datacite:hasIdentifier/literal:hasLiteralValue "{citing_doi}".
                             ?s ?p ?o.
                         }}
                     """
@@ -154,7 +171,7 @@ class DatasetAutoEnhancer(object):
                     sparql.setReturnFormat(RDFXML)
                     results = sparql.query().convert()
                     preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
-                    citing_entity = graphset.add_br(self.resp_agent, preexisting_graph=preexisting_graph)
+                    citing_entity = graphset.add_br(self.resp_agent, res=URIRef(results_dict[citing_doi]["res"]), preexisting_graph=preexisting_graph)
                     # Identifier
                     reference_id = graphset.add_id(self.resp_agent)
                     reference_id.create_doi(reference["cited"])
@@ -180,24 +197,33 @@ class DatasetAutoEnhancer(object):
                         CONSTRUCT {{?s ?p ?o}}
                         WHERE {{
                             ?s cito:hasCitingEntity/datacite:hasIdentifier/literal:hasLiteralValue "{reference["citing"]}".
+                            ?s cito:hasCitedEntity/datacite:hasIdentifier/literal:hasLiteralValue "{reference["cited"]}".
                             ?s ?p ?o.
                         }}
                     """
                     sparql.setQuery(reference_ci_query)
                     sparql.setReturnFormat(RDFXML)
                     results = sparql.query().convert()
-                    preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
-                    reference_ci = graphset.add_ci(self.resp_agent, preexisting_graph=preexisting_graph)
-                    reference_ci.has_citation_time_span(reference["timespan"])
-                    if reference["journal_sc"] == "yes":
-                        reference_ci.create_journal_self_citation()
-                    if reference["author_sc"] == "yes":
-                        reference_ci.create_author_self_citation()
+                    subjects = set()
+                    # If the data already exists, do not add it again
+                    if (None, URIRef("http://purl.org/spar/cito/hasCitationTimeSpan"), None) not in results:
+                        preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
+                        for subject in results.subjects():
+                            subjects.add(subject)
+                    # There could be duplicates if not already merged
+                    for subject in subjects:
+                        reference_ci = graphset.add_ci(self.resp_agent, res= URIRef(subject),preexisting_graph=preexisting_graph)
+                        reference_ci.has_citation_time_span(reference["timespan"])
+                        if reference["journal_sc"] == "yes":
+                            reference_ci.create_journal_self_citation()
+                        if reference["author_sc"] == "yes":
+                            reference_ci.create_author_self_citation()
             pbar.update(1)
         pbar.close()
         if len(logs) > 0:
             print("Errors have been found. Writing logs...")
             Support().dump_json(logs, "./logs/coci.json")
+        return graphset
 
 
 

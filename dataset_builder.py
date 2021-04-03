@@ -11,9 +11,10 @@ from datetime import datetime
 from support import Support
 
 class DatasetBuilder(object):
-    def __init__(self, base_uri, resp_agent):
+    def __init__(self, base_uri, resp_agent, info_dir:str = ""):
         self.base_uri = base_uri
         self.resp_agent = resp_agent
+        self.info_dir = info_dir
 
     def get_journal_data_from_crossref(self, journal_issn, your_email, path, small=False, logs=False):
         error_log_dict = dict()
@@ -125,7 +126,7 @@ class DatasetBuilder(object):
         return metadataset
     
     def generate_graph(self, journal_data_path):
-        journal_graphset = GraphSet(self.base_uri)
+        journal_graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
         with open(journal_data_path) as journal_data:
             journal_data_items = json.load(journal_data)["message"]["items"]
         journal_item = next((item for item in journal_data_items if item["type"] == "journal"), None)
@@ -197,7 +198,8 @@ class DatasetBuilder(object):
         pbar.close()
         return journal_graphset
     
-    def generate_provenance(self, graphset):
-        provset = ProvSet(graphset, self.base_uri)
+    def generate_provenance(self, graphset, info_dir:str = ""):
+        print("Generating Provenance...")
+        provset = ProvSet(prov_subj_graph_set=graphset, base_iri=self.base_uri, info_dir=info_dir, wanted_label=False)
         provset.generate_provenance()
         return provset
