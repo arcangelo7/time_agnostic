@@ -47,6 +47,7 @@ class Support(object):
         zipf.close()
     
     def minify_json(self, path):
+        print(f"[Support: INFO] Minifing file {path}")
         file_data = open(path, "r", encoding="utf-8").read()
         json_data = json.loads(file_data) 
         json_string = json.dumps(json_data, separators=(',', ":")) 

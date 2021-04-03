@@ -10,30 +10,36 @@ from datetime import datetime
 from oc_ocdm.graph.graph_entity import GraphEntity
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.prov import ProvSet
+from oc_ocdm.reader import Reader
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 
 class DatasetAutoEnhancer(object):
-    def __init__(self, base_uri, resp_agent, ts_url='http://localhost:9999/bigdata/sparql', dataset=None, info_dir:str=""):
-        self.resp_agent = resp_agent
+    def __init__(self, base_uri:str, resp_agent:str, info_dir:str=""):
         self.base_uri = base_uri
+        self.resp_agent = resp_agent
         self.info_dir = info_dir
-        if dataset is not None:
-            self.dataset = dataset
-            self.dataset.commit_changes()
-            self.provset = ProvSet(self.dataset, self.base_uri)
-            self.provset.generate_provenance()
-        else:
-            self.ts_url = ts_url
 
-    def merge_graphset_by_id(self, entities_set):
+    def merge_by_id_from_file(self, entities_set:set, rdf_file_path:str):
+        reader = Reader()
+        rdf_file = reader.load(rdf_file_path)
+        enhanced_graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/", info_dir=self.info_dir, wanted_label=False)
+        reader.import_entities_from_graph(enhanced_graphset, rdf_file, "https://orcid.org/0000-0002-8420-0696", enable_validation=False)
         switcher = {
-                "br": self.dataset.get_br,
-                "ra": self.dataset.get_ra
+            "br": {
+                "class": "fabio:Expression",
+                "get": enhanced_graphset.get_br
+                },
+            "ra": {
+                "class": "foaf:Agent",
+                "get": enhanced_graphset.get_ra
+                }
         }
+        reader = Reader()
         for entity in entities_set:
-            entities = switcher[entity]()
+            entities = switcher[entity]["get"]()
             ids_found = dict()
-            pbar = tqdm(total=len(entities_set))
+            print(f"[DatasetAutoEnhancer: INFO] Merging entities of type {switcher[entity]['class']}")
+            pbar = tqdm(total=len(entities))
             for entity_obj in entities:
                 entity_ids = entity_obj.get_identifiers()
                 if len(entity_ids) > 0:
@@ -43,21 +49,18 @@ class DatasetAutoEnhancer(object):
                     continue
                 entity_id_literal = entity_id.get_literal_value()
                 if entity_id_literal in ids_found:
-                    prev_entity = self.dataset.get_entity(URIRef(ids_found[entity_id_literal].res))
+                    prev_entity = enhanced_graphset.get_entity(URIRef(ids_found[entity_id_literal].res))
                     try:
+                        print(f'Merging {prev_entity.res} with {entity_obj.res}')
                         prev_entity.merge(entity_obj)
                     except TypeError:
-                        print(prev_entity, entity_obj)
                         pass
                 ids_found[entity_id_literal] = entity_obj
                 pbar.update(1)
             pbar.close()
-        print("Generating provenance...")
-        self.dataset.commit_changes()
-        self.provset.generate_provenance()
-        return self.dataset, self.provset
+        return enhanced_graphset
     
-    def merge_triplestore_by_id(self, entities_set):
+    def merge_by_id_from_triplestore(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql'):
         enhanced_graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
         switcher = {
             "br": {
@@ -120,7 +123,7 @@ class DatasetAutoEnhancer(object):
             pbar.close()
         return enhanced_graphset
     
-    def add_reference_data_from_coci(self, journal_issn):
+    def add_reference_data_from_coci(self, journal_issn:str, ts_url:str='http://localhost:9999/bigdata/sparql'):
         graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
         queryString = f"""
             PREFIX dcterm: <http://purl.org/dc/terms/>
