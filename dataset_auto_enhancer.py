@@ -2,9 +2,10 @@ import re, rdflib, json
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
-from rdflib import URIRef, Namespace, ConjunctiveGraph, Graph
+from rdflib import URIRef, Namespace, ConjunctiveGraph, Graph, plugin
+from rdflib.serializer import Serializer
 from rdflib.plugins.sparql.results.jsonresults import JSONResultSerializer
-from rdflib.plugins.stores.sparqlstore import SPARQLStore
+from rdflib.plugins.sparql import prepareQuery
 from oc_ocdm.support.query_utils import get_update_query
 from datetime import datetime
 from oc_ocdm.graph.graph_entity import GraphEntity
@@ -15,15 +16,12 @@ from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 
 class DatasetAutoEnhancer(object):
     def __init__(self, base_uri:str, resp_agent:str, info_dir:str=""):
-        self.base_uri = base_uri
+        self.base_iri = base_uri
         self.resp_agent = resp_agent
         self.info_dir = info_dir
 
-    def merge_by_id_from_file(self, entities_set:set, rdf_file_path:str):
-        reader = Reader()
-        rdf_file = reader.load(rdf_file_path)
-        enhanced_graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/", info_dir=self.info_dir, wanted_label=False)
-        reader.import_entities_from_graph(enhanced_graphset, rdf_file, "https://orcid.org/0000-0002-8420-0696", enable_validation=False)
+    def merge_by_id_from_file(self, entities_set:set, rdf_file_path:str) -> GraphSet:
+        enhanced_graphset = Support().get_graph_from_file(rdf_file_path, self.base_iri, self.resp_agent, self.info_dir)        
         switcher = {
             "br": {
                 "class": "fabio:Expression",
@@ -51,7 +49,7 @@ class DatasetAutoEnhancer(object):
                 if entity_id_literal in ids_found:
                     prev_entity = enhanced_graphset.get_entity(URIRef(ids_found[entity_id_literal].res))
                     try:
-                        print(f'Merging {prev_entity.res} with {entity_obj.res}')
+                        print(f'[DatasetAutoEnhancer: INFO] Merging {prev_entity.res} with {entity_obj.res}')
                         prev_entity.merge(entity_obj)
                     except TypeError:
                         pass
@@ -60,8 +58,8 @@ class DatasetAutoEnhancer(object):
             pbar.close()
         return enhanced_graphset
     
-    def merge_by_id_from_triplestore(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql'):
-        enhanced_graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
+    def merge_by_id_from_triplestore(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
+        enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         switcher = {
             "br": {
                 "class": "fabio:Expression",
@@ -90,7 +88,7 @@ class DatasetAutoEnhancer(object):
             sparql.setQuery(queryString)
             sparql.setReturnFormat(JSON)
             results = sparql.query().convert()
-            print(f"Merging entities of type {switcher[entity]['class']}...")
+            print(f"[DatasetAutoEnhancer: INFO] Merging entities of type {switcher[entity]['class']}...")
             pbar = tqdm(total=len(results["results"]["bindings"]))
             for result in results["results"]["bindings"]:
                 if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
@@ -113,7 +111,7 @@ class DatasetAutoEnhancer(object):
                     duplicated_entity = switcher[entity]["add"](self.resp_agent, res=URIRef(result["s"]["value"]), preexisting_graph=duplicated_graph)
                     preexisting_entity = switcher[entity]["add"](self.resp_agent, res=URIRef(ids_found[result["literalValue"]["value"]]), preexisting_graph=preexisting_graph)
                     try:
-                        print(f'Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
+                        print(f'[DatasetAutoEnhancer: INFO] Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
                         preexisting_entity.merge(duplicated_entity)
                     except TypeError:
                         pass
@@ -123,8 +121,96 @@ class DatasetAutoEnhancer(object):
             pbar.close()
         return enhanced_graphset
     
-    def add_reference_data_from_coci(self, journal_issn:str, ts_url:str='http://localhost:9999/bigdata/sparql'):
-        graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
+    def add_coci_data_from_file(self, journal_issn:str, rdf_file_path:str) -> GraphSet:
+        rdf_file = Reader().load(rdf_file_path)
+        enhanced_graphset = GraphSet(base_iri=self.base_iri, wanted_label=False)
+        Reader().import_entities_from_graph(enhanced_graphset, rdf_file, self.resp_agent, enable_validation=False)
+        results_dict = dict()
+        queryString = f"""
+            PREFIX dcterm: <http://purl.org/dc/terms/>
+            PREFIX fabio: <http://purl.org/spar/fabio/>
+            PREFIX frbr: <http://purl.org/vocab/frbr/core#>
+            PREFIX datacite: <http://purl.org/spar/datacite/>
+            PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
+            PREFIX cito: <http://purl.org/spar/cito/>
+            SELECT ?res ?citingDOI (GROUP_CONCAT(?citedDOI; SEPARATOR=", ") AS ?citedDOIs)
+            WHERE {{
+                ?res a fabio:JournalArticle;
+                    datacite:hasIdentifier ?doiEntity;
+                    frbr:partOf+/datacite:hasIdentifier/literal:hasLiteralValue "{journal_issn}".
+                ?doiEntity literal:hasLiteralValue ?citingDOI.
+                OPTIONAL {{
+                    ?res cito:cites/datacite:hasIdentifier/literal:hasLiteralValue ?citedDOI.
+                }}
+            }}
+            GROUP BY ?res ?citingDOI
+        """
+        results = rdf_file.query(queryString)
+        for row in results:
+            results_dict[str(row.citingDOI)] = {
+                "res": row.res,
+                "citedDOIs": row.citedDOIs.split(", ")
+            }
+        logs = dict()
+        pbar = tqdm(total=len(results_dict))
+        for citing_doi in results_dict:
+            references = Support().handle_request(f"https://w3id.org/oc/index/coci/api/v1/references/{citing_doi}", "./cache/coci_cache", logs)
+            for reference in references:
+                if reference["cited"] not in results_dict[citing_doi]["citedDOIs"]:
+                    citing_entity = enhanced_graphset.get_entity(results_dict[citing_doi]["res"])
+                    # Identifier
+                    reference_id = enhanced_graphset.add_id(self.resp_agent)
+                    reference_id.create_doi(reference["cited"])
+                    # BibliographicResource
+                    reference_br = enhanced_graphset.add_br(self.resp_agent)
+                    reference_br.has_identifier(reference_id)
+                    citing_entity.has_citation(reference_br)
+                    # Citation
+                    reference_ci = enhanced_graphset.add_ci(self.resp_agent)
+                    reference_ci.has_citing_entity(citing_entity)
+                    reference_ci.has_cited_entity(reference_br)
+                    reference_ci.has_citation_creation_date(reference["creation"])
+                    reference_ci.has_citation_time_span(reference["timespan"])
+                    if reference["journal_sc"] == "yes":
+                        reference_ci.create_journal_self_citation()
+                    if reference["author_sc"] == "yes":
+                        reference_ci.create_author_self_citation()
+                else:
+                    reference_ci_query = f"""
+                        PREFIX datacite: <http://purl.org/spar/datacite/>
+                        PREFIX cito: <http://purl.org/spar/cito/>
+                        PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
+                        CONSTRUCT {{?s ?p ?o}}
+                        WHERE {{
+                            ?s cito:hasCitingEntity/datacite:hasIdentifier/literal:hasLiteralValue "{reference["citing"]}".
+                            ?s cito:hasCitedEntity/datacite:hasIdentifier/literal:hasLiteralValue "{reference["cited"]}".
+                            ?s ?p ?o.
+                        }}
+                    """
+                    reference_ci_results = rdf_file.query(reference_ci_query)
+                    subjects = set()
+                    # If the data already exists, do not add it again
+                    if (None, URIRef("http://purl.org/spar/cito/hasCitationTimeSpan"), None) not in reference_ci_results:
+                        for row in reference_ci_results:
+                            subjects.add(row[0])
+                    # There could be duplicates if not already merged
+                    for subject in subjects:
+                        reference_ci = enhanced_graphset.get_entity(subject)
+                        reference_ci.has_citation_time_span(reference["timespan"])
+                        if reference["journal_sc"] == "yes":
+                            reference_ci.create_journal_self_citation()
+                        if reference["author_sc"] == "yes":
+                            reference_ci.create_author_self_citation()
+            pbar.update(1) 
+        pbar.close()
+        if len(logs) > 0:
+            print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/coci.json")
+            Support().dump_json(logs, "./logs/coci.json")
+        return enhanced_graphset                   
+
+        
+    def add_coci_data_from_triplestore(self, journal_issn:str, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
+        graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         queryString = f"""
             PREFIX dcterm: <http://purl.org/dc/terms/>
             PREFIX : <https://github.com/arcangelo7/time_agnostic/>
@@ -224,7 +310,7 @@ class DatasetAutoEnhancer(object):
             pbar.update(1)
         pbar.close()
         if len(logs) > 0:
-            print("Errors have been found. Writing logs...")
+            print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/coci.json")
             Support().dump_json(logs, "./logs/coci.json")
         return graphset
 

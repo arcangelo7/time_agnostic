@@ -1,4 +1,5 @@
 import requests, requests_cache, json, urllib, re, os
+from oc_ocdm.graph.entities.bibliographic_entity import BibliographicEntity
 from oc_ocdm.graph import GraphSet, GraphEntity
 from oc_ocdm.prov import ProvSet
 from oc_ocdm.support import create_date
@@ -11,12 +12,12 @@ from datetime import datetime
 from support import Support
 
 class DatasetBuilder(object):
-    def __init__(self, base_uri, resp_agent, info_dir:str = ""):
+    def __init__(self, base_uri:str, resp_agent:str, info_dir:str = ""):
         self.base_uri = base_uri
         self.resp_agent = resp_agent
         self.info_dir = info_dir
 
-    def get_journal_data_from_crossref(self, journal_issn, your_email, path, small=False, logs=False):
+    def get_journal_data_from_crossref(self, journal_issn:str, your_email:str, path:str, small:bool=False, logs:bool=False):
         error_log_dict = dict()
         if not os.path.exists("./cache/"):
             os.makedirs("./cache/")
@@ -44,7 +45,7 @@ class DatasetBuilder(object):
                 os.makedirs("./logs/")
             Support().dump_json(json.dumps(error_log_dict), f"./logs/{journal_issn}_crossref_error_logs")
     
-    def _manage_volume_issue(self, graphset, journal_br, item_br, item):
+    def _manage_volume_issue(self, graphset:GraphSet, journal_br:BibliographicEntity, item_br:BibliographicEntity, item:dict):
         volume_br = None
         if "volume" in item:
             volume_br = graphset.add_br(self.resp_agent)
@@ -66,7 +67,7 @@ class DatasetBuilder(object):
         if "volume" not in item and "issue" not in item and journal_br is not None:
             item_br.is_part_of(journal_br)
 
-    def _manage_resource_embodiment(self, graphset, item, item_br, digital_format):
+    def _manage_resource_embodiment(self, graphset:GraphSet, item:dict, item_br:BibliographicEntity, digital_format:bool):
         if not digital_format:
             item_re = graphset.add_re(self.resp_agent)
             item_re.create_print_embodiment()
@@ -91,7 +92,7 @@ class DatasetBuilder(object):
             item_re.create_digital_embodiment()
             item_br.has_format(item_re)
 
-    def _manage_citations(self, graphset, item, citing_entity):
+    def _manage_citations(self, graphset:GraphSet, item:dict, citing_entity:BibliographicEntity):
         if "reference" in item:
             for reference in item["reference"]:
                 if "DOI" in reference:
@@ -115,7 +116,7 @@ class DatasetBuilder(object):
                     reference_be.references_br(citing_entity)
                     citing_entity.contains_in_reference_list(reference_be)
     
-    def generate_dataset(self, title, description=None):
+    def generate_dataset(self, title:str, description:str=None) -> MetadataSet:
         metadataset = MetadataSet(self.base_uri)
         dataset = metadataset.add_dataset(title, self.base_uri)
         dataset.has_title(title)
@@ -125,7 +126,7 @@ class DatasetBuilder(object):
         dataset.has_modification_date(timestamp)
         return metadataset
     
-    def generate_graph(self, journal_data_path):
+    def generate_graph(self, journal_data_path:str) -> GraphSet:
         journal_graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
         with open(journal_data_path) as journal_data:
             journal_data_items = json.load(journal_data)["message"]["items"]
@@ -198,7 +199,7 @@ class DatasetBuilder(object):
         pbar.close()
         return journal_graphset
     
-    def generate_provenance(self, graphset, info_dir:str = ""):
+    def generate_provenance(self, graphset:GraphSet, info_dir:str = "") -> ProvSet:
         print("Generating Provenance...")
         provset = ProvSet(prov_subj_graph_set=graphset, base_iri=self.base_uri, info_dir=info_dir, wanted_label=False)
         provset.generate_provenance()
