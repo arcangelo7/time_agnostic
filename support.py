@@ -1,4 +1,4 @@
-import os, zipfile, json, time, requests, requests_cache
+import os, zipfile, json, time, requests, requests_cache, rdflib
 from requests import Session
 from zipfile import ZipFile
 from requests.adapters import HTTPAdapter
@@ -6,6 +6,10 @@ from requests.packages.urllib3.util.retry import Retry
 from oc_ocdm.storer import Storer
 from oc_ocdm.reader import Reader
 from oc_ocdm.graph import GraphSet
+from rdflib import Graph
+from rdflib.query import ResultParser, ResultSerializer
+from rdflib.plugin import register, Serializer, Parser
+from rdflib.plugins.sparql.results.csvresults import CSVResultSerializer, CSVResultParser
 
 class Support(object):
     def _requests_retry_session(
@@ -76,7 +80,7 @@ class Support(object):
     
     def dump_json(self, json_data:dict, path:str):
         with open(path, 'w') as outfile:
-            print("Writing to file...")
+            print("[Support: INFO] Writing to file")
             json.dump(json_data, outfile, sort_keys=True, indent=4)
     
     def get_graph_from_file(self, rdf_file_path:str, base_iri:str, resp_agent:str, info_dir:str) -> GraphSet:
@@ -86,3 +90,7 @@ class Support(object):
         graphset = GraphSet(base_iri=base_iri, info_dir=info_dir, wanted_label=False)
         reader.import_entities_from_graph(graphset, rdf_file, resp_agent, enable_validation=False)
         return graphset
+    
+
+
+

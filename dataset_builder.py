@@ -172,26 +172,38 @@ class DatasetBuilder(object):
             if "author" in item:
                 authorAgentRoles = list()
                 for author in item["author"]:
-                    item_ra = journal_graphset.add_ra(self.resp_agent)
+                    author_ra = journal_graphset.add_ra(self.resp_agent)
                     if "ORCID" in author:
                         author_id = journal_graphset.add_id(self.resp_agent)
                         author_id.create_orcid(author["ORCID"])
-                        item_ra.has_identifier(author_id)
+                        author_ra.has_identifier(author_id)
                     if "given" in author:
-                        item_ra.has_given_name(author["given"])
+                        author_ra.has_given_name(author["given"])
                     if "family" in author:
-                        item_ra.has_family_name(author["family"])
+                        author_ra.has_family_name(author["family"])
                     if "given" in author and "family" in author:
-                        item_ra.has_name(author["given"] + " " + author["family"])
+                        author_ra.has_name(author["given"] + " " + author["family"])
                     # AgentRole
                     author_ar = journal_graphset.add_ar(self.resp_agent)
                     author_ar.create_author()
-                    author_ar.is_held_by(item_ra)
+                    author_ar.is_held_by(author_ra)
                     item_br.has_contributor(author_ar)
                     authorAgentRoles.append(author_ar)
                 for index, authorAgentRole in enumerate(authorAgentRoles):
                     if index+1 < len(authorAgentRoles):
                         authorAgentRole.has_next(authorAgentRoles[index+1])
+            if "publisher" in item:
+                publisher_ra = journal_graphset.add_ra(self.resp_agent)
+                publisher_ra.has_name(item["publisher"])
+                if journal_item is not None:
+                    publisher_ra.has_identifier(journal_id)
+                else:
+                    journal_id = journal_graphset.add_id(self.resp_agent)
+                    journal_id.create_issn(item["ISSN"][0])
+                    publisher_ra.has_identifier(journal_id)
+                publisher_ar = journal_graphset.add_ar(self.resp_agent)
+                publisher_ar.create_publisher()
+                publisher_ar.is_held_by(publisher_ra)
             # Citation
             self._manage_citations(journal_graphset, item, item_br)
             pbar.update(1)

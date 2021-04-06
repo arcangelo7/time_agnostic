@@ -48,78 +48,80 @@
                         </div>
                     </div>
                 </div>
+                <div class="alert alert-secondary alert-dismissible shadow-soft fade show" role="alert">
+                    <span class="alert-inner--icon"><span class="fas fa-exclamation-circle"></span></span>
+                    <span class="alert-inner--text"><strong>Novità!</strong> Da adesso in poi tutti i punti del diario saranno numerati, così da poter essere richiamati in maniera sintetica e puntuale.</span>
+                    <button type="button" class="close text-dark" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
             </div>
         </section>
 
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (31/03/2021)</h2>
+                    <h2>Prossimo incontro (07/04/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
-                    <ul>
-                        <li>Ho caricato dati e provenance su Blazegraph.</li>
-                        <li>Ho implementato:
-                            <ul>
-                                <li>un sistema di gestione delle richieste tramite api più raffinato, con un timeout, un numero massimo di tentativi separati da intervalli progressivamente crescenti tramite backoff factor e con la possibilità di salvare gli errori in un file di log;</li>
-                                <li>una funzione che effettua query SPARQL su un triplestore al fine di verificare l'esistenza di entità associate allo stesso id. Nel caso le trovi, recupera i grafi associati e li unisce;</li>
-                                <li>una funzione che effettua query SPARQL su un triplestore al fine di ottenere tutti i DOI degli articoli appartenenti a una determinata rivista e i DOI di tutti gli articoli da essi citati. Dopodiché, controlla se su COCI sono presenti altri DOI di articoli citati e, se li trova, recupera il grafo dell'entità citante e gli aggancia le varie entità relative alla risorsa citata, ovvero l'Identifier, la BibliographicResource e la Citation (data di creazione, timespan, journal o author self-citation).  Per quanto riguarda i DOI degli articoli citati già presenti sul triplestore, vengono aggiunte alle rispettive entità Citation il timespan e se sono autocitazioni della rivista o dell'autore;</li>
-                                <li>una gestione più sofisticata di volume, issue e articoli:
-                                    <ul>
-                                        <li>se ci sono sia volume che issue l'articolo fa parte dell'issue, l'issue del volume e il volume della rivista;</li>
-                                        <li>se c'è solo il volume, l'articolo fa parte del volume e il volume della rivista;</li>
-                                        <li>se c'è solo l'issue, l'articolo fa parte dell'issue e l'issue della rivista;</li>
-                                        <li>se non ci sono né issue né volume l'articolo fa parte della rivista. </li>
-                                    </ul>
+                    <ol>
+                        <li>Le query SPARQL precedentemente effettuate tramite SPARQLStore utilizzano adesso SPARQLWrapper.</li>
+                        <li>Grafi di provenance e grafi sui dati vengono adesso generati in base alla storia pregressa tramite un indice.</li>
+                        <li>Effettuati i miglioramenti automatici, le nuove triple e loro provenance vengono adesso caricate correttamente sul triplestore.</li>
+                        <li>Grazie alla spiegazione fornitami da Simone, sono riuscito a importare correttamente un grafo da file json tramite metodo import_entities_from_graph della classe Reader di oc_ocdm.</li>
+                        <li>Sono state implementate due nuove funzioni, merge_by_id_from_file e add_coci_data_from_file, che anziché lavorare a partire da un triplestore lavorano a partire da un file. Di conseguenza, è possibile ottenere in output un nuovo file modificato anziché un upload su un triplestore. In questo modo potrò sia avere un file di backup che inviare a Cristian dei file rdf customizzati in base alle sue esigenze.</li>
+                        <li>Cristian mi ha fatto notare che avevo considerato solo gli autori come AgentRole. Ora il grafo iniziale comprende anche i publisher.</li>
+                        <li>Risolti alcuni bug nella funzione add_coci_data_from_triplestore:
+                            <ol>
+                                <li>Le entità di tipo cito:Citation preesistenti venivano prima ricercate solo tramite il DOI name del citato e non anche tramite il DOI name del citante.</li>
+                                <li>Le nuove entità venivano prima generate senza tenere conto dell'ultimo indice, provocando sovrapposizioni.</li>
+                                <li>Specificare l'argomento res nella ricreazione di un grafo preesistente permette adesso di prescindere dalla funzione di merge poiché, anche se presenti più entità associate ai medesimi identificativi, viene riprodotto solo il grafo dell'entità di interesse corrente.</li>
+                                <li>Nel caso in cui la funzione venga lanciata più volte sul medesimo triplestore, è stato aggiunto un controllo per cui le stesse informazioni non vengano aggiunte più volte.</li>
+                            </ol>
+                        </li>
+                        <li>Risolto un bug in merge_by_id_from_triplestore per cui le entità venivano unite a loro stesse.</li>
+                        <li>Aggiunta una nuova funzione di supporto che prende in input il percorso di un file rdf e restituisce in output un oggetto di tipo GraphSet.</li>
+                        <li>Tutte le funzioni hanno adesso parametri e output tipati, in osservanza di <a href="https://www.python.org/dev/peps/pep-3107/" alt="Link to PEP 3107" target="_blank">PEP 3107</a>, allo scopo di aumentare la leggibilità del codice, sia per gli altri che per me. Si tratta quindi di semplici annotazioni, che non causeranno un'eccezione TypeError se non rispettate.</li>
+                        <li>Il vantaggio del lavorare con una certa mole di dati è che, mentre gli script vengono eseguiti, si ha molto tempo per leggere:
+                            <ol>
+                                <li>Belhajjame, K., B’Far, R., Cheney, J., Coppens, S., Cresswell, S., Gil, Y., Groth, P., Klyne, G., Lebo, T., McCusker, J., Miles, S., Myers, J., Sahoo, S., & Tilmes, C. (2013). PROV-DM: The PROV Data Model (L. Moreau & P. Missier, Eds.). World Wide Web Consortium. https://www.w3.org/TR/prov-dm/.</li>
+                                <li>Wolfe, M. (2017, August 9). CC0 and Data Citation. https://www.library.ucdavis.edu/news/cc0-and-data-citation/.</li>
+                                <li>Wilkinson, M. D., Dumontier, M., Aalbersberg, I. J., Appleton, G., Axton, M., Baak, A., Blomberg, N., Boiten, J.-W., da Silva Santos, L. B., Bourne, P. E., Bouwman, J., Brookes, A. J., Clark, T., Crosas, M., Dillo, I., Dumon, O., Edmunds, S., Evelo, C. T., Finkers, R., … Mons, B. (2016). The FAIR Guiding Principles for scientific data management and stewardship. Scientific Data, 3, 160018. https://doi.org/10.1038/sdata.2016.18.</li>
+                                <li>GO FAIR. (2018). FAIR Principles. https://www.go-fair.org/fair-principles/.</li>
+                                <li>Open Knowledge Foundation. (2015). Open Definition 2.1. https://opendefinition.org/od/2.1/en/.</li>
+                                <li>Landi, A., Thompson, M., Giannuzzi, V., Bonifazi, F., Labastida, I., da Silva Santos, L. O. B., & Roos, M. (2020). The “A” of FAIR – As Open as Possible, as Closed as Necessary. Data Intelligence, 2(1–2), 47–55. https://doi.org/10.1162/dint_a_00027.</li>
+                                <li>Lin, D., Crabtree, J., Dillo, I., Downs, R. R., Edmunds, R., Giaretta, D., De Giusti, M., L’Hours, H., Hugo, W., Jenkyns, R., Khodiyar, V., Martone, M. E., Mokrane, M., Navale, V., Petters, J., Sierman, B., Sokolova, D. V., Stockhause, M., & Westbrook, J. (2020). The TRUST Principles for digital repositories. Scientific Data, 7(1), 144. https://doi.org/10.1038/s41597-020-0486-7.</li>
+                                <li>Michener, W. K. (2015). Ten Simple Rules for Creating a Good Data Management Plan. PLOS Computational Biology, 11(10), e1004525. https://doi.org/10.1371/journal.pcbi.1004525.</li>
+                                <li>Haak, L. L., Fenner, M., Paglione, L., Pentz, E., & Ratner, H. (2012). ORCID: A system to uniquely identify researchers. Learned Publishing, 25(4), 259–264. https://doi.org/10.1087/20120404.</li>
+                                <li>Meng, X.-L. (2020). Reproducibility, Replicability, and Reliability. Harvard Data Science Review, 2(4). https://doi.org/10.1162/99608f92.dbfce7f9.</li>
+                                <li>Baker, M. (2016). 1,500 scientists lift the lid on reproducibility. Nature, 533(7604), 452–454. https://doi.org/10.1038/533452a.
+                                    <ol>
+                                        <li>Vince il premio lettura più sconcertante della settimana, una di quelle che cambia il modo di vedere le cose. </li>
+                                    </ol>
                                 </li>
-                            </ul>
+                            </ol>
                         </li>
-                        <li>Ho aperto i seguenti issue:
-                            <ul>
-                                <li><a href="https://github.com/opencitations/oc_ocdm/issues/4" target="_blank" alt="Link to the GitHub issue">https://github.com/opencitations/oc_ocdm/issues/4</a></li>
-                                <li><a href="https://github.com/opencitations/oc_ocdm/issues/5" target="_blank" alt="Link to the GitHub issue">https://github.com/opencitations/oc_ocdm/issues/5</a></li>
-                            </ul>
-                        </li>
-                        <li>Ho letto:
-                            <ul>
-                                <li>International DOI Foundation. (2019). DOI® Handbook. https://doi.org/10.1000/182.
-                                    <ul><li>Sì, ho seriamente letto tutto l'handbook.</li></ul>
-                                </li>
-                                <li>Fecher, B., & Friesike, S. (2014). Open Science: One Term, Five Schools of Thought. In S. Bartling & S. Friesike (Eds.), Opening Science (pp. 17–47). Springer International Publishing. https://doi.org/10.1007/978-3-319-00026-8_2.</li>
-                                <li>Kramer, B., & Bosman, J. (2015, June 18). The good, the efficient and the open—Changing research workflows and the need to move from Open Access to Open Science. CERN Workshop on Innovations in Scholarly Communication (OAI9), University of Geneva, Geneva, Switzerland. https://www.slideshare.net/bmkramer/the-good-the-efficient-and-the-open-oai9.</li>
-                                <li>Woelfle, M., Olliaro, P., & Todd, M. H. (2011). Open science is a research accelerator. Nature Chemistry, 3(10), 745–748. https://doi.org/10.1038/nchem.1149.</li>
-                                <li>UNESCO. (2020). First draft of the UNESCO Recommendation on Open Science (Programme and Meeting Document SC-PCB-SPP/2020/OS/R1; p. 16). https://unesdoc.unesco.org/ark:/48223/pf0000374837.</li>
-                                <li>Documentazione di rdflib.</li>
-                            </ul>
-                        </li>
-                        <li>Ho seguito il corso Semantic Web Technologies del Prof. Harald Sack, reperibile all'indirizzo <a href="https://open.hpi.de/courses/semanticweb" target="_blank" alt="Link to the Semantic Web course">https://open.hpi.de/courses/semanticweb</a>, al fine di approfondire la mia conoscenza di SPARQL 1.1.</li>
-                    </ul>
+                    </ol>
                 <h3>Cosa non ho capito</h3>
-                <ul>
-                    <li>
-                        Allo scopo di ottenere tutte le triple di cui un'entità è soggetto da un triplestore, oc_ocdm fornisce il metodo import_entity_from_triplestore della classe Reader. Ecco un esempio di come ho provato a utilizzarla:
-                        <pre><code class="prettyprint">
-g = GraphSet("https://github.com/arcangelo7/time_agnostic/")
-qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegraph/sparql", URIRef("https://github.com/arcangelo7/time_agnostic/br/1"),"https://orcid.org/0000-0002-8420-0696")
-                        </code></pre>
-                        Nonostante l'entità esista ottengo però un ValueError, con messaggio di errore: "The required entity was not found or was not recognised as a proper OCDM entity". Dico che l'entità esiste perché facendo il medesimo CONSTRUCT tramite endpoint SPARQL ottengo i risultati attesi. Sto utilizzando correttamente il metodo? Ho infine risolto il problema utilizzando la classe SPARQLStore di rdflib o SPARQLWrapper, ma visto che oc_ocdm fornisce già uno shortcut preferirei utilizzare quello.
-                    </li>
-                    <li>La documentazione della classe SPARQLStore di rdflib, reperibile a <a href="https://rdflib.readthedocs.io/en/stable/apidocs/rdflib.plugins.stores.html#rdflib.plugins.stores.sparqlstore.SPARQLStore" target="_blank" alt="SPARQLStore class documentation">questo indirizzo</a>, afferma:
+                <ol>
+                    <li>Talvolta, provando a fare un merge tra due BibliographicResources, ottengo un errore di tipo TypeError che dice: 
                         <blockquote class="blockquote ml-5 mt-3">
-                            An RDFLib store around a SPARQL endpoint
-                            This is context-aware and should work as expected
-                            when a context is specified.
-                            For ConjunctiveGraphs, reading is done from the "default graph". Exactly
-                            what this means depends on your endpoint, because SPARQL does not offer a
-                            simple way to query the union of all graphs as it would be expected for a
-                            ConjuntiveGraph. This is why we recommend using Dataset instead, which is
-                            motivated by the SPARQL 1.1.
+                            [BibliographicResource.contains_discourse_element] Expected argument type: de. Provided argument type: BibliographicReference.
                         </blockquote>
-                        Non ho capito cosa intenda dire. 
+                        Poiché non sto in alcun modo utilizzando entità di tipo DiscourseElement, sospetto che si tratti di un bug. 
                     </li>
-                    <li>Dopo avere unito le entità associate agli stessi id è necessario caricare le modifiche sul triplestore. Dal codice di oc_ocdm ho inteso che la libreria si occupa di elaborare la query di update, definendo cosa vada cancellato e cosa aggiunto, ma dai tentativi fatti mi continuano a risultare 0 modifiche, per cui la query non viene lanciata. Sospetto c'entri qualcosa il metodo commit_changes(), il cui funzionamento mi risulta però oscuro.</li>
-                    <li>Non sono riuscito ad aggiornare la provenance a partire da un grafo di provenance preesistente.</li>
-                </ul>
+                    <li>Portata a termine l'operazione di merge sulle entità associate agli stessi id e caricate le novità sul triplestore, ho riscontrato le stesse stranezze nell'output già riportate sul diario di bordo in data <a href="#d2303cnhc7">23/03 (<em>Cosa non ho capito</em>, punto 7)</a>. Da quello che ho visto, se unisco A a B, ad A viene associato l'id di B e B viene cancellata. Il problema è che A si ritrova ad essere associata a due entità di tipo datacite:Identifier che in realtà sono identiche, perché appunto A e B sono state unite in quando associate agli stessi id. Inoltre, l'entità B, nonostante sia stata cancellata, continua ad avere degli ingoing links da parte di tutte quelle entità che ad essa si riferivano in passato. C'è qualcosa del metodo merge che non sto capendo o qualcosa che dovrei fare e non sto facendo?</li>
+                    <li>È preferibile avere funzioni distinte che lavorino su triplestore e file o è meglio avere un'unica funzione che, a seconda degli argomenti passati, lavora indifferentemente su entrambi?</li>
+                    <li>Non so quanto sia ottimale effettuare query SPARQL su un'entità Graph di rdflib, perché credo manchi delle ottimizzazioni di un triplestore. Quando mi hai detto che devo lavorare sia su triplestore che su file intendevi che devo produrre entrambi gli output o che devo creare funzioni che lavorino in entrambe le modalità?</li>
+                    <li>Cristian mi ha detto che le librerie con cui lavora per produrre graph embeddings tendono a prendere in input un file tsv e non json. Tramite rdflib posso serializzare rdf in una moltitudine di notazioni, quali turtle, nt, json-ld, rdf/xml ed n3, ma onestamente non ho mai visto un grafo rdf serializzato in tsv. Si può fare?</li>
+                    <li>Mi piacerebbe portare avanti nuove idee per quanto riguarda possibili miglioramenti automatici del grafo, poiché quelle che ho al momento non mi convincono:
+                        <ol>
+                            <li>Correggere i DOI names sbagliati. Dato che è materia d'esame e che coinvolge altre 3 persone non mi sembra corretto occuparmene da solo per il tirocinio.</li>
+                            <li>Strutturare i campi unstructured forniti da Crossref precedentemente non considerati. Per farlo dovrei utilizzare nuovamente l'API di Crossref, mentre vorrei capire se è possibile migliorare ulteriormente quello che ho già senza chiedere altre risorse esterne.</li>
+                            <li>Arricchire i metadati delle entità citate, che mi convince poco per le stesse ragioni del punto precedente, ovvero che dovrei rivolgermi all'API di Crossref.</li>
+                        </ol>
+                    </li>
+                </ol>
             </div>
         </section>
 
@@ -138,26 +140,27 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                         <div class="collapse" id="panel-1">
                             <div class="pt-3">
                                 <h3>Cosa ho fatto</h3>
-                                <ul>
-                                    <li>Ho letto:</li>
-                                    <ul>
-                                        <li>Peroni, S., Shotton, D., Vitali, F. (2016). <em>A document-inspired way for
-                                                tracking changes
-                                                of RDF data</em>. <a
-                                                href="https://w3id.org/oc/paper/occ-driftalod2016.html"
-                                                alt="Link to the paper">https://w3id.org/oc/paper/occ-driftalod2016.html</a>.
-                                        </li>
-                                        <li>Daquino, M., Peroni, S., Shotton D. (2020). <em>The OpenCitations Data
-                                                Model</em>. <a
-                                                href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7"
-                                                alt="Link to the OpenCitations Data Model documentation">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>
-                                        </li>
-                                        <li>Documentazione delle seguenti librerie e API: <em>Crossref REST API</em>,
-                                            <em>REST API for
-                                                COCI</em>, <em>oc_ocdm</em>.
-                                        </li>
-                                        <li>Ho sfogliato il lavoro fin qui svolto da Arianna Moretti.</li>
-                                    </ul>
+                                <ol>
+                                    <li>Ho letto:
+                                        <ol>
+                                            <li>Peroni, S., Shotton, D., Vitali, F. (2016). <em>A document-inspired way for
+                                                    tracking changes
+                                                    of RDF data</em>. <a
+                                                    href="https://w3id.org/oc/paper/occ-driftalod2016.html"
+                                                    alt="Link to the paper">https://w3id.org/oc/paper/occ-driftalod2016.html</a>.
+                                            </li>
+                                            <li>Daquino, M., Peroni, S., Shotton D. (2020). <em>The OpenCitations Data
+                                                    Model</em>. <a
+                                                    href="https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7"
+                                                    alt="Link to the OpenCitations Data Model documentation">https://figshare.com/articles/online_resource/Metadata_for_the_OpenCitations_Corpus/3443876/7</a>
+                                            </li>
+                                            <li>Documentazione delle seguenti librerie e API: <em>Crossref REST API</em>,
+                                                <em>REST API for
+                                                    COCI</em>, <em>oc_ocdm</em>.
+                                            </li>
+                                            <li>Ho sfogliato il lavoro fin qui svolto da Arianna Moretti.</li>
+                                        </ol>
+                                    </li>
                                     <li>Ho scritto il seguente codice con lo scopo di comprendere il funzionamento di
                                         tutte le librerie e API su menzionate, nonché di produrre output utili in vista
                                         della realizzazione del dataset su "Scientometrics": <a
@@ -236,7 +239,7 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                         </div>
                                     </div>
                                     <li>Ho ottenuto in output tre file json:</li>
-                                    <ul>
+                                    <ol>
                                         <li>Una lista di 20 lavori (articoli, libri, atti di convegni, etc) presenti
                                             nella rivista "Scientometrics", con relativi metadati: <a
                                                 href="https://github.com/arcangelo7/time_agnostic/blob/main/data/scientometrics.json"
@@ -251,10 +254,10 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                             metadati relativi a titolo e data di pubblicazione: <a
                                                 href="https://github.com/arcangelo7/time_agnostic/blob/main/data/graph.json"
                                                 target="_blank" alt="Link to the graph">graph.json</a>.</li>
-                                    </ul>
-                                </ul>
+                                    </ol>
+                                </ol>
                                 <h3>Cosa non ho capito</h3>
-                                <ul>
+                                <ol>
                                     <li>Non posso accedere a <em>The OpenCitations Data Model</em> su SpringerLink (<a
                                             href="https://link.springer.com/chapter/10.1007%2F978-3-030-62466-8_28"
                                             alt="Link to the OpenCitations Data Model docuemntation on Springer"
@@ -287,7 +290,7 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                                 come gestire le omonimie?</li>
                                         </ol>
                                     </li>
-                                </ul>
+                                </ol>
                             </div>
                         </div>
                     </div>
@@ -300,86 +303,87 @@ storer.store_graphs_in_file("data/graph.json", "./")
                         <div class="collapse" id="panel-2">
                             <div class="pt-3">
                                 <h3>Cosa ho fatto</h3>
-                                <ul>
+                                <ol>
                                     <li>Ho riorganizzato il codice utilizzando la programmazione a oggetti per rendere
                                         lo sviluppo più mantenibile.</li>
                                     <li>Utilizzando il parametro <em>cursor</em>, ho aumentato da 20 a 6065 il numero di
                                         works contenuti in "Scientometrics" ritornati tramite Crossref. Ora ci sono
                                         tutti.</li>
                                     <li>Ho generato 3 output corrispondenti a 3 grafi, di cui si elencano i rispettivi
-                                        metadati considerati:</li>
-                                    <ul>
-                                        <li>MetadataSet (dcat:Dataset)</li>
-                                        <ul>
-                                            <li>Titolo (dcterms:title)</li>
-                                            <li>Descrizione (dcterms:description)</li>
-                                            <li>Data di modifica (dcterms:modified)</li>
-                                        </ul>
-                                        <li>Provenance (prov:Entity)</li>
-                                        <ul>
-                                            <li>Descrizione (dcterms:description)</li>
-                                            <li>is snapshot of (prov:specializationOf)</li>
-                                            <li>Attribuzione (prov:wasAttributedTo)</li>
-                                            <li>Data di creazione (prov:generatedAtTime)</li>
-                                        </ul>
-                                        <li>Graphset (set di grafi sulle entità bibliografiche)</li>
-                                        <ul>
-                                            <li>BibliographicResource, per la rivista, i suoi articoli e gli articoli
-                                                citati dai suoi articoli (fabio:Expression, fabio:Journal,
-                                                fabio:JournalArticle)</li>
-                                            <ul>
-                                                <li>Tipo (rdf:type)</li>
+                                        metadati considerati:
+                                        <ol>
+                                            <li>MetadataSet (dcat:Dataset)
+                                            <ol>
                                                 <li>Titolo (dcterms:title)</li>
-                                                <li>Sottotitolo, laddove presente (fabio:hasSubtitle)</li>
-                                                <li>Identificatore, DOI per gli articoli, ISSN per la rivista
-                                                    (datacite:hasIdentifier)</li>
-                                                <li>Se articolo, autore (pro:isDocumentContextFor)</li>
-                                                <li>Se articolo, data di pubblicazione, laddove presente
-                                                    (prism:publicationDate)</li>
-                                                <li>Se articolo, rivista di appartenenza (frbr:partOf)</li>
-                                                <li>Formato (frbr:embodiment)</li>
-                                            </ul>
-                                            <li>Citation (cito:Citation, cito:JournalSelfCitation,
-                                                cito:AuthorSelfCitation, cito:DistantCitation)</li>
-                                            <ul>
-                                                <li>Tipo (rdf:type)</li>
-                                                <li>Documento citante (cito:hasCitingEntity)</li>
-                                                <li>Documento citato (cito:hasCitedEntity)</li>
-                                                <li>Data di creazione (cito:hasCitationCreationDate)</li>
-                                                <li>Time span (cito:hasCitationTimeSpan)</li>
-                                            </ul>
-                                            <li>ResourceEmbodiment (fabio:manifestation, fabio:DigitalManifestation,
-                                                fabio:PrintObject)</li>
-                                            <ul>
-                                                <li>Tipo, laddove presente (rdf:type)</li>
-                                                <li>Media type, laddove presente (dcterms:format)</li>
-                                                <li>Pagina iniziale, laddove presente (prism:startingPage)</li>
-                                                <li>Pagina finale, laddove presente (prism:endingPage)</li>
-                                                <li>URL, laddove presente (frbr:exemplar)</li>
-                                            </ul>
-                                            <li>ResponsibleAgent (foaf:Agent)</li>
-                                            <ul>
-                                                <li>Tipo (rdf:type)</li>
-                                                <li>Identificativo, ovvero ORCID, laddove presente
-                                                    (datacite:hasIdentifier)</li>
-                                                <li>Nome, laddove presente (foaf:givenName)</li>
-                                                <li>Cognome, laddove presente (foaf:familyName)</li>
-                                                <li>Nome completo, laddove presente (foaf:name)</li>
-                                            </ul>
-                                            <li>AgentRole (pro:RoleInTime)</li>
-                                            <ul>
-                                                <li>Tipo (rdf:type)</li>
-                                                <li>Tipo di ruolo (pro:withRole)</li>
-                                                <li>Is held by (pro:isHeldBy)</li>
-                                            </ul>
-                                            <li>Identifier (datacite:Identifier)</li>
-                                            <ul>
-                                                <li>Tipo (rdf:type)</li>
-                                                <li>Tipo di identificatore (datacite:usesIdentifierScheme)</li>
-                                                <li>Stringa (literalreification:hasLiteralValue)</li>
-                                            </ul>
-                                        </ul>
-                                    </ul>
+                                                <li>Descrizione (dcterms:description)</li>
+                                                <li>Data di modifica (dcterms:modified)</li>
+                                            </ol></li>
+                                            <li>Provenance (prov:Entity)
+                                            <ol>
+                                                <li>Descrizione (dcterms:description)</li>
+                                                <li>is snapshot of (prov:specializationOf)</li>
+                                                <li>Attribuzione (prov:wasAttributedTo)</li>
+                                                <li>Data di creazione (prov:generatedAtTime)</li>
+                                            </ol></li>
+                                            <li>Graphset (set di grafi sulle entità bibliografiche)
+                                            <ol>
+                                                <li>BibliographicResource, per la rivista, i suoi articoli e gli articoli
+                                                    citati dai suoi articoli (fabio:Expression, fabio:Journal,
+                                                    fabio:JournalArticle)
+                                                <ol>
+                                                    <li>Tipo (rdf:type)</li>
+                                                    <li>Titolo (dcterms:title)</li>
+                                                    <li>Sottotitolo, laddove presente (fabio:hasSubtitle)</li>
+                                                    <li>Identificatore, DOI per gli articoli, ISSN per la rivista
+                                                        (datacite:hasIdentifier)</li>
+                                                    <li>Se articolo, autore (pro:isDocumentContextFor)</li>
+                                                    <li>Se articolo, data di pubblicazione, laddove presente
+                                                        (prism:publicationDate)</li>
+                                                    <li>Se articolo, rivista di appartenenza (frbr:partOf)</li>
+                                                    <li>Formato (frbr:embodiment)</li>
+                                                </ol></li>
+                                                <li>Citation (cito:Citation, cito:JournalSelfCitation,
+                                                    cito:AuthorSelfCitation, cito:DistantCitation)
+                                                <ol>
+                                                    <li>Tipo (rdf:type)</li>
+                                                    <li>Documento citante (cito:hasCitingEntity)</li>
+                                                    <li>Documento citato (cito:hasCitedEntity)</li>
+                                                    <li>Data di creazione (cito:hasCitationCreationDate)</li>
+                                                    <li>Time span (cito:hasCitationTimeSpan)</li>
+                                                </ol></li>
+                                                <li>ResourceEmbodiment (fabio:manifestation, fabio:DigitalManifestation,
+                                                    fabio:PrintObject)
+                                                <ol>
+                                                    <li>Tipo, laddove presente (rdf:type)</li>
+                                                    <li>Media type, laddove presente (dcterms:format)</li>
+                                                    <li>Pagina iniziale, laddove presente (prism:startingPage)</li>
+                                                    <li>Pagina finale, laddove presente (prism:endingPage)</li>
+                                                    <li>URL, laddove presente (frbr:exemplar)</li>
+                                                </ol></li>
+                                                <li>ResponsibleAgent (foaf:Agent)
+                                                <ol>
+                                                    <li>Tipo (rdf:type)</li>
+                                                    <li>Identificativo, ovvero ORCID, laddove presente
+                                                        (datacite:hasIdentifier)</li>
+                                                    <li>Nome, laddove presente (foaf:givenName)</li>
+                                                    <li>Cognome, laddove presente (foaf:familyName)</li>
+                                                    <li>Nome completo, laddove presente (foaf:name)</li>
+                                                </ol></li>
+                                                <li>AgentRole (pro:RoleInTime)
+                                                <ol>
+                                                    <li>Tipo (rdf:type)</li>
+                                                    <li>Tipo di ruolo (pro:withRole)</li>
+                                                    <li>Is held by (pro:isHeldBy)</li>
+                                                </ol></li>
+                                                <li>Identifier (datacite:Identifier)
+                                                <ol>
+                                                    <li>Tipo (rdf:type)</li>
+                                                    <li>Tipo di identificatore (datacite:usesIdentifierScheme)</li>
+                                                    <li>Stringa (literalreification:hasLiteralValue)</li>
+                                                </ol></li>
+                                            </ol></li>
+                                        </ol>
+                                    </li>
                                     <li>La mappatura è avvenuta nel modo più generico e rivista-indipendente possibile.
                                         Dovrebbe essere possibile utilizzare lo stesso software per mappare seguendo
                                         l'ocdm qualunque rivista ritornata da Crossref.</li>
@@ -391,9 +395,9 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                             alt="Link to the Python script">https://github.com/arcangelo7/time_agnostic/blob/main/dataset_builder.py</a>.
                                         Purtroppo, non è stato possibile caricare gli output su GitHub date le loro
                                         dimensioni.</li>
-                                </ul>
+                                </ol>
                                 <h3>Cosa non ho capito</h3>
-                                <ul>
+                                <ol>
                                     <li>Come faccio a esprimere che un certo issue fa parte di un certo volume
                                         utilizzando l'OCDM? Una BibliographicResource ha come metodo has_number, che
                                         però è generico.</li>
@@ -473,44 +477,44 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                         Tuttavia, a causa dei lunghi tempi d'attesa, e quindi del rischio di crash lungo
                                         il percorso, sono stato costretto a spezzettare il processo su più funzioni da
                                         chiamare manualmente. È possibile realizzare l'ideale?</li>
-                                </ul>
+                                </ol>
                             </div>
                         </div>
                     </div>
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-3" data-target="#panel-3" class="accordion-panel-header" data-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="panel-3">
+                            role="button" aria-expanded="false" aria-controls="panel-3" id="d2303cnhc7p">
                             <span class="h6 mb-0 font-weight-bold">23/03/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-3">
                             <div class="pt-3">
                                 <h3>Cosa ho fatto</h3>
-                                <ul>
-                                    <li>Ho letto:</li>
-                                    <ul>
+                                <ol>
+                                    <li>Ho letto:
+                                    <ol>
                                         <li>Peroni, S., Shotton, D., Vitali, F. (2012). Scholarly publishing and Linked
                                             Data: describing roles, statuses, temporal and contextual extents.
                                             Association for Computing Machinery, New York. Retrieved from <a
                                                 href="https://doi.org/10.1145/2362499.2362502" alt="Link to the article"
                                                 target="_blank">https://doi.org/10.1145/2362499.2362502</a>.</li>
-                                        <ul>
+                                        <ol>
                                             <li>Vi ho appreso con entusiasmo che dietro l'entità apparentemente contorta
                                                 pro:RoleInTime si cela invece la possibilità di definire feature tempo e
                                                 contesto-dipendenti e di effettuare query più profonde.</li>
-                                        </ul>
+                                        </ol>
                                         <li>Peroni, S., Shotton, D. (2012). FaBiO and CiTO: Ontologies for describing
                                             bibliographic resources and citations. Journal of Web Semantics, Volume 17,
                                             Pages 33-43.
                                             Retrieved from <a href="https://doi.org/10.1016/j.websem.2012.08.001"
                                                 alt="Link to the article"
                                                 target="_blank">https://doi.org/10.1016/j.websem.2012.08.001</a>.</li>
-                                        <ul>
+                                        <ol>
                                             <li>Ne ho tratto informazioni sulla genesi di FaBio E CiTO e in particolare
                                                 sul valore del predicato cito:hasCitationCharacterization.</li>
-                                        </ul>
+                                        </ol>
                                         <li>Documentazione di Blazegraph.</li>
-                                    </ul>
+                                    </ol></li>
                                     <li>Il Graphset contiene adesso informazioni sui volumi e sugli issues,
                                         rappresentati come BibliographicResources rispettivamente di tipo JournalVolume
                                         e JournalIssue, aventi come predicati fabio:hasSequenceIdentifier e frbr:partOf.
@@ -531,16 +535,16 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                         collegata alle rispettive BibliographicReferences tramie frbr:part.</li>
                                     <li>È stata create una nuova classe, DatasetAutoEnhancer, pensata per contenere
                                         metodi e proprietà che migliorino la qualità del dataset in maniera automatica.
-                                        Al momento presenta:</li>
-                                    <ul>
+                                        Al momento presenta:
+                                    <ol>
                                         <li>il metodo merge_by_id, il quale unisce due entità nel caso in cui gli
                                             identificativi ad esse associate coincidano. Nella fattispecie, unisce due
                                             BibliographicResources con lo stesso DOI e due ResponsibleAgents con lo
                                             stesso ORCID.</li>
                                         <li>Il metodo privato _generate_snaphot, che si occupa di aggiornare il grafo
                                             sulla provenance registrando i delta rispetto a quello precedente, in
-                                            particolare:</li>
-                                        <ul>
+                                            particolare:
+                                        <ol>
                                             <li>Crea lo snaphsot.</li>
                                             <li>Definisce la data di creazione (has_generation_time).</li>
                                             <li>Definisce di quale entità è lo snaphot (is_snapshot_of).</li>
@@ -554,11 +558,11 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                             <li>Definisce la risorsa primaria da cui hanno origine i metadati nello
                                                 snapshot, ovvero Crossref (has_primary_source).</li>
                                             <li>Definisce l'agente responsabile delle modifiche (has_resp_agent).</li>
-                                        </ul>
-                                    </ul>
+                                        </ol></li>
+                                    </ol></li>
                                     <li>È stata implementata una nuova classe, Support, che contiene i seguenti metodi:
-                                    </li>
-                                    <ul>
+                                    
+                                    <ol>
                                         <li>zip_data, per comprimere i dati in un archivio.</li>
                                         <li>minify_json, per minificare i file json in modo che siano parsabili dal
                                             metodo load della classe Reader di oc_ocdm.</li>
@@ -566,10 +570,10 @@ storer.store_graphs_in_file("data/graph.json", "./")
                                         </li>
                                         <li>dump_dataset, per conservare i dataset in un file json.</li>
                                         <li>dump_json, per salvare gli oggetti json in un file.</li>
-                                    </ul>
-                                </ul>
+                                    </ol>
+                                </ol></li>
                                 <h3>Cosa non ho capito</h3>
-                                <ul>
+                                <ol>
                                     <li>Non mi è mai capitato per "Scientometrics", ma come mi comporto se viene
                                         indicato l'issue e non il volume? Creo un entità Volume vuota e le collego
                                         l'issue?</li>
@@ -632,7 +636,7 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                         import_entities_from_graph richiede notevolmente più tempo che creare il grafo
                                         da zero. Ho quindi deciso di aumentare la provenance direttamente durante la
                                         creazione del GraphSet, ovvero tramite più commit successivi. È corretto?</li>
-                                    <li>Per quanto riguarda la creazione di uno snapshot, quanto deve essere esplicitato
+                                    <li id="d2303cnhc7">Per quanto riguarda la creazione di uno snapshot, quanto deve essere esplicitato
                                         e quanto viene fatto in automatico? Mi spiego meglio: quando unisco un'entità a
                                         un'altra tramite il metodo merge, tutto ciò che ruota attorno a quelle entità
                                         rimane invariato. Ad esempio, se unisco due risorse bibliografiche dopo aver
@@ -656,8 +660,8 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                         </pre>
                                         Dopodiché, ho controllato che il campo "score" contenesse un numero maggiore di
                                         90 e, se sì, ho estratto il DOI dall'item. A questo proposito ho tre domande:
-                                    </li>
-                                    <ul>
+                                    
+                                    <ol>
                                         <li>Come funziona lo score? Perché ho notato che a volte risultati con score
                                             superiore a 100 sono sbagliati.</li>
                                         <li>La query non ritorna solo il risultato migliore, ma un numero variabile di
@@ -667,7 +671,7 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                             successo.</li>
                                         <li>È questo il metodo migliore per ottenere un DOI da una reference non
                                             strutturata?</li>
-                                    </ul>
+                                    </ol></li>
                                     <li>Persiste il problema della memoria. Ho provato ad aggiungere due banchetti che
                                         avevo in un altro PC e portare la RAM a 32 GB, ho attivato l'X.M.P., l'ho
                                         overclockata e ho portato il file di paging a 8 GB, ma non è bastato, il
@@ -678,7 +682,7 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                         </div>
                                         Utilizzando Jupyer Notebook e il monitoraggio risorse, ho potuto eseguire i vari
                                         passaggi singolarmente, per misurare quanta RAM occorresse a ciascuno:
-                                        <ul>
+                                        <ol>
                                             <li>
                                                 <p>Creare il graphset ha occupato circa 18.4 GB</p>
                                                 <div
@@ -698,21 +702,21 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                             </li>
                                             <li>Infine, il dump del dataset sulla provenance ha fatto crashare il
                                                 programma.</li>
-                                        </ul>
+                                        </ol>
                                         Sono infine riuscito a risolvere portando il file di paging a 16 GB, ma in tutta
                                         onestà non la ritengo una soluzione valida, né filosoficamente né guardando al
                                         futuro prossimo in cui i dati saranno molti di più. Cosa ne pensi?
                                     </li>
                                     <li>Durante l'ultimo incontro hai fatto due riferimenti che sono rimasti in sospeso:
-                                        <ul>
+                                        <ol>
                                             <li>A proposito di OpenCitations Meta, hai menzionato un articolo che
                                                 introduce a OpenCitations. Ho verificato di non averlo letto. Potresti
                                                 inviarmelo?</li>
                                             <li>Hai menzionato alcune questioni di cui discutere dopo la risposta alle
                                                 domande, che però non sono più state discusse.</li>
-                                        </ul>
+                                        </ol>
                                     </li>
-                                </ul>
+                                </ol>
                                 <h3>Note</h3>
                                 <p>La documentazione del metodo import_entities_from_graph della classe Reader di
                                     oc_ocdm non è aggiornata. Il metodo vuole infatti tre argomenti obbligatori, non
@@ -730,10 +734,10 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         <div class="collapse" id="panel-4">
                             <div class="pt-3">
                                 <h3>Cosa ho fatto</h3>
-                                <ul>
+                                <ol>
                                     <li>Ho caricato dati e provenance su Blazegraph.</li>
                                     <li>Ho implementato:
-                                        <ul>
+                                        <ol>
                                             <li>un sistema di gestione delle richieste tramite api più raffinato, con un timeout, un numero
                                                 massimo di tentativi separati da intervalli progressivamente crescenti tramite backoff factor e
                                                 con la possibilità di salvare gli errori in un file di log;</li>
@@ -748,30 +752,30 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                                 presenti sul triplestore, vengono aggiunte alle rispettive entità Citation il timespan e se sono
                                                 autocitazioni della rivista o dell'autore;</li>
                                             <li>una gestione più sofisticata di volume, issue e articoli:
-                                                <ul>
+                                                <ol>
                                                     <li>se ci sono sia volume che issue l'articolo fa parte dell'issue, l'issue del volume e il
                                                         volume della rivista;</li>
                                                     <li>se c'è solo il volume, l'articolo fa parte del volume e il volume della rivista;</li>
                                                     <li>se c'è solo l'issue, l'articolo fa parte dell'issue e l'issue della rivista;</li>
                                                     <li>se non ci sono né issue né volume l'articolo fa parte della rivista. </li>
-                                                </ul>
+                                                </ol>
                                             </li>
-                                        </ul>
+                                        </ol>
                                     </li>
                                     <li>Ho aperto i seguenti issue:
-                                        <ul>
+                                        <ol>
                                             <li><a href="https://github.com/opencitations/oc_ocdm/issues/4" target="_blank"
                                                     alt="Link to the GitHub issue">https://github.com/opencitations/oc_ocdm/issues/4</a></li>
                                             <li><a href="https://github.com/opencitations/oc_ocdm/issues/5" target="_blank"
                                                     alt="Link to the GitHub issue">https://github.com/opencitations/oc_ocdm/issues/5</a></li>
-                                        </ul>
+                                        </ol>
                                     </li>
                                     <li>Ho letto:
-                                        <ul>
+                                        <ol>
                                             <li>International DOI Foundation. (2019). DOI® Handbook. https://doi.org/10.1000/182.
-                                                <ul>
+                                                <ol>
                                                     <li>Sì, ho seriamente letto tutto l'handbook.</li>
-                                                </ul>
+                                                </ol>
                                             </li>
                                             <li>Fecher, B., & Friesike, S. (2014). Open Science: One Term, Five Schools of Thought. In S.
                                                 Bartling & S. Friesike (Eds.), Opening Science (pp. 17–47). Springer International Publishing.
@@ -785,15 +789,15 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                             <li>UNESCO. (2020). First draft of the UNESCO Recommendation on Open Science (Programme and Meeting
                                                 Document SC-PCB-SPP/2020/OS/R1; p. 16). https://unesdoc.unesco.org/ark:/48223/pf0000374837.</li>
                                             <li>Documentazione di rdflib.</li>
-                                        </ul>
+                                        </ol>
                                     </li>
                                     <li>Ho seguito il corso Semantic Web Technologies del Prof. Harald Sack, reperibile all'indirizzo <a
                                             href="https://open.hpi.de/courses/semanticweb" target="_blank"
                                             alt="Link to the Semantic Web course">https://open.hpi.de/courses/semanticweb</a>, al fine di
                                         approfondire la mia conoscenza di SPARQL 1.1.</li>
-                                </ul>
+                                </ol>
                                 <h3>Cosa non ho capito</h3>
-                                <ul>
+                                <ol>
                                     <li>
                                         Allo scopo di ottenere tutte le triple di cui un'entità è soggetto da un triplestore, oc_ocdm fornisce
                                         il metodo import_entity_from_triplestore della classe Reader. Ecco un esempio di come ho provato a
@@ -829,17 +833,29 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                                         cui la query non viene lanciata. Sospetto c'entri qualcosa il metodo commit_changes(), il cui
                                         funzionamento mi risulta però oscuro.</li>
                                     <li>Non sono riuscito ad aggiornare la provenance a partire da un grafo di provenance preesistente.</li>
-                                </ul>
+                                </ol>
                             </div>
                         </div>
                     </div>
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-5" data-target="#panel-5" class="accordion-panel-header" data-toggle="collapse"
                             role="button" aria-expanded="false" aria-controls="panel-5">
-                            <span class="h6 mb-0 font-weight-bold">06/04/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">07/04/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-5">
+                            <div class="pt-3">
+                                <p class="mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-6" data-target="#panel-6" class="accordion-panel-header" data-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="panel-6">
+                            <span class="h6 mb-0 font-weight-bold">14/04/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-6">
                             <div class="pt-3">
                                 <p class="mb-0"></p>
                             </div>
@@ -869,6 +885,7 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
     <script src="./vendor/prismjs/prism.js"></script>
     <!-- Neumorphism JS -->
     <script src="./assets/js/neumorphism.js"></script>
+    <script src="./assets/js/custom.js"></script>
 </body>
 
 </html>

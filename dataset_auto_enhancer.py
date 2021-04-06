@@ -1,4 +1,4 @@
-import re, rdflib, json
+import re, rdflib, json, urllib
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
@@ -70,7 +70,7 @@ class DatasetAutoEnhancer(object):
                 "add": enhanced_graphset.add_ra
                 }
         }
-        sparql = SPARQLWrapper(self.ts_url)
+        sparql = SPARQLWrapper(ts_url)
         for entity in entities_set:
             ids_found = dict()
             queryString = f"""
@@ -231,7 +231,7 @@ class DatasetAutoEnhancer(object):
             }}
             GROUP BY ?res ?citingDOI
         """
-        sparql = SPARQLWrapper(self.ts_url)
+        sparql = SPARQLWrapper(ts_url)
         sparql.setQuery(queryString)
         sparql.setReturnFormat(JSON)
         results = sparql.query().convert()
@@ -313,6 +313,93 @@ class DatasetAutoEnhancer(object):
             print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/coci.json")
             Support().dump_json(logs, "./logs/coci.json")
         return graphset
+    
+    def add_crossref_reference_data_from_triplestore(self, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
+        enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
+        queryString = """
+            PREFIX cito: <http://purl.org/spar/cito/>
+            PREFIX datacite: <http://purl.org/spar/datacite/>
+            PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
+            SELECT ?citedEntity ?citedEntityDOI
+            WHERE {
+                ?citation cito:hasCitedEntity ?citedEntity.
+                ?citedEntity datacite:hasIdentifier/literal:hasLiteralValue ?citedEntityDOI.
+            }
+        """
+        sparql = SPARQLWrapper(ts_url)
+        sparql.setQuery(queryString)
+        sparql.setReturnFormat(JSON)
+        results = sparql.query().convert()
+        logs = dict()
+        pbar = tqdm(total=len(results["results"]["bindings"]))
+        for result in results["results"]["bindings"]:
+            crossref_info = Support().handle_request(f"https://api.crossref.org/works/{{{result['citedEntityDOI']['value']}}}", "./cache/crossref_cache", logs)
+            if crossref_info is not None:
+                Support().dump_json(crossref_info, "./test/crossref_info.json")
+                if len(logs) > 0:
+                    print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/crossref.json")
+                    Support().dump_json(logs, "./logs/crossref.json")
+                return
+            else:
+                pbar.update(1)
+        pbar.close()
+    
+    def add_unstructured_reference_data_from_triplestore(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
+        with open(journal_data_path) as journal_data:
+            journal_data_items = json.load(journal_data)["message"]["items"]
+        unstructured = dict()
+        structured = dict()
+        for item in journal_data_items:
+            if "reference" in item:
+                for reference in item["reference"]:
+                    if "DOI" not in reference:
+                        unstructured[item["DOI"]] = {"unstructured": reference["unstructured"]}
+        logs = dict()
+        pbar = tqdm(total=len(unstructured))
+        for doi, unstructured in unstructured.items():
+            unstructured_field = unstructured["unstructured"]
+            doi_in_unstructured = re.search("10.\d{4,9}/[-._;()/:A-Z0-9]+", unstructured_field, flags=re.IGNORECASE)
+            if doi_in_unstructured is not None:
+                doi_in_unstructured = doi_in_unstructured.group()
+                structured[doi] = {"reference_doi": doi_in_unstructured, "unstructured": unstructured_field, "method": "regex"}
+            else:
+                search = Support().handle_request(f"https://api.crossref.org/works?query.bibliographic={urllib.parse.quote(unstructured['unstructured'])}", cache_path="./cache/crossref_cache", error_log_dict=logs)
+                if search is None:
+                    continue
+                hits = search["message"]["items"]
+                score = dict()
+                for hit in hits:
+                    score[hit["DOI"]] = hit["score"]
+                    if "author" in hit:
+                        for author in hit["author"]:
+                            if "family" in author:
+                                if author["family"].lower() in unstructured_field.lower():
+                                    score[hit["DOI"]] += 50
+                            if "given" in author:
+                                if author["given"].lower() in unstructured_field.lower():
+                                    score[hit["DOI"]] += 50
+                    if "publisher" in hit:
+                        if hit["publisher"].lower() in unstructured_field.lower():
+                            score[hit["DOI"]] += 50
+                    if "title" in hit:
+                        if hit["title"][0].lower() in unstructured_field.lower():
+                            score[hit["DOI"]] += 100
+                v_score = list(score.values())
+                k_score = list(score.keys())
+                max_score = k_score[v_score.index(max(v_score))]
+                if max(v_score) > 200:
+                    structured[doi] = {"reference_doi": max_score, "unstructured": unstructured_field, "method": f"Crossref ({max(v_score)})"}
+            pbar.update(1)
+        pbar.close()
+        Support().dump_json(structured, "./test/structured.json")
+        if len(logs) > 0:
+            print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/crossref.json")
+            Support().dump_json(logs, "./logs/crossref.json")
+
+
+
+
+
 
 
 
