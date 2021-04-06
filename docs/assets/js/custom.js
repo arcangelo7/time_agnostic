@@ -1,9 +1,8 @@
 $( document ).ready(function() {
     $("a[href^='#d']").click(function( event ) {
-        var start = $(this).attr("href")
         event.preventDefault();
-        $(start + "p").removeClass("collapsed");
-        $(`${start + "p"} + div`).removeClass("collapse");
+        var start = $(this).attr("href")
+        $(start + "p").trigger("click");
         $('html, body').animate({
             scrollTop: $(start).offset().top
         }, 1000);
