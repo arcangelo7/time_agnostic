@@ -1,7 +1,6 @@
 $( document ).ready(function() {
     $("a[href^='#d']").click(function( event ) {
-        var url = window.location.href;
-        var start = url.substr(url.indexOf("#"));    
+        var start = $(this).attr("href")
         event.preventDefault();
         $(start + "p").removeClass("collapsed");
         $(`${start + "p"} + div`).removeClass("collapse");
