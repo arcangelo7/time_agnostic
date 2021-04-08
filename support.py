@@ -14,17 +14,15 @@ from rdflib.plugins.sparql.results.csvresults import CSVResultSerializer, CSVRes
 class Support(object):
     def _requests_retry_session(
         self,
-        retries=3,
-        backoff_factor=0.3,
+        tries=1,
         status_forcelist=(500, 502, 504, 520, 521),
         session=None
     ) -> Session:
         session = session or requests.Session()
         retry = Retry(
-            total=retries,
-            read=retries,
-            connect=retries,
-            backoff_factor=backoff_factor,
+            total=tries,
+            read=tries,
+            connect=tries,
             status_forcelist=status_forcelist,
         )
         adapter = HTTPAdapter(max_retries=retry)

@@ -12,7 +12,9 @@ from oc_ocdm.graph.graph_entity import GraphEntity
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.prov import ProvSet
 from oc_ocdm.reader import Reader
+from oc_ocdm.support import create_date
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
+from collections import OrderedDict
 
 class DatasetAutoEnhancer(object):
     def __init__(self, base_uri:str, resp_agent:str, info_dir:str=""):
@@ -120,96 +122,9 @@ class DatasetAutoEnhancer(object):
                 pbar.update(1)
             pbar.close()
         return enhanced_graphset
-    
-    def add_coci_data_from_file(self, journal_issn:str, rdf_file_path:str) -> GraphSet:
-        rdf_file = Reader().load(rdf_file_path)
-        enhanced_graphset = GraphSet(base_iri=self.base_iri, wanted_label=False)
-        Reader().import_entities_from_graph(enhanced_graphset, rdf_file, self.resp_agent, enable_validation=False)
-        results_dict = dict()
-        queryString = f"""
-            PREFIX dcterm: <http://purl.org/dc/terms/>
-            PREFIX fabio: <http://purl.org/spar/fabio/>
-            PREFIX frbr: <http://purl.org/vocab/frbr/core#>
-            PREFIX datacite: <http://purl.org/spar/datacite/>
-            PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
-            PREFIX cito: <http://purl.org/spar/cito/>
-            SELECT ?res ?citingDOI (GROUP_CONCAT(?citedDOI; SEPARATOR=", ") AS ?citedDOIs)
-            WHERE {{
-                ?res a fabio:JournalArticle;
-                    datacite:hasIdentifier ?doiEntity;
-                    frbr:partOf+/datacite:hasIdentifier/literal:hasLiteralValue "{journal_issn}".
-                ?doiEntity literal:hasLiteralValue ?citingDOI.
-                OPTIONAL {{
-                    ?res cito:cites/datacite:hasIdentifier/literal:hasLiteralValue ?citedDOI.
-                }}
-            }}
-            GROUP BY ?res ?citingDOI
-        """
-        results = rdf_file.query(queryString)
-        for row in results:
-            results_dict[str(row.citingDOI)] = {
-                "res": row.res,
-                "citedDOIs": row.citedDOIs.split(", ")
-            }
-        logs = dict()
-        pbar = tqdm(total=len(results_dict))
-        for citing_doi in results_dict:
-            references = Support().handle_request(f"https://w3id.org/oc/index/coci/api/v1/references/{citing_doi}", "./cache/coci_cache", logs)
-            for reference in references:
-                if reference["cited"] not in results_dict[citing_doi]["citedDOIs"]:
-                    citing_entity = enhanced_graphset.get_entity(results_dict[citing_doi]["res"])
-                    # Identifier
-                    reference_id = enhanced_graphset.add_id(self.resp_agent)
-                    reference_id.create_doi(reference["cited"])
-                    # BibliographicResource
-                    reference_br = enhanced_graphset.add_br(self.resp_agent)
-                    reference_br.has_identifier(reference_id)
-                    citing_entity.has_citation(reference_br)
-                    # Citation
-                    reference_ci = enhanced_graphset.add_ci(self.resp_agent)
-                    reference_ci.has_citing_entity(citing_entity)
-                    reference_ci.has_cited_entity(reference_br)
-                    reference_ci.has_citation_creation_date(reference["creation"])
-                    reference_ci.has_citation_time_span(reference["timespan"])
-                    if reference["journal_sc"] == "yes":
-                        reference_ci.create_journal_self_citation()
-                    if reference["author_sc"] == "yes":
-                        reference_ci.create_author_self_citation()
-                else:
-                    reference_ci_query = f"""
-                        PREFIX datacite: <http://purl.org/spar/datacite/>
-                        PREFIX cito: <http://purl.org/spar/cito/>
-                        PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
-                        CONSTRUCT {{?s ?p ?o}}
-                        WHERE {{
-                            ?s cito:hasCitingEntity/datacite:hasIdentifier/literal:hasLiteralValue "{reference["citing"]}".
-                            ?s cito:hasCitedEntity/datacite:hasIdentifier/literal:hasLiteralValue "{reference["cited"]}".
-                            ?s ?p ?o.
-                        }}
-                    """
-                    reference_ci_results = rdf_file.query(reference_ci_query)
-                    subjects = set()
-                    # If the data already exists, do not add it again
-                    if (None, URIRef("http://purl.org/spar/cito/hasCitationTimeSpan"), None) not in reference_ci_results:
-                        for row in reference_ci_results:
-                            subjects.add(row[0])
-                    # There could be duplicates if not already merged
-                    for subject in subjects:
-                        reference_ci = enhanced_graphset.get_entity(subject)
-                        reference_ci.has_citation_time_span(reference["timespan"])
-                        if reference["journal_sc"] == "yes":
-                            reference_ci.create_journal_self_citation()
-                        if reference["author_sc"] == "yes":
-                            reference_ci.create_author_self_citation()
-            pbar.update(1) 
-        pbar.close()
-        if len(logs) > 0:
-            print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/coci.json")
-            Support().dump_json(logs, "./logs/coci.json")
-        return enhanced_graphset                   
 
         
-    def add_coci_data_from_triplestore(self, journal_issn:str, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
+    def add_coci_data(self, journal_issn:str, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
         graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         queryString = f"""
             PREFIX dcterm: <http://purl.org/dc/terms/>
@@ -344,7 +259,7 @@ class DatasetAutoEnhancer(object):
                 pbar.update(1)
         pbar.close()
     
-    def add_unstructured_reference_data_from_triplestore(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
+    def add_unstructured_reference_data(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
         with open(journal_data_path) as journal_data:
             journal_data_items = json.load(journal_data)["message"]["items"]
         unstructured = dict()
@@ -395,6 +310,108 @@ class DatasetAutoEnhancer(object):
         if len(logs) > 0:
             print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/crossref.json")
             Support().dump_json(logs, "./logs/crossref.json")
+    
+    def _generate_crossref_query_from_metadata(self, metadata:dict):
+        switch = {
+            "unstructured": {
+                "type": "query",
+                "keyword": "bibliographic"
+            }, 
+            "journal-title": {
+                "type": "query",
+                "keyword": "container-title"
+            },
+            "author": {
+                "type": "query",
+                "keyword": "author"
+            }, 
+            "ISBN": {
+                "type": "filter",
+                "keyword": "isbn"
+            },
+            "year": {
+                "type": "filter",
+                "keyword": "from-index-date"
+            }
+        }
+        if "year" in metadata:
+            metadata.move_to_end("year", last=True)
+        if "ISBN" in metadata:
+            metadata.move_to_end("ISBN", last=True)
+        query_string = "https://api.crossref.org/works?"
+        for k, v in metadata.items():
+            if k in switch:
+                keyword = switch[k]['keyword']
+                value = urllib.parse.quote(v)
+                if switch[k]["type"] == "query":
+                    query_param = f"query.{keyword}={value}&"
+                elif switch[k]["type"] == "filter":
+                    if "filter=" not in query_string:
+                        query_param = f"filter={keyword}:{value},"
+                    else:
+                        query_param = f"{keyword}:{value},"
+                query_string += query_param
+        return query_string[:-1]
+    
+    def add_reference_data_without_doi(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
+        logs = dict()
+        sparql = SPARQLWrapper(ts_url)
+        graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
+        with open(journal_data_path) as journal_data:
+            journal_data_items = json.load(journal_data)["message"]["items"]
+        pbar = tqdm(total=len(journal_data_items))
+        for item in journal_data_items:
+            if "reference" in item:
+                for reference in item["reference"]:
+                    if "DOI" not in reference and len(reference) > 2: # That is, if there is more information than just key and unstructured
+                        query_string = self._generate_crossref_query_from_metadata(OrderedDict(reference))
+                        search = Support().handle_request(url=query_string, cache_path="./cache/crossref_cache", error_log_dict=logs)
+                        if len(search["message"]["items"]) > 0:
+                            new_doi = search["message"]["items"][0]["DOI"]
+                            citing_entity_query = f"""
+                                PREFIX datacite: <http://purl.org/spar/datacite/>
+                                PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
+                                PREFIX cito: <http://purl.org/spar/cito/>
+                                CONSTRUCT {{?s ?p ?o}}
+                                WHERE {{
+                                    ?s datacite:hasIdentifier/literal:hasLiteralValue "{item["DOI"]}".
+                                    FILTER NOT EXISTS {{?s cito:cites/datacite:hasIdentifier/literal:hasLiteralValue "{new_doi}"}}
+                                    ?s ?p ?o.
+                                }}
+                            """
+                            sparql.setQuery(citing_entity_query)
+                            sparql.setReturnFormat(RDFXML)
+                            results = sparql.query().convert()
+                            preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
+                            subjects = dict()
+                            if (None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None) in results:
+                                for s, p, o in results.triples((None, None, None)):
+                                    if p == URIRef('http://prismstandard.org/namespaces/basic/2.0/publicationDate'):
+                                        subjects[s] = o
+                            else:
+                                for s in results.subjects():
+                                    subjects[s] = ""
+                            # There could be duplicates if not already merged
+                            for subject in subjects:
+                                citing_entity = graphset.add_br(self.resp_agent, res=subject, preexisting_graph=preexisting_graph)
+                                # Identifier
+                                reference_id = graphset.add_id(self.resp_agent)
+                                reference_id.create_doi(new_doi)
+                                # BibliographicResource
+                                reference_br = graphset.add_br(self.resp_agent)
+                                reference_br.has_identifier(reference_id)
+                                citing_entity.has_citation(reference_br)
+                                # Citation
+                                reference_ci = graphset.add_ci(self.resp_agent)
+                                reference_ci.has_citing_entity(citing_entity)
+                                reference_ci.has_cited_entity(reference_br)
+                                if subjects[subject] != "":
+                                    reference_ci.has_citation_creation_date(str(subjects[subject]))
+            pbar.update(1)
+        pbar.close()
+        return graphset
+
+
 
 
 
