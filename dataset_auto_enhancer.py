@@ -1,4 +1,4 @@
-import re, rdflib, json, urllib
+import re, rdflib, json, urllib, itertools
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
@@ -22,46 +22,34 @@ class DatasetAutoEnhancer(object):
         self.resp_agent = resp_agent
         self.info_dir = info_dir
 
-    def merge_by_id_from_file(self, entities_set:set, rdf_file_path:str) -> GraphSet:
-        enhanced_graphset = Support().get_graph_from_file(rdf_file_path, self.base_iri, self.resp_agent, self.info_dir)        
-        switcher = {
-            "br": {
-                "class": "fabio:Expression",
-                "get": enhanced_graphset.get_br
-                },
-            "ra": {
-                "class": "foaf:Agent",
-                "get": enhanced_graphset.get_ra
-                }
-        }
-        reader = Reader()
-        for entity in entities_set:
-            entities = switcher[entity]["get"]()
-            ids_found = dict()
-            print(f"[DatasetAutoEnhancer: INFO] Merging entities of type {switcher[entity]['class']}")
-            pbar = tqdm(total=len(entities))
-            for entity_obj in entities:
-                entity_ids = entity_obj.get_identifiers()
-                if len(entity_ids) > 0:
-                    entity_id = entity_ids[0]
-                else:
-                    pbar.update(1)
-                    continue
-                entity_id_literal = entity_id.get_literal_value()
-                if entity_id_literal in ids_found:
-                    prev_entity = enhanced_graphset.get_entity(URIRef(ids_found[entity_id_literal].res))
-                    try:
-                        print(f'[DatasetAutoEnhancer: INFO] Merging {prev_entity.res} with {entity_obj.res}')
-                        prev_entity.merge(entity_obj)
-                    except TypeError:
-                        pass
-                ids_found[entity_id_literal] = entity_obj
-                pbar.update(1)
-            pbar.close()
-        return enhanced_graphset
+    def _get_entity_and_ids_from_res(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, switcher:dict, entity:str):
+        query = f"""
+            CONSTRUCT {{<{res}> ?p ?o}}
+            WHERE {{<{res}> ?p ?o}}
+        """
+        sparql.setQuery(query)
+        sparql.setReturnFormat(RDFXML)
+        data = sparql.query().convert()
+        graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
+        entity = switcher[entity]["add"](self.resp_agent, res=res, preexisting_graph=graph)
+        ids = entity.get_identifiers()
+        ids_entities = list()
+        for identifier in ids:
+            id_query = f"""
+                CONSTRUCT {{<{identifier.res}> ?p ?o}}
+                WHERE {{<{identifier.res}> ?p ?o}}
+            """
+            sparql.setQuery(id_query)
+            sparql.setReturnFormat(RDFXML)
+            id_data = sparql.query().convert()
+            id_graph = Graph().parse(data=id_data.serialize(format='xml'), format='xml')
+            id_entity = graphset.add_id(self.resp_agent, res=identifier.res, preexisting_graph=id_graph)
+            ids_entities.append(id_entity)
+        return entity, ids_entities
     
     def merge_by_id_from_triplestore(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
         enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
+        sparql = SPARQLWrapper(ts_url)
         switcher = {
             "br": {
                 "class": "fabio:Expression",
@@ -72,7 +60,6 @@ class DatasetAutoEnhancer(object):
                 "add": enhanced_graphset.add_ra
                 }
         }
-        sparql = SPARQLWrapper(ts_url)
         for entity in entities_set:
             ids_found = dict()
             queryString = f"""
@@ -90,31 +77,18 @@ class DatasetAutoEnhancer(object):
             sparql.setQuery(queryString)
             sparql.setReturnFormat(JSON)
             results = sparql.query().convert()
-            print(f"[DatasetAutoEnhancer: INFO] Merging entities of type {switcher[entity]['class']}...")
             pbar = tqdm(total=len(results["results"]["bindings"]))
             for result in results["results"]["bindings"]:
                 if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
-                    query_duplicated_graph = f"""
-                        CONSTRUCT {{<{result["s"]["value"]}> ?p ?o}}
-                        WHERE {{<{result["s"]["value"]}> ?p ?o}}
-                    """
-                    query_preexisting_graph = f"""
-                        CONSTRUCT {{<{ids_found[result["literalValue"]["value"]]}> ?p ?o}}
-                        WHERE {{<{ids_found[result["literalValue"]["value"]]}> ?p ?o}}
-                    """
-                    sparql.setQuery(query_duplicated_graph)
-                    sparql.setReturnFormat(RDFXML)
-                    duplicated_data = sparql.query().convert()
-                    duplicated_graph = Graph().parse(data=duplicated_data.serialize(format='xml'), format='xml')
-                    sparql.setQuery(query_preexisting_graph)
-                    sparql.setReturnFormat(RDFXML)
-                    preexisting_data = sparql.query().convert()
-                    preexisting_graph = Graph().parse(data=preexisting_data.serialize(format='xml'), format='xml')
-                    duplicated_entity = switcher[entity]["add"](self.resp_agent, res=URIRef(result["s"]["value"]), preexisting_graph=duplicated_graph)
-                    preexisting_entity = switcher[entity]["add"](self.resp_agent, res=URIRef(ids_found[result["literalValue"]["value"]]), preexisting_graph=preexisting_graph)
+                    preexisting_entity, preexisting_ids = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(ids_found[result["literalValue"]["value"]]), switcher=switcher, entity=entity)
+                    duplicated_entity, duplicated_ids = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(result["s"]["value"]), switcher=switcher, entity=entity)
                     try:
                         print(f'[DatasetAutoEnhancer: INFO] Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
                         preexisting_entity.merge(duplicated_entity)
+                        for preexisting_id, duplicated_id in itertools.product(preexisting_ids, duplicated_ids):
+                            if preexisting_id != duplicated_id:
+                                print(f'[DatasetAutoEnhancer: INFO] Merging {preexisting_id.res} with {duplicated_id.res}')
+                                preexisting_id.merge(duplicated_id)
                     except TypeError:
                         pass
                 else:
@@ -122,7 +96,6 @@ class DatasetAutoEnhancer(object):
                 pbar.update(1)
             pbar.close()
         return enhanced_graphset
-
         
     def add_coci_data(self, journal_issn:str, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
         graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
