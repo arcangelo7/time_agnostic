@@ -1,4 +1,4 @@
-import re, rdflib, json, urllib, itertools
+import re, rdflib, json, urllib, itertools, os
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
@@ -33,7 +33,7 @@ class DatasetAutoEnhancer(object):
         graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
         entity = switcher[entity]["add"](self.resp_agent, res=res, preexisting_graph=graph)
         ids = entity.get_identifiers()
-        ids_entities = list()
+        ids_entities = set()
         for identifier in ids:
             id_query = f"""
                 CONSTRUCT {{<{identifier.res}> ?p ?o}}
@@ -43,11 +43,11 @@ class DatasetAutoEnhancer(object):
             sparql.setReturnFormat(RDFXML)
             id_data = sparql.query().convert()
             id_graph = Graph().parse(data=id_data.serialize(format='xml'), format='xml')
-            id_entity = graphset.add_id(self.resp_agent, res=identifier.res, preexisting_graph=id_graph)
-            ids_entities.append(id_entity)
+            id_entity = graphset.add_id(resp_agent=self.resp_agent, res=identifier.res, preexisting_graph=id_graph)
+            ids_entities.add(id_entity)
         return entity, ids_entities
     
-    def merge_by_id_from_triplestore(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
+    def merge_by_id(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
         enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         sparql = SPARQLWrapper(ts_url)
         switcher = {
@@ -202,7 +202,7 @@ class DatasetAutoEnhancer(object):
             Support().dump_json(logs, "./logs/coci.json")
         return graphset
     
-    def add_crossref_reference_data_from_triplestore(self, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
+    def add_crossref_reference_data(self, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
         enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         queryString = """
             PREFIX cito: <http://purl.org/spar/cito/>
@@ -221,16 +221,62 @@ class DatasetAutoEnhancer(object):
         logs = dict()
         pbar = tqdm(total=len(results["results"]["bindings"]))
         for result in results["results"]["bindings"]:
-            crossref_info = Support().handle_request(f"https://api.crossref.org/works/{{{result['citedEntityDOI']['value']}}}", "./cache/crossref_cache", logs)
+            crossref_info = Support().handle_request(f"https://api.crossref.org/works/{result['citedEntityDOI']['value']}", "./cache/crossref_cache", logs)
             if crossref_info is not None:
-                Support().dump_json(crossref_info, "./test/crossref_info.json")
-                if len(logs) > 0:
-                    print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/crossref.json")
-                    Support().dump_json(logs, "./logs/crossref.json")
-                return
-            else:
-                pbar.update(1)
+                item = crossref_info["message"]
+                # Journal BR
+                if "ISSN" in item:
+                    journal_br = enhanced_graphset.add_br(resp_agent=self.resp_agent)
+                    journal_br.create_journal()
+                    journal_id = enhanced_graphset.add_id(self.resp_agent)
+                    journal_id.create_issn(item["ISSN"][0])
+                    journal_br.has_identifier(journal_id)
+                    if "publisher" in item:
+                        journal_br.has_title(item["publisher"])
+                        publisher_ra = enhanced_graphset.add_ra(self.resp_agent)
+                        publisher_ra.has_name(item["publisher"])
+                        publisher_ra.has_identifier(journal_id)
+                        publisher_ar = enhanced_graphset.add_ar(self.resp_agent)
+                        publisher_ar.create_publisher()
+                        publisher_ar.is_held_by(publisher_ra)
+                reference_br_uri = URIRef(result['citedEntity']['value'])
+                preexisting_graph_query = f"""
+                    CONSTRUCT {{<{reference_br_uri}> ?p ?o}}
+                    WHERE {{<{reference_br_uri}> ?p ?o}}
+                """
+                sparql.setQuery(preexisting_graph_query)
+                sparql.setReturnFormat(RDFXML)
+                preexisting_graph_data = sparql.query().convert()
+                preexisting_graph = Graph().parse(data=preexisting_graph_data.serialize(format='xml'), format='xml')
+                reference_br = enhanced_graphset.add_br(self.resp_agent, res=reference_br_uri, preexisting_graph=preexisting_graph)
+                try:
+                    DatasetBuilder._manage_br_type(reference_br, item)
+                except KeyError as e:
+                    print(e)
+                if len(item["title"]) > 0:
+                    reference_br.has_title(item["title"][0])
+                if len(item["subtitle"]) > 0:
+                    reference_br.has_subtitle(item["subtitle"][0])  
+                DatasetBuilder._manage_volume_issue(enhanced_graphset, journal_br, reference_br, item, self.resp_agent)
+                # ResourceEmbodiment
+                if "published-online" in item:
+                    DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, self.resp_agent, digital_format=True)     
+                if "published-print" in item:
+                    DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, self.resp_agent, digital_format=False)     
+                pub_date = item["issued"]["date-parts"][0][0]
+                if pub_date is not None:
+                    iso_date_string = create_date([pub_date])
+                    reference_br.has_pub_date(iso_date_string)
+                if "author" in item:
+                    DatasetBuilder._manage_author_ra_ar(enhanced_graphset, item, reference_br, self.resp_agent)
+            pbar.update(1)
+        if len(logs) > 0:
+            print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/crossref.json")
+            if not os.path.exists("./logs/"):
+                os.makedirs("./logs/")
+            Support().dump_json(logs, "./logs/crossref.json")
         pbar.close()
+        return enhanced_graphset
     
     def add_unstructured_reference_data(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
         with open(journal_data_path) as journal_data:

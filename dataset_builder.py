@@ -5,7 +5,7 @@ from oc_ocdm.prov import ProvSet
 from oc_ocdm.support import create_date
 from oc_ocdm.metadata import MetadataSet
 from oc_ocdm.reader import Reader
-from oc_ocdm.graph.entities import *
+from oc_ocdm.graph.entities.bibliographic.bibliographic_resource import BibliographicResource
 from rdflib import URIRef
 from tqdm import tqdm
 from datetime import datetime
@@ -45,16 +45,33 @@ class DatasetBuilder(object):
                 os.makedirs("./logs/")
             Support().dump_json(json.dumps(error_log_dict), f"./logs/{journal_issn}_crossref_error_logs")
     
-    def _manage_volume_issue(self, graphset:GraphSet, journal_br:BibliographicEntity, item_br:BibliographicEntity, item:dict):
+    @staticmethod
+    def _manage_br_type(br:BibliographicResource, item:dict):
+        switch = {
+            "book": br.create_book,
+            "book-chapter": br.create_book_chapter,
+            "component": br.create_component,
+            "journal-article": br.create_journal_article,
+            "monograph": br.create_monograph,
+            "other": br.create_other,
+            "posted-content": br.create_other,
+            "proceedings-article": br.create_proceedings_article,
+            "report": br.create_report,
+            "report-series": br.create_report_series
+        }
+        switch[item["type"]]()
+    
+    @staticmethod
+    def _manage_volume_issue(graphset:GraphSet, journal_br:BibliographicEntity, item_br:BibliographicEntity, item:dict, resp_agent:str):
         volume_br = None
         if "volume" in item:
-            volume_br = graphset.add_br(self.resp_agent)
+            volume_br = graphset.add_br(resp_agent)
             volume_br.create_volume()
             volume_br.has_number(item["volume"])
             if journal_br is not None:
                 volume_br.is_part_of(journal_br)
         if "issue" in item:
-            issue_br = graphset.add_br(self.resp_agent)
+            issue_br = graphset.add_br(resp_agent)
             issue_br.create_issue()
             issue_br.has_number(item["issue"])
             if volume_br is not None:
@@ -67,9 +84,10 @@ class DatasetBuilder(object):
         if "volume" not in item and "issue" not in item and journal_br is not None:
             item_br.is_part_of(journal_br)
 
-    def _manage_resource_embodiment(self, graphset:GraphSet, item:dict, item_br:BibliographicEntity, digital_format:bool):
+    @staticmethod
+    def _manage_resource_embodiment(graphset:GraphSet, item:dict, item_br:BibliographicEntity, resp_agent:str, digital_format:bool):
         if not digital_format:
-            item_re = graphset.add_re(self.resp_agent)
+            item_re = graphset.add_re(resp_agent)
             item_re.create_print_embodiment()
             if "page" in item:
                 starting_page = item["page"].split("-")[0] if "-" in item["page"] else item["page"]
@@ -81,16 +99,41 @@ class DatasetBuilder(object):
             URLs_found = set()
             for link in item["link"]:
                 if link["URL"] not in URLs_found and link["content-type"] != "unspecified":
-                    item_re = graphset.add_re(self.resp_agent)
+                    item_re = graphset.add_re(resp_agent)
                     item_re.create_digital_embodiment()
                     item_re.has_media_type(URIRef("https://w3id.org/spar/mediatype/" + link["content-type"]))
                     item_re.has_url(URIRef(link["URL"]))
                     URLs_found.add(link["URL"])
                     item_br.has_format(item_re)
         elif digital_format and not "link" in item:
-            item_re = graphset.add_re(self.resp_agent)
+            item_re = graphset.add_re(resp_agent)
             item_re.create_digital_embodiment()
             item_br.has_format(item_re)
+    
+    @staticmethod
+    def _manage_author_ra_ar(graphset:GraphSet, item:dict, item_br:BibliographicResource, resp_agent:str):
+        authorAgentRoles = list()
+        for author in item["author"]:
+            author_ra = graphset.add_ra(resp_agent)
+            if "ORCID" in author:
+                author_id = graphset.add_id(resp_agent)
+                author_id.create_orcid(author["ORCID"])
+                author_ra.has_identifier(author_id)
+            if "given" in author:
+                author_ra.has_given_name(author["given"])
+            if "family" in author:
+                author_ra.has_family_name(author["family"])
+            if "given" in author and "family" in author:
+                author_ra.has_name(author["given"] + " " + author["family"])
+            # AgentRole
+            author_ar = graphset.add_ar(resp_agent)
+            author_ar.create_author()
+            author_ar.is_held_by(author_ra)
+            item_br.has_contributor(author_ar)
+            authorAgentRoles.append(author_ar)       
+        for index, authorAgentRole in enumerate(authorAgentRoles):
+            if index+1 < len(authorAgentRoles):
+                authorAgentRole.has_next(authorAgentRoles[index+1])         
 
     def _manage_citations(self, graphset:GraphSet, item:dict, citing_entity:BibliographicEntity):
         if "reference" in item:
@@ -141,7 +184,7 @@ class DatasetBuilder(object):
             if "issn-type" in journal_item:
                 for issn_type in journal_item["issn-type"]:
                     digital_format = True if issn_type["type"] == "electronic" else False
-                    self._manage_resource_embodiment(journal_graphset, journal_item, journal_br, digital_format)
+                    DatasetBuilder._manage_resource_embodiment(journal_graphset, journal_item, journal_br, self.resp_agent, digital_format)
         else: 
             journal_br = None
         pbar = tqdm(total=len(journal_data_items))
@@ -152,46 +195,25 @@ class DatasetBuilder(object):
             # BibliographicResource
             if item["type"] != "journal":
                 item_br = journal_graphset.add_br(self.resp_agent)  
-                item_br.create_journal_article()
+                DatasetBuilder._manage_br_type(item_br, item)
                 item_br.has_identifier(item_id)
                 if "title" in item:
                     item_br.has_title(item["title"][0])
                 if "subtitle" in item:
                     item_br.has_subtitle(item["subtitle"][0])
-                self._manage_volume_issue(journal_graphset, journal_br, item_br, item)
+                DatasetBuilder._manage_volume_issue(journal_graphset, journal_br, item_br, item, self.resp_agent)
                 # ResourceEmbodiment
                 if "published-online" in item:
-                    self._manage_resource_embodiment(journal_graphset, item, item_br, digital_format=True)     
+                    DatasetBuilder._manage_resource_embodiment(journal_graphset, item, item_br, self.resp_agent, digital_format=True)     
                 if "published-print" in item:
-                    self._manage_resource_embodiment(journal_graphset, item, item_br, digital_format=False)     
+                    DatasetBuilder._manage_resource_embodiment(journal_graphset, item, item_br, self.resp_agent, digital_format=False)     
                 if "issued" in item:
                     pub_date = item["issued"]["date-parts"][0][0]
                     iso_date_string = create_date([pub_date])
                     item_br.has_pub_date(iso_date_string)
-            # ResponsibleAgent
+            # ResponsibleAgent / AgentRole
             if "author" in item:
-                authorAgentRoles = list()
-                for author in item["author"]:
-                    author_ra = journal_graphset.add_ra(self.resp_agent)
-                    if "ORCID" in author:
-                        author_id = journal_graphset.add_id(self.resp_agent)
-                        author_id.create_orcid(author["ORCID"])
-                        author_ra.has_identifier(author_id)
-                    if "given" in author:
-                        author_ra.has_given_name(author["given"])
-                    if "family" in author:
-                        author_ra.has_family_name(author["family"])
-                    if "given" in author and "family" in author:
-                        author_ra.has_name(author["given"] + " " + author["family"])
-                    # AgentRole
-                    author_ar = journal_graphset.add_ar(self.resp_agent)
-                    author_ar.create_author()
-                    author_ar.is_held_by(author_ra)
-                    item_br.has_contributor(author_ar)
-                    authorAgentRoles.append(author_ar)
-                for index, authorAgentRole in enumerate(authorAgentRoles):
-                    if index+1 < len(authorAgentRoles):
-                        authorAgentRole.has_next(authorAgentRoles[index+1])
+                DatasetBuilder._manage_author_ra_ar(journal_graphset, item, item_br, self.resp_agent)
             if "publisher" in item:
                 publisher_ra = journal_graphset.add_ra(self.resp_agent)
                 publisher_ra.has_name(item["publisher"])
@@ -207,7 +229,6 @@ class DatasetBuilder(object):
             # Citation
             self._manage_citations(journal_graphset, item, item_br)
             pbar.update(1)
-        # journal_graphset.commit_changes()
         pbar.close()
         return journal_graphset
     
