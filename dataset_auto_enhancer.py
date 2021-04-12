@@ -2,7 +2,7 @@ import re, rdflib, json, urllib, itertools, os
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
-from rdflib import URIRef, Namespace, ConjunctiveGraph, Graph, plugin
+from rdflib import URIRef, Graph
 from rdflib.serializer import Serializer
 from rdflib.plugins.sparql.results.jsonresults import JSONResultSerializer
 from rdflib.plugins.sparql import prepareQuery
