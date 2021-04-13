@@ -94,12 +94,13 @@
                             <div class="card bg-primary shadow-inset border-light">
                                 <pre>
                                     <code class="prettyprint">
+        from oc_ocdm.graph.graph_entity import GraphEntity
         from oc_ocdm.graph import GraphSet
         from rdflib import URIRef, Graph
         from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 
 
-        def get_entity_from_res(res:URIRef, graphset:GraphSet):
+        def get_entity_from_res(res:URIRef, graphset:GraphSet) -> GraphEntity:
             res = URIRef(res)
             query = f"""
                 CONSTRUCT {{&lt;{res}&gt; ?p ?o}}
@@ -114,16 +115,16 @@
 
         # Estrai Identifier e DOI name di tutte le br dal triplestore
         queryString = f"""
-        PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
-        PREFIX fabio: &lt;http://purl.org/spar/fabio/&gt;
-        PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
-        SELECT ?id ?literalValue
-        WHERE
-        {{
-            ?s a fabio:Expression;
-                datacite:hasIdentifier ?id.
-            ?id literal:hasLiteralValue ?literalValue.
-        }}
+            PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
+            PREFIX fabio: &lt;http://purl.org/spar/fabio/&gt;
+            PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+            SELECT ?id ?literalValue
+            WHERE
+            {{
+                ?s a fabio:Expression;
+                    datacite:hasIdentifier ?id.
+                ?id literal:hasLiteralValue ?literalValue.
+            }}
         """
         sparql = SPARQLWrapper("http://localhost:9999/bigdata/sparql")
         sparql.setQuery(queryString)
