@@ -94,24 +94,28 @@
                             <div class="card bg-primary shadow-inset border-light">
                                 <pre>
                                     <code class="prettyprint">
+        from oc_ocdm.graph import GraphSet
+        from rdflib import URIRef, Graph
+        from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
+
+
         def get_entity_from_res(res:URIRef, graphset:GraphSet):
-        res = URIRef(res)
-        query = f"""
-            CONSTRUCT {{&lt;{res}&gt; ?p ?o}}
-            WHERE {{&lt;{res}&gt; ?p ?o}}
-        """
-        sparql.setQuery(query)
-        sparql.setReturnFormat(RDFXML)
-        results = sparql.query().convert()
-        preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
-        entity = graphset.add_id(resp_agent="https://orcid.org/0000-0002-8420-0696", res=res, preexisting_graph=preexisting_graph)
-        return entity
+            res = URIRef(res)
+            query = f"""
+                CONSTRUCT {{&lt;{res}&gt; ?p ?o}}
+                WHERE {{&lt;{res}&gt; ?p ?o}}
+            """
+            sparql.setQuery(query)
+            sparql.setReturnFormat(RDFXML)
+            results = sparql.query().convert()
+            preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
+            entity = graphset.add_id(resp_agent="https://orcid.org/0000-0002-8420-0696", res=res, preexisting_graph=preexisting_graph)
+            return entity
 
         # Estrai Identifier e DOI name di tutte le br dal triplestore
         queryString = f"""
         PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
         PREFIX fabio: &lt;http://purl.org/spar/fabio/&gt;
-        PREFIX foaf: &lt;http://xmlns.com/foaf/0.1/&gt;
         PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
         SELECT ?id ?literalValue
         WHERE
@@ -128,15 +132,15 @@
         dois_found = dict()
         graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/", wanted_label=False)
         for result in results["results"]["bindings"]:
-        # Se il DOI name è già stato trovato e l'Identifier è diverso da quello già trovato
-        if result["literalValue"]["value"] in dois_found and result["id"]["value"] != dois_found[result["literalValue"]["value"]]:
-            id_duplicated_entity = get_entity_from_res(result["id"]["value"], graphset)
-            id_preexisting_entity = get_entity_from_res(dois_found[result["literalValue"]["value"]], graphset)
-            print(f"Merging entity {id_preexisting_entity.res} with {id_duplicated_entity.res}")
-            id_preexisting_entity.merge(id_duplicated_entity)
-        else:
-            # Registra di aver trovato questo DOI name e che è associato a questa br e a questo id
-            dois_found[result["literalValue"]["value"]] = result["id"]["value"]
+            # Se il DOI name è già stato trovato e l'Identifier è diverso da quello già trovato
+            if result["literalValue"]["value"] in dois_found and result["id"]["value"] != dois_found[result["literalValue"]["value"]]:
+                id_duplicated_entity = get_entity_from_res(result["id"]["value"], graphset)
+                id_preexisting_entity = get_entity_from_res(dois_found[result["literalValue"]["value"]], graphset)
+                print(f"Merging entity {id_preexisting_entity.res} with {id_duplicated_entity.res}")
+                id_preexisting_entity.merge(id_duplicated_entity)
+            else:
+                # Registra di aver trovato questo DOI name e che è associato a questo Identifier
+                dois_found[result["literalValue"]["value"]] = result["id"]["value"]
                                 </code>
                             </pre>
                         </div>
@@ -147,15 +151,15 @@
                             <pre>
                                 <code class="prettyprint">
         # for idx, entity in enumerate(self.a_set.res_to_entity.values()):
-        #    update_query, n_added, n_removed = get_update_query(entity, entity_type=self._class_to_entity_type(entity))
-                    if update_query == "" or update_query is None:
+            # update_query, n_added, n_removed = get_update_query(entity, entity_type=self._class_to_entity_type(entity))
+                if update_query == "" or update_query is None:
                     skipped_queries += 1
                                 </code>
                             </pre>
                         </div>
                         Tuttavia, dato che l'update_query vuota dovrebbe sempre essere "" e non None, credo ci sia un altro bug a monte. 
                     </li>    
-                    <li>Non ho trovato documentazione su tutti i possibili metadati delle reference di Crossref, quindi ho scoperto tramite un algoritmo che, sui quasi 7000 articoli citanti di Scientometrics, i citati posso riportare le chiavi sotto elencate. Di fianco a ciascuna viene indicato tramite quale notazione sono state usate nella query a Crossref:
+                    <li>Non ho trovato documentazione su tutti i possibili metadati delle reference di un work restituite da Crossref, quindi ho scoperto tramite un algoritmo che, sui quasi 7000 articoli citanti di Scientometrics, i citati posso riportare le chiavi sotto elencate. Di fianco a ciascuna viene indicato tramite quale notazione sono state usate nella query a Crossref al fine di recuperare il DOI name:
                         <ul>
                             <li>journal-title → query.bibliographic=value&</li>
                             <li>author → query.author=value&</li>
