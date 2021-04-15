@@ -2,7 +2,18 @@
 {% block content %}
     <section class="section">
         <div class="container">
-            {% for result in triples_result["results"]["bindings"] %}
+            <form method="POST" class="form-group">
+                <div class="d-flex flex-column">
+                    <label for="sparqlEndpoint">Write the SPARQL query</label>
+                    <textarea class="form-control" id="sparqlEndpoint" rows="10" name="sparqlQuery"></textarea>
+                    <button class="btn btn-primary btn-pill text-secondary m-5 align-self-end" type="submit">Submit the query</button>
+                </div>
+            </form>
+        </div>
+    </section>
+    <section>
+        <div class="container">
+            {% for result in results %}
                 <div class="row justify-content-center">
                     <div class="col-12 col-md-6 mb-5">
                         <div class="card bg-primary border-light shadow-soft">
@@ -15,4 +26,5 @@
             {% endfor %}
         </div>
     </section>
+    <script>
 {% endblock %}
