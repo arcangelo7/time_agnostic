@@ -1,28 +1,48 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 from SPARQLWrapper.SPARQLExceptions import QueryBadFormed
-from rdflib import Graph
-import json
+from rdflib import Graph, URIRef
+import json, urllib
 
 app = Flask(__name__)
 
-sparql = SPARQLWrapper("http://localhost:9999/bigdata/sparql")
-results = {
-    "results": list()
-}
+endpoint = "http://localhost:9999/bigdata/sparql"
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def home():
-    if request.method == "POST":
+    return render_template("home.jinja2")
+
+@app.route("/sparql")
+def sparql():
+    query = request.args.get('query', None)
+    if query:
+        sparql = SPARQLWrapper(endpoint)
+        sparql.setQuery(query)
+        sparql.setReturnFormat(JSON)
         try:
-            query = request.form.get("sparqlQuery")
-            sparql.setQuery(query)
-            sparql.setReturnFormat(JSON)
-            results["results"] = sparql.query().convert()["results"]["bindings"]
-            return redirect(url_for("home"))
-        except QueryBadFormed:
-            return redirect(url_for("home"))
-    return render_template("home.jinja2", results=results["results"])
+            response = sparql.query().convert()
+            return jsonify(response)
+        except Exception as e:
+            app.logger.error('Something went wrong')
+    else:
+        return jsonify({'result': 'Error'})
+
+@app.route("/entity/<path:res>")
+def entity(res):
+    query = f"""
+        CONSTRUCT {{<{res}> ?p ?o}}
+        WHERE {{
+            <{res}> ?p ?o
+        }}
+    """
+    sparql = SPARQLWrapper(endpoint)
+    sparql.setQuery(query)
+    sparql.setReturnFormat(RDFXML)
+    try:
+        response = sparql.query().convert()
+    except Exception as e:
+        app.logger.error('Something went wrong')
+    return render_template("entity.jinja2", res=res)
 
 if __name__ == "__main__":
     app.run(debug=True)

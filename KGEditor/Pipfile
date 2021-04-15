@@ -7,6 +7,7 @@ name = "pypi"
 flask = "*"
 sparqlwrapper = "*"
 rdflib = "*"
+requests = "*"
 
 [dev-packages]
 
