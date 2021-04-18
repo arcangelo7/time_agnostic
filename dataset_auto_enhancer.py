@@ -14,7 +14,7 @@ from oc_ocdm.prov import ProvSet
 from oc_ocdm.reader import Reader
 from oc_ocdm.support import create_date
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
-from collections import OrderedDict
+import numpy as np
 
 class DatasetAutoEnhancer(object):
     def __init__(self, base_uri:str, resp_agent:str, info_dir:str=""):
@@ -330,52 +330,86 @@ class DatasetAutoEnhancer(object):
             print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/crossref.json")
             Support().dump_json(logs, "./logs/crossref.json")
     
-    def _generate_crossref_query_from_metadata(self, metadata:dict):
+    def _generate_crossref_query_from_metadata(self, metadata:dict) -> str:
         switch = {
-            "unstructured": {
-                "type": "query",
-                "keyword": "bibliographic"
-            }, 
-            "journal-title": {
-                "type": "query",
-                "keyword": "container-title"
-            },
-            "author": {
-                "type": "query",
-                "keyword": "author"
-            }, 
-            "ISBN": {
-                "type": "filter",
-                "keyword": "isbn"
-            },
-            "year": {
-                "type": "filter",
-                "keyword": "from-index-date"
-            }
+            "unstructured": "bibliographic", 
+            "journal-title": "container-title",
+            "volume-title": "container-title",
+            "series-title": "container-title",
+            "author": "author"
         }
-        if "year" in metadata:
-            metadata.move_to_end("year", last=True)
-        if "ISBN" in metadata:
-            metadata.move_to_end("ISBN", last=True)
         query_string = "https://api.crossref.org/works?"
         for k, v in metadata.items():
             if k in switch:
-                keyword = switch[k]['keyword']
+                keyword = switch[k]
                 value = urllib.parse.quote(v)
-                if switch[k]["type"] == "query":
-                    query_param = f"query.{keyword}={value}&"
-                elif switch[k]["type"] == "filter":
-                    if "filter=" not in query_string:
-                        query_param = f"filter={keyword}:{value},"
-                    else:
-                        query_param = f"{keyword}:{value},"
+                query_param = f"query.{keyword}={value}&"
                 query_string += query_param
         return query_string[:-1]
+    
+    def _levenshtein_distance(self, target:str, source:str) -> int:
+        # Build matrix of correct size
+        target = [k for k in "#" + target]
+        source = [k for k in "#" + source]
+        sol = np.zeros(shape=(len(source), len(target)))
+        # first row & column
+        sol[0] = [j for j in range(len(target))]
+        sol[:,0] = [j for j in range(len(source))]
+        # Add anchor value
+        if target[1] != source[1]:
+            sol[1,1] = 2
+        # Fill in rest
+        # Through every column
+        for c in range(1, len(target)):
+            #Through evert row
+            for r in range(1, len(source)):
+                # Not same letter
+                if target[c] != source[r]:
+                    sol[r,c] = min(sol[r-1,c], sol[r,c-1]) + 1
+                #Same letter
+                else:
+                    sol[r,c] = sol[r-1,c-1]
+        min_edit_distance = int(sol[-1,-1])
+        return min_edit_distance
+    
+    def _heuristic_match(self, source_metadata:dict, target_metadata:dict) -> float:
+        if "author" in source_metadata and "author" in target_metadata:
+            if " " in source_metadata["author"]:
+                first_name_a = source_metadata["author"].split()[0]
+                last_name_a = source_metadata["author"].split()[1]
+            else:
+                first_name_a = source_metadata["author"]
+                last_name_a = source_metadata["author"]
+            if "name" in target_metadata["author"][0]:
+                first_name_b = target_metadata["author"][0]["name"]
+                last_name_b = target_metadata["author"][0]["name"]
+            else:
+                if "family" in target_metadata["author"][0] and "given" in target_metadata["author"][0]:
+                    first_name_b = target_metadata["author"][0]["given"].replace(".", "")
+                    last_name_b = target_metadata["author"][0]["family"]
+                elif "family" in target_metadata["author"][0] and "given" not in target_metadata["author"][0]:
+                    if ", " in target_metadata["author"][0]["family"]:
+                        first_name_b = target_metadata["author"][0]["family"].split(", ")[0]
+                        last_name_b = target_metadata["author"][0]["family"].split(", ")[1]
+                    elif " " in target_metadata["author"][0]["family"]:
+                        first_name_b = target_metadata["author"][0]["family"].split()[0]
+                        last_name_b = target_metadata["author"][0]["family"].split()[1]
+                    else:
+                        first_name_b = ""
+                        last_name_b = target_metadata["author"][0]["family"]
+            e = 0
+            if first_name_a == first_name_b:
+                e = 1
+            m_first_author = 0.8 - 0.8 * self._levenshtein_distance(last_name_a, last_name_b) / max(len(last_name_a), len(last_name_b)) + 0.2 * e
+            return m_first_author
+        else:
+            return 0.0
     
     def add_reference_data_without_doi(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
         logs = dict()
         sparql = SPARQLWrapper(ts_url)
         graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
+        # add_reference_data_without_doi = dict()
         with open(journal_data_path) as journal_data:
             journal_data_items = json.load(journal_data)["message"]["items"]
         pbar = tqdm(total=len(journal_data_items))
@@ -383,9 +417,12 @@ class DatasetAutoEnhancer(object):
             if "reference" in item:
                 for reference in item["reference"]:
                     if "DOI" not in reference and len(reference) > 2: # That is, if there is more information than just key and unstructured
-                        query_string = self._generate_crossref_query_from_metadata(OrderedDict(reference))
+                        query_string = self._generate_crossref_query_from_metadata(reference)
                         search = Support().handle_request(url=query_string, cache_path="./cache/crossref_cache", error_log_dict=logs)
                         if len(search["message"]["items"]) > 0:
+                            for item in search["message"]["items"]:
+                                s = self._heuristic_match(reference, item)
+                                # print(s)
                             new_doi = search["message"]["items"][0]["DOI"]
                             citing_entity_query = f"""
                                 PREFIX datacite: <http://purl.org/spar/datacite/>
@@ -413,6 +450,10 @@ class DatasetAutoEnhancer(object):
                             # There could be duplicates if not already merged
                             for subject in subjects:
                                 citing_entity = graphset.add_br(self.resp_agent, res=subject, preexisting_graph=preexisting_graph)
+                                # add_reference_data_without_doi[citing_entity.res] = {
+                                #     "metadata": reference,
+                                #     "new_doi": new_doi
+                                # }
                                 # Identifier
                                 reference_id = graphset.add_id(self.resp_agent)
                                 reference_id.create_doi(new_doi)
@@ -428,6 +469,7 @@ class DatasetAutoEnhancer(object):
                                     reference_ci.has_citation_creation_date(str(subjects[subject]))
             pbar.update(1)
         pbar.close()
+        # Support().dump_json(add_reference_data_without_doi, "test/add_reference_data_without_doi.json")
         return graphset
 
 
