@@ -36,3 +36,10 @@ li ol > li:before {
 .badge {
     font-size: 1rem;
 }
+
+#editButton {
+    z-index: 1;
+    position: fixed;
+    bottom: 5rem;
+    right: 5rem;
+}

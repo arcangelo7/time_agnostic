@@ -1,8 +1,55 @@
 {% extends 'base.jinja2' %}
 {% block content %}
+    <button class="btn btn-pill btn-success btn-lg" type="button" id="editButton">
+        <span class="mr-1"><span class="fas fa-pen-fancy"></span></span>
+        Edit
+    </button>
     <section class="section">
         <div class="container">
-            <p>{{res}}</p>
+            <h1 class="mb-5" id="resName">{{res}}</h1>
+                {# <span class="badge badge-lg badge-dark mb-5"></span> #}
+            <h2 class="mb-5">Outgoing Links</h2>
+                <table id="sparqlResults" class ="table shadow-soft rounded col-sm-10 col-md-6 mb-5">
+                    <thead>
+                        <tr>
+                            <th id="outgoingPredicate">Predicate</th>
+                            <th id="outgoingObject">Object</th>
+                        </tr> 
+                    </thead>  
+                    <tbody>
+                        {% for triple in response_outgoing["results"]["bindings"] %}
+                            <tr>
+                                <td headers="outgoingPredicate">{{triple["predicate"]["value"]}}</td>
+                                {% if baseUri in triple["object"]["value"] %}
+                                    <td headers="outgoingObject"><a href="" class="sparqlEntity">{{triple["object"]["value"]}}</a></td>
+                                {% else %}
+                                    <td headers="outgoingObject">{{triple["object"]["value"]}}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>     
+                </table>
+            <h2 class="mb-5">Incoming Links</h2>
+                <table id="sparqlResults" class ="table shadow-soft rounded col-sm-10 col-md-6">
+                    <thead>
+                        <tr>
+                            <th id="incomingSubject">Subject</th>
+                            <th id="incomingPredicate">Predicate</th>
+                        </tr> 
+                    </thead>  
+                    <tbody>
+                        {% for triple in response_incoming["results"]["bindings"] %}
+                            <tr>
+                                {% if baseUri in triple["subject"]["value"] %}
+                                    <td headers="incomingSubject"><a href="" class="sparqlEntity">{{triple["subject"]["value"]}}</a></td>
+                                {% else %}
+                                    <td headers="incomingSubject">{{triple["subject"]["value"]}}</td>
+                                {% endif %}
+                                <td headers="incomingPredicate">{{triple["predicate"]["value"]}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>     
+                </table>
         </div>
     </section>
 {% endblock %}
