@@ -54,147 +54,105 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (14/04/2021)</h2>
+                    <h2>Prossimo incontro (21/04/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                     <ol>
-                        <li>Ho implementato l'algoritmo <strong>add_reference_data_without_doi</strong> che, preso in input un file json contenente l'output di Crossref con le informazioni sui lavori di una determinata rivista, controlla quali reference non hanno DOI name e hanno altri metadati oltre all'unstructured. Dopodiché, chiama il metodo privato <strong>_generate_crossref_query_from_metadata</strong>, che trasforma i metadati in una stringa di query da lanciare tramite API di Crossref. Se la ricerca va a buon fine, seleziona il primo risultato, cerca sul triplestore l'entità citante corrente, verifica che il DOI name della citata trovata non esista già (FILTER NOT EXISTS) e solo allora crea Identifier, BibliographicResource e Citation corrispondenti e li aggiunge al preexisting graph dell'entità citante corrente. </li>
-                        <li>Ho implementato il metodo <strong>add_crossref_reference_data</strong>, che arricchisce il dataset corredando le risorse bibliografiche citate di numerose informazioni tratte da Crossref, quali publisher, titolo, sottotitolo, volume, issue, data di pubblicazione, resource embodiment e autori, ciascuna correttamente mappata seguendo l'OCDM.  </li>
-                        <li>Il metodo <strong>merge_by_id_from_triplestore</strong> unisce adesso anche le entità di tipo datacite:Identifier associate alle entità unite sulla base dell'identificativo.</li>
-                        <li>È stato implementato il metodo <strong>_get_entity_and_ids_from_res</strong>, che si occupa di restituire un'entità e la lista delle entità degli id associati dato un URIRef e un triplestore. </li>
-                        <li>Il metodo <strong>_manage_br_type</strong> si occupa adesso di assegnare a ciascuna risorsa bibliografica il tipo corretto, tra book, book-chapter, component, journal-article, monograph, other, posted-content, proceeding-article, report e report-series. </li>
-                        <li>Sono stati estratti dal metodo generate_graph tre nuovi metodi privati statici, i quali sono stati riutilizzati dal metodo add_crossref_reference_data:
+                        <li>Novità relative al <strong>Knowledge Graph Editor</strong>:
                             <ol>
-                                <li><strong>_manage_author_ra_ar</strong>;</li>
-                                <li><strong>_manage_volume_issue</strong>;</li>
-                                <li><strong>_manage_resource_embdiment</strong>.</li>    
+                                <li>È stata aggiunta una textarea che permette di effettuare query SPARQL.
+                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                        <img src="./assets/img/sparql_textarea.png" alt="SPARQL textarea">
+                                    </div>
+                                </li>
+                                <li>Se la query richiede molto tempo, un'icona di caricamento comunica all'utente lo stato interno del sistema.
+                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                        <img src="./assets/img/sparql_loading.png" alt="SPARQL loading">
+                                    </div>
+                                </li>
+                                <li>L'output della query viene mostrato in una tabella, in cui ogni colonna rappresenta una variabile della query stessa. Le entità vengono riportate come link, mentre non è possibile interagire con i predicati, con gli oggetti di tipo literal e in generale con gli oggetti il cui URI non contiene l'URI base del dataset.
+                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                        <img src="./assets/img/sparql_results.png" alt="SPARQL results">
+                                    </div>
+                                </li>
+                                <li>Cliccando su un'entità, vengono mostrati tutti gli outgoing links e tutti gli incoming links relativi a quell'entità. 
+                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                        <img src="./assets/img/sparql_entity.png" alt="SPARQL entity">
+                                    </div>
+                                </li>
+                                <li>Il pulsante "Edit" permette di accedere alla modalità di modifica.</li>
                             </ol>
                         </li>
-                        <li>Prima di avventurarmi nella scrittura di un programma di editing interattivo per Knowledge Graph, ho esplorato la letteratura esistente sull'argomento:
+                        <li>Novità relative al metodo per ottenere i DOI names delle reference riportate da Crossref senza DOI.
                             <ol>
-                                <li>Wright J., Rodríguez Méndez S.J., Haller A., Taylor K., Omran P.G. (2020) Schímatos: A SHACL-Based Web-Form Generator for Knowledge Graph Editing. In: Pan J.Z. et al. (eds) The Semantic Web – ISWC 2020. ISWC 2020. Lecture Notes in Computer Science, vol 12507. Springer, Cham. https://doi.org/10.1007/978-3-030-62466-8_5.
+                                <li>Il metodo <strong>add_reference_data_without_doi</strong> non utilizza più data di pubblicazione e ISBN per fare query su Crossref, mentre usa volume-title e series-title oltre al journal-title.</li>
+                                <li>Sono state aggiunti diversi metodi il cui scopo complessivo è quello di calcolare il <strong>matching score</strong> tra due dizionari di metadati, ovvero quelli sintentici e grezzi riportati da Crossref nel campo "reference" e quelli approfonditi risultanti da una query. L'algoritmo è stato mutuato dai capitoli 3.2 and soprattuttutto dall'appendice dell'articolo <em>Large-scale comparison of bibliographic data.
+                                    sources: Scopus, Web of Science, Dimensions,
+                                    Crossref, and Microsoft Academic</em> (Visser, Martijn et al., 2005), reperibile al seguente indirizzo: <a href="https://arxiv.org/abs/2005.10732" alt="Link to the paper" target="_blank">https://arxiv.org/abs/2005.10732</a>. La formula adottata, rispetto a quella originale, non considera i DOI names, poiché, date le premesse, non sono mai presenti nei metadati di partenza.
                                     <ol>
-                                        <li>L'articolo introduce <strong>Schímatos</strong>, un editor di KG interattivo, che si occupa della validazione degli input utilizzando SHACL Shapes Constraint Language (https://www.w3.org/TR/shacl/).  Non sembra esserci però un modo immediato per riutilizzare il software con KG che non siano WikiData. Sembra infatti essere soltanto una demo a scopo dimostrativo, per quanto molto interessante.</li>
+                                        <li>Il metodo <strong>_do_heuristic_match</strong> combina gli score derivanti dai singoli match in un unico score finale.</li>
+                                        <li>Il metodo <strong>_levenshtein_distance</strong> calcola la distanza di Levenshtein, ovvero il minimo numero di modifiche (cancellazioni, aggiunte e sostituzioni) necessarie per trasformare una stringa in un'altra. È stato adottato l'algoritmo iterativo basato su una matrice, poiché le soluzioni ricorsiva e tramite tecnica di dynamic programming richiedevano innumerevoli passaggi in più, risultando meno efficienti.
+                                            <p>Questa funzione vince il premio algoritmo più entusiasmante della settimana, se non del mese. È talmente bella che la riporto nel diario:</p>
+                                            <div class="card bg-primary shadow-inset border-light"><pre><code class="prettyprint">
+    import numpy as np
+
+    def levenshtein_distance(target:str, source:str) -> int:
+        target = [k for k in "#" + target]
+        source = [k for k in "#" + source]
+        sol = np.zeros(shape=(len(source), len(target)))
+        sol[0] = [j for j in range(len(target))]
+        sol[:,0] = [j for j in range(len(source))]
+        if target[1] != source[1]:
+            sol[1,1] = 2
+        for c in range(1, len(target)):
+            for r in range(1, len(source)):
+                if target[c] != source[r]:
+                    sol[r,c] = min(sol[r-1,c], sol[r,c-1]) + 1
+                else:
+                    sol[r,c] = sol[r-1,c-1]
+        min_edit_distance = int(sol[-1,-1])
+        return min_edit_distance
+                                            </code></pre></div>
+                                        </li>
+                                        <li>
+                                            <p>Il metodo <strong>_match_first_author</strong> compara le iniziali del nome e il cognome dei primi autori dei due lavori, tramite la seguente formula:</p>
+                                            <div class="card bg-primary shadow-inset border-light">
+                                                <pre><code class="prettyprint">
+    𝑚<sub>firstauthor</sub> = 0.8 − 0.8𝐷(𝑙<sub>A</sub>, 𝑙<sub>B</sub>) ⁄ max(𝐿(𝑙<sub>A</sub>), 𝐿(𝑙<sub>B</sub>)) + 0.2𝐸(𝑓<sub>A, 𝑓<sub>B</sub>)
+                                                </code></pre>
+                                            </div>
+                                            <p>Dove l<sub>X</sub> ed f<sub>X</sub> denotano rispettivamente il cognome e le iniziali del nome del primo autore del documento X. L(a) è uguale alla lunghezza della stringa. D(a,b) è la distanza di Levenshtein tra la stringa a e la stringa b. E(a,b) è uguale a 1 se a è uguale a b, altrimenti 0. Dunque, 𝑚<sub>firstauthor</sub> è uguale a 1 se i primi autori dei documenti A e B hanno gli stessi cognomi e iniziali dei nomi.</p>
+                                        </li>
+                                        <li>
+                                            <p>Il metodo <strong>_match_title</strong> compara i titoli dei due lavori, tramite la seguente formula:</p>
+                                            <div class="card bg-primary shadow-inset border-light">
+                                                <pre><code class="prettyprint">
+    𝑚<sub>title</sub> = 1 − 𝐷(𝑡<sub>A</sub>, 𝑡<sub>B</sub>) ⁄ max(𝐿(𝑡<sub>A</sub>), 𝐿(𝑡<sub>B</sub>))
+                                                </code></pre>
+                                            </div>
+                                            <p>Anche in questo caso, 𝑚<sub>title</sub> è uguale a 1 se i titoli dei documenti A e B sono identici. </p>
+                                        </li>
                                     </ol>
                                 </li>
-                                <li>Heyvaert P., Dimou A., Verborgh R., Mannens E., Van de Walle R. (2016) Graph-Based Editing of Linked Data Mappings Using the RMLEditor. In: Sack H., Rizzo G., Steinmetz N., Mladenić D., Auer S., Lange C. (eds) The Semantic Web. ESWC 2016. Lecture Notes in Computer Science, vol 9989. Springer, Cham. https://doi.org/10.1007/978-3-319-47602-5_25.
-                                    <ol>
-                                        <li><strong>RMLEditor</strong> offre una GUI per consentire ai data publishers, esperti di dominio, di modellare la conoscenza derivata da dati di origini multiple ed eterogenee. RMLEditor utilizza RML come linguaggio di mappatura sottostante. Ad oggi è presente una demo che permette di modellare fino a 20 nodi per un massimo di 2 MB per singolo file. </li>
-                                    </ol>
-                                </li>
-                                <li>Ho letto la documentazione e ho provato a usare <strong>Web-Karma</strong> (<a href="https://github.com/usc-isi-i2/Web-Karma" target="_blank" alt="Web-Karm documentation">https://github.com/usc-isi-i2/Web-Karma</a>), un tool per modificare un KG in base a un'ontologia specificata. Problema: non ha un sistema di validazione rispetto all'ontologia ed è possibile modificare l'ontologia stessa, intenzionalmente o per errore. In sintesi, utilizzabile solo da chi conosce già molto bene il data model. </li>
                             </ol>
                         </li>
-                        <li>Ho letto la documentazione di <strong>Flask</strong>, allo scopo di utilizzare Python per il back-end della mia applicazione di KG editing. Ho anche letto la documentazione di <strong>Jinja</strong>, dato che è il template-engine predefinito di Flask.</li>
-                        <li>Utilizzando Flask per il server, Jinja2 come motore di template e Blazegraph come database ho implementato una prima interfaccia grafica che mostra dieci triple. </li>
+                        <li>Ho aperto il seguente issue: <a href="https://github.com/opencitations/oc_ocdm/issues/8" alt="Link to the GitHub issue on oc-ocdm" target="_blank">https://github.com/opencitations/oc_ocdm/issues/8</a>.</li>
                     </ol>
                 <h3>Cosa non ho capito</h3>
-                    <ol>
-                        <li>Oltre ai due bug del metodo merge di oc_ocdm già rilevati in <a href="#d0704cnhc1">07/04/2021 (Cosa non ho capito, punti 1 e 2)</a> credo di averne trovato un terzo specifico per il merge tra entità di tipo datacite:Identifier. Ho miniaturizzato e commentato il codice utilizzato al fine di rendere l'errore più facile da comprendere e riprodurre. Inoltre, mi piacerebbe capire se io stia procedendo nel modo corretto prima di mandare un'altra mail a Simone. 
+                <ol>
+                    <li>
+                        <p>Per effettuare un'operazione di aggiunta, cancellazione e modifica sulle triple del dataset attraverso il KGEditor, devo necessariamente utilizzare oc_ocdm. Se lanciassi query di update in autonomia, infatti, perderei tutte le informazioni contenute negli indici del dataset e della provenance, oltre al fatto che dovrei riscrivere lo stesso codice già scritto da Simone per effettuare le medesime operazioni. Problema: come dico a Python quale metodo di oc_ocdm invocare per fare un delete, un create o un update? Mi spiego meglio con un esempio: poniamo che l'utente voglia eliminare una delle triple in figura cliccando sull'apposito pulsante "-":</p>
+                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                            <img src="./assets/img/sparql_remove.png" alt="SPARQL remove entity">
+                        </div>
+                        <p>Ad esempio, potrebbe voler eliminare la prima tripla:
                             <div class="card bg-primary shadow-inset border-light">
-                                <pre>
-                                    <code class="prettyprint">
-        from oc_ocdm.graph.graph_entity import GraphEntity
-        from oc_ocdm.graph import GraphSet
-        from rdflib import URIRef, Graph
-        from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
-
-
-        def get_entity_from_res(res:URIRef, graphset:GraphSet) -> GraphEntity:
-            res = URIRef(res)
-            query = f"""
-                CONSTRUCT {{&lt;{res}&gt; ?p ?o}}
-                WHERE {{&lt;{res}&gt; ?p ?o}}
-            """
-            sparql.setQuery(query)
-            sparql.setReturnFormat(RDFXML)
-            results = sparql.query().convert()
-            preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
-            entity = graphset.add_id(resp_agent="https://orcid.org/0000-0002-8420-0696", res=res, preexisting_graph=preexisting_graph)
-            return entity
-
-        # Estrai Identifier e DOI name di tutte le br dal triplestore
-        queryString = """
-            PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
-            PREFIX fabio: &lt;http://purl.org/spar/fabio/&gt;
-            PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
-            SELECT ?id ?literalValue
-            WHERE
-            {{
-                ?s a fabio:Expression;
-                    datacite:hasIdentifier ?id.
-                ?id literal:hasLiteralValue ?literalValue.
-            }}
-        """
-        sparql = SPARQLWrapper("http://localhost:9999/bigdata/sparql")
-        sparql.setQuery(queryString)
-        sparql.setReturnFormat(JSON)
-        results = sparql.query().convert()
-        dois_found = dict()
-        graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/", wanted_label=False)
-        for result in results["results"]["bindings"]:
-            # Se il DOI name è già stato trovato e l'Identifier è diverso da quello già trovato
-            if result["literalValue"]["value"] in dois_found and result["id"]["value"] != dois_found[result["literalValue"]["value"]]:
-                id_duplicated_entity = get_entity_from_res(result["id"]["value"], graphset)
-                id_preexisting_entity = get_entity_from_res(dois_found[result["literalValue"]["value"]], graphset)
-                print(f"Merging entity {id_preexisting_entity.res} with {id_duplicated_entity.res}")
-                id_preexisting_entity.merge(id_duplicated_entity)
-            else:
-                # Registra di aver trovato questo DOI name e che è associato a questo Identifier
-                dois_found[result["literalValue"]["value"]] = result["id"]["value"]
-                                </code>
-                            </pre>
-                        </div>
-                        Se a questo punto provo a fare l'upload attraverso il metodo upload_all passando il graphset, l'upload non avviene a causa di un errore nella formattazione della query di upload. In particolare, pare che manchi un ";" prima di un INSERT.
-                    </li>    
-                    <li>Per qualche ragione a volte l'update_query vuota non è "" ma None. Il metodo upload_all della classe Storer di oc_ocdm non gestiste il caso in cui l'update_query sia None, sollevando un'eccezione nel momento in cui viene fatta la seguente concatenazione: query_string += " ; " + update_query, dato che non è possibile concatenare una stringa con None. Ho risolto in locale aggiungendo:
-                        <div class="card bg-primary shadow-inset border-light">
-                            <pre>
-                                <code class="prettyprint">
-        # for idx, entity in enumerate(self.a_set.res_to_entity.values()):
-            # update_query, n_added, n_removed = get_update_query(entity, entity_type=self._class_to_entity_type(entity))
-                if update_query == "" or update_query is None:
-                    skipped_queries += 1
-                                </code>
-                            </pre>
-                        </div>
-                        Tuttavia, dato che l'update_query vuota dovrebbe sempre essere "" e non None, credo ci sia un altro bug a monte. 
-                    </li>    
-                    <li>Non ho trovato documentazione su tutti i possibili metadati delle reference di un work restituite da Crossref, quindi ho scoperto tramite un algoritmo che, sui quasi 7000 articoli citanti di Scientometrics, i citati posso riportare le chiavi sotto elencate. Di fianco a ciascuna viene indicato tramite quale notazione sono state usate nella query a Crossref al fine di recuperare il DOI name:
-                        <ul>
-                            <li>journal-title → query.bibliographic=value&</li>
-                            <li>author → query.author=value&</li>
-                            <li>journal-title → query.container-title=value&</li>
-                            <li>ISBN → filter=isbn:value</li>
-                            <li>year → filter=from-index-date:value,
-                                <ul>
-                                    <li>Perché proprio from-index-date? Perché nella documentazione si legge:
-                                        <blockquote class="blockquote ml-5 mt-3">
-                                            When using time filters to retrieve periodic, incremental metadata updates, the from-index-date filter should be used over from-update-date, from-deposit-date, from-created-date and from-pub-date. The timestamp that from-index-date filters on is guaranteed to be updated every time there is a change to metadata requiring a reindex.
-                                        </blockquote>
-                                    </li>
-                                </ul>
-                            </li>    
-                        </ul>
-                        Tuttavia, ci sono molti altri campi per i quali Crossref non sembra non fornire né field queries né filtri, ovvero: 
-                            <ul>
-                                <li>issue</li>
-                                <li>volume-title</li>
-                                <li>series-title</li>
-                                <li>edition</li>
-                                <li>key</li>
-                                <li>first-page</li>
-                                <li>volume</li>
-                                <li>isbn-type</li>
-                            </ul>
-                        Le domande a questo punto sono:
-                            <ol>
-                                <li>Ti risulta che io non possa fare query a Crossref utilizzando quelle informazioni?</li>
-                                <li>È possibile utilizzare volume-title e series-title come valore della field query <em>query.container-title</em>?</li>
-                                <li>I risultati ottenuti finora sono sorprendentemente buoni, vale la pena restringere ulteriormente la ricerca?</li>
-                            </ol>
-                        <li>Cristian mi ha detto che per il suo progetto un'informazione rilevante è l'affiliazione degli autori. Credo che l'OCDM non la preveda, giusto?</li>
-                        <li>Se una risorsa bibliografica viene indicata da Crossref come di tipo "posted-content" con quale tipo di BibliographicResource presente nell'OCDM devo mapparla? </li>
+                                <pre><code class="prettyprint">
+&lt;https://github.com/arcangelo7/time_agnostic/br/1&gt; &lt;http://purl.org/spar/datacite/hasIdentifier&gt; &lt;https://github.com/arcangelo7/time_agnostic/id/1&gt;
+                                </code></pre>
+                            </div>
+                        </p>
+                        <p>Niente di più facile, oc_ocdm mette a disposizione il metodo remove_identifier a questo scopo. Tuttavia, il pulsante "-" è generico e l'unica informazione per capire quale metodo di cancellazione invocare è il predicato <http://purl.org/spar/datacite/hasIdentifier>. Come faccio dal predicato a risalire a quale metodo di cancellazione utilizzare? Il problema è il medesimo anche per aggiungere e modificare. Devo creare un enorme dizionario che mappi ogni predicato con il suo metodo? A mio parere, una soluzione più pulita sarebbe un unico metodo delete generico per una bibliographic_entity che prende in input qualunque oggetto e cancella la tripla.</p>
                     </li>
                 </ol>
             </div>
@@ -913,8 +871,8 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                         </div>
                     </div>
                     <div class="card card-sm card-body bg-primary border-light mb-0">
-                        <a href="#panel-5" data-target="#panel-5" class="accordion-panel-header" data-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="panel-5" id="d0704cnhc1p">
+                        <a href="#panel-5" data-target="#panel-5" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-5" id="d0704cnhc1p">
                             <span class="h6 mb-0 font-weight-bold">07/04/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
@@ -923,56 +881,75 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                                 <h3>Cosa ho fatto</h3>
                                 <ol>
                                     <li>Le query SPARQL precedentemente effettuate tramite SPARQLStore utilizzano adesso SPARQLWrapper.</li>
-                                    <li>Grafi di provenance e grafi sui dati vengono adesso generati in base alla storia pregressa tramite un
+                                    <li>Grafi di provenance e grafi sui dati vengono adesso generati in base alla storia pregressa tramite
+                                        un
                                         indice.</li>
                                     <li>Effettuati i miglioramenti automatici, le nuove triple e loro provenance vengono adesso caricate
                                         correttamente sul triplestore.</li>
-                                    <li>Grazie alla spiegazione fornitami da Simone, sono riuscito a importare correttamente un grafo da file
+                                    <li>Grazie alla spiegazione fornitami da Simone, sono riuscito a importare correttamente un grafo da
+                                        file
                                         json tramite metodo import_entities_from_graph della classe Reader di oc_ocdm.</li>
-                                    <li>Sono state implementate due nuove funzioni, merge_by_id_from_file e add_coci_data_from_file, che anziché
-                                        lavorare a partire da un triplestore lavorano a partire da un file. Di conseguenza, è possibile ottenere
-                                        in output un nuovo file modificato anziché un upload su un triplestore. In questo modo potrò sia avere
+                                    <li>Sono state implementate due nuove funzioni, merge_by_id_from_file e add_coci_data_from_file, che
+                                        anziché
+                                        lavorare a partire da un triplestore lavorano a partire da un file. Di conseguenza, è possibile
+                                        ottenere
+                                        in output un nuovo file modificato anziché un upload su un triplestore. In questo modo potrò sia
+                                        avere
                                         un file di backup che inviare a Cristian dei file rdf customizzati in base alle sue esigenze.</li>
-                                    <li>Cristian mi ha fatto notare che avevo considerato solo gli autori come AgentRole. Ora il grafo iniziale
+                                    <li>Cristian mi ha fatto notare che avevo considerato solo gli autori come AgentRole. Ora il grafo
+                                        iniziale
                                         comprende anche i publisher.</li>
                                     <li>Risolti alcuni bug nella funzione add_coci_data_from_triplestore:
                                         <ol>
-                                            <li>Le entità di tipo cito:Citation preesistenti venivano prima ricercate solo tramite il DOI name
+                                            <li>Le entità di tipo cito:Citation preesistenti venivano prima ricercate solo tramite il DOI
+                                                name
                                                 del citato e non anche tramite il DOI name del citante.</li>
                                             <li>Le nuove entità venivano prima generate senza tenere conto dell'ultimo indice, provocando
                                                 sovrapposizioni.</li>
                                             <li>Specificare l'argomento res nella ricreazione di un grafo preesistente permette adesso di
-                                                prescindere dalla funzione di merge poiché, anche se presenti più entità associate ai medesimi
+                                                prescindere dalla funzione di merge poiché, anche se presenti più entità associate ai
+                                                medesimi
                                                 identificativi, viene riprodotto solo il grafo dell'entità di interesse corrente.</li>
-                                            <li>Nel caso in cui la funzione venga lanciata più volte sul medesimo triplestore, è stato aggiunto
+                                            <li>Nel caso in cui la funzione venga lanciata più volte sul medesimo triplestore, è stato
+                                                aggiunto
                                                 un controllo per cui le stesse informazioni non vengano aggiunte più volte.</li>
                                         </ol>
                                     </li>
                                     <li>Risolto un bug in merge_by_id_from_triplestore per cui le entità venivano unite a loro stesse.</li>
-                                    <li>Aggiunta una nuova funzione di supporto che prende in input il percorso di un file rdf e restituisce in
+                                    <li>Aggiunta una nuova funzione di supporto che prende in input il percorso di un file rdf e restituisce
+                                        in
                                         output un oggetto di tipo GraphSet.</li>
                                     <li>Tutte le funzioni hanno adesso parametri e output tipati, in osservanza di <a
                                             href="https://www.python.org/dev/peps/pep-3107/" alt="Link to PEP 3107" target="_blank">PEP
-                                            3107</a>, allo scopo di aumentare la leggibilità del codice, sia per gli altri che per me. Si tratta
+                                            3107</a>, allo scopo di aumentare la leggibilità del codice, sia per gli altri che per me. Si
+                                        tratta
                                         quindi di semplici annotazioni, che non causeranno un'eccezione TypeError se non rispettate.</li>
-                                    <li>Il vantaggio del lavorare con una certa mole di dati è che, mentre gli script vengono eseguiti, si ha
+                                    <li>Il vantaggio del lavorare con una certa mole di dati è che, mentre gli script vengono eseguiti, si
+                                        ha
                                         molto tempo per leggere:
                                         <ol>
-                                            <li>Belhajjame, K., B’Far, R., Cheney, J., Coppens, S., Cresswell, S., Gil, Y., Groth, P., Klyne,
-                                                G., Lebo, T., McCusker, J., Miles, S., Myers, J., Sahoo, S., & Tilmes, C. (2013). PROV-DM: The
+                                            <li>Belhajjame, K., B’Far, R., Cheney, J., Coppens, S., Cresswell, S., Gil, Y., Groth, P.,
+                                                Klyne,
+                                                G., Lebo, T., McCusker, J., Miles, S., Myers, J., Sahoo, S., & Tilmes, C. (2013). PROV-DM:
+                                                The
                                                 PROV Data Model (L. Moreau & P. Missier, Eds.). World Wide Web Consortium.
                                                 https://www.w3.org/TR/prov-dm/.</li>
                                             <li>Wolfe, M. (2017, August 9). CC0 and Data Citation.
                                                 https://www.library.ucdavis.edu/news/cc0-and-data-citation/.</li>
                                             <li>Wilkinson, M. D., Dumontier, M., Aalbersberg, I. J., Appleton, G., Axton, M., Baak, A.,
-                                                Blomberg, N., Boiten, J.-W., da Silva Santos, L. B., Bourne, P. E., Bouwman, J., Brookes, A. J.,
-                                                Clark, T., Crosas, M., Dillo, I., Dumon, O., Edmunds, S., Evelo, C. T., Finkers, R., … Mons, B.
-                                                (2016). The FAIR Guiding Principles for scientific data management and stewardship. Scientific
+                                                Blomberg, N., Boiten, J.-W., da Silva Santos, L. B., Bourne, P. E., Bouwman, J., Brookes, A.
+                                                J.,
+                                                Clark, T., Crosas, M., Dillo, I., Dumon, O., Edmunds, S., Evelo, C. T., Finkers, R., … Mons,
+                                                B.
+                                                (2016). The FAIR Guiding Principles for scientific data management and stewardship.
+                                                Scientific
                                                 Data, 3, 160018. https://doi.org/10.1038/sdata.2016.18.</li>
                                             <li>GO FAIR. (2018). FAIR Principles. https://www.go-fair.org/fair-principles/.</li>
-                                            <li>Open Knowledge Foundation. (2015). Open Definition 2.1. https://opendefinition.org/od/2.1/en/.
+                                            <li>Open Knowledge Foundation. (2015). Open Definition 2.1.
+                                                https://opendefinition.org/od/2.1/en/.
                                             </li>
-                                            <li>Landi, A., Thompson, M., Giannuzzi, V., Bonifazi, F., Labastida, I., da Silva Santos, L. O. B.,
+                                            <li>Landi, A., Thompson, M., Giannuzzi, V., Bonifazi, F., Labastida, I., da Silva Santos, L. O.
+                                                B.,
                                                 & Roos, M. (2020). The “A” of FAIR – As Open as Possible, as Closed as Necessary. Data
                                                 Intelligence, 2(1–2), 47–55. https://doi.org/10.1162/dint_a_00027.</li>
                                             <li>Lin, D., Crabtree, J., Dillo, I., Downs, R. R., Edmunds, R., Giaretta, D., De Giusti, M.,
@@ -987,10 +964,12 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                                                 https://doi.org/10.1087/20120404.</li>
                                             <li>Meng, X.-L. (2020). Reproducibility, Replicability, and Reliability. Harvard Data Science
                                                 Review, 2(4). https://doi.org/10.1162/99608f92.dbfce7f9.</li>
-                                            <li>Baker, M. (2016). 1,500 scientists lift the lid on reproducibility. Nature, 533(7604), 452–454.
+                                            <li>Baker, M. (2016). 1,500 scientists lift the lid on reproducibility. Nature, 533(7604),
+                                                452–454.
                                                 https://doi.org/10.1038/533452a.
                                                 <ol>
-                                                    <li>Vince il premio lettura più sconcertante della settimana, una di quelle che cambia il
+                                                    <li>Vince il premio lettura più sconcertante della settimana, una di quelle che cambia
+                                                        il
                                                         modo di vedere le cose. </li>
                                                 </ol>
                                             </li>
@@ -999,43 +978,57 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                                 </ol>
                                 <h3>Cosa non ho capito</h3>
                                 <ol>
-                                    <li id="d0704cnhc1">Talvolta, provando a fare un merge tra due BibliographicResources, ottengo un errore di tipo TypeError
+                                    <li id="d0704cnhc1">Talvolta, provando a fare un merge tra due BibliographicResources, ottengo un errore
+                                        di tipo TypeError
                                         che dice:
                                         <blockquote class="blockquote ml-5 mt-3">
                                             [BibliographicResource.contains_discourse_element] Expected argument type: de. Provided argument
                                             type: BibliographicReference.
                                         </blockquote>
-                                        Poiché non sto in alcun modo utilizzando entità di tipo DiscourseElement, sospetto che si tratti di un
+                                        Poiché non sto in alcun modo utilizzando entità di tipo DiscourseElement, sospetto che si tratti di
+                                        un
                                         bug.
                                     </li>
-                                    <li>Portata a termine l'operazione di merge sulle entità associate agli stessi id e caricate le novità sul
-                                        triplestore, ho riscontrato le stesse stranezze nell'output già riportate sul diario di bordo in data <a
-                                            href="#d2303cnhc7">23/03 (<em>Cosa non ho capito</em>, punto 7)</a>. Da quello che ho visto, se
+                                    <li>Portata a termine l'operazione di merge sulle entità associate agli stessi id e caricate le novità
+                                        sul
+                                        triplestore, ho riscontrato le stesse stranezze nell'output già riportate sul diario di bordo in
+                                        data <a href="#d2303cnhc7">23/03 (<em>Cosa non ho capito</em>, punto 7)</a>. Da quello che ho visto,
+                                        se
                                         unisco A a B, ad A viene associato l'id di B e B viene cancellata. Il problema è che A si ritrova ad
-                                        essere associata a due entità di tipo datacite:Identifier che in realtà sono identiche, perché appunto A
+                                        essere associata a due entità di tipo datacite:Identifier che in realtà sono identiche, perché
+                                        appunto A
                                         e B sono state unite in quando associate agli stessi id. Inoltre, l'entità B, nonostante sia stata
                                         cancellata, continua ad avere degli ingoing links da parte di tutte quelle entità che ad essa si
-                                        riferivano in passato. C'è qualcosa del metodo merge che non sto capendo o qualcosa che dovrei fare e
+                                        riferivano in passato. C'è qualcosa del metodo merge che non sto capendo o qualcosa che dovrei fare
+                                        e
                                         non sto facendo?</li>
                                     <li>È preferibile avere funzioni distinte che lavorino su triplestore e file o è meglio avere un'unica
                                         funzione che, a seconda degli argomenti passati, lavora indifferentemente su entrambi?</li>
                                     <li>Non so quanto sia ottimale effettuare query SPARQL su un'entità Graph di rdflib, perché credo manchi
-                                        delle ottimizzazioni di un triplestore. Quando mi hai detto che devo lavorare sia su triplestore che su
-                                        file intendevi che devo produrre entrambi gli output o che devo creare funzioni che lavorino in entrambe
+                                        delle ottimizzazioni di un triplestore. Quando mi hai detto che devo lavorare sia su triplestore che
+                                        su
+                                        file intendevi che devo produrre entrambi gli output o che devo creare funzioni che lavorino in
+                                        entrambe
                                         le modalità?</li>
-                                    <li>Cristian mi ha detto che le librerie con cui lavora per produrre graph embeddings tendono a prendere in
+                                    <li>Cristian mi ha detto che le librerie con cui lavora per produrre graph embeddings tendono a prendere
+                                        in
                                         input un file tsv e non json. Tramite rdflib posso serializzare rdf in una moltitudine di notazioni,
-                                        quali turtle, nt, json-ld, rdf/xml ed n3, ma onestamente non ho mai visto un grafo rdf serializzato in
+                                        quali turtle, nt, json-ld, rdf/xml ed n3, ma onestamente non ho mai visto un grafo rdf serializzato
+                                        in
                                         tsv. Si può fare?</li>
                                     <li>Mi piacerebbe portare avanti nuove idee per quanto riguarda possibili miglioramenti automatici del
                                         grafo, poiché quelle che ho al momento non mi convincono:
                                         <ol>
-                                            <li>Correggere i DOI names sbagliati. Dato che è materia d'esame e che coinvolge altre 3 persone non
+                                            <li>Correggere i DOI names sbagliati. Dato che è materia d'esame e che coinvolge altre 3 persone
+                                                non
                                                 mi sembra corretto occuparmene da solo per il tirocinio.</li>
-                                            <li>Strutturare i campi unstructured forniti da Crossref precedentemente non considerati. Per farlo
-                                                dovrei utilizzare nuovamente l'API di Crossref, mentre vorrei capire se è possibile migliorare
+                                            <li>Strutturare i campi unstructured forniti da Crossref precedentemente non considerati. Per
+                                                farlo
+                                                dovrei utilizzare nuovamente l'API di Crossref, mentre vorrei capire se è possibile
+                                                migliorare
                                                 ulteriormente quello che ho già senza chiedere altre risorse esterne.</li>
-                                            <li>Arricchire i metadati delle entità citate, che mi convince poco per le stesse ragioni del punto
+                                            <li>Arricchire i metadati delle entità citate, che mi convince poco per le stesse ragioni del
+                                                punto
                                                 precedente, ovvero che dovrei rivolgermi all'API di Crossref.</li>
                                         </ol>
                                     </li>
@@ -1044,9 +1037,224 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                         </div>
                     </div>
                     <div class="card card-sm card-body bg-primary border-light mb-0">
-                        <a href="#panel-6" data-target="#panel-6" class="accordion-panel-header" data-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="panel-6">
+                        <a href="#panel-6" data-target="#panel-6" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-6">
                             <span class="h6 mb-0 font-weight-bold">14/04/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-6">
+                            <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>Ho implementato l'algoritmo <strong>add_reference_data_without_doi</strong> che, preso in input un
+                                        file json contenente l'output di Crossref con le informazioni sui lavori di una determinata rivista,
+                                        controlla quali reference non hanno DOI name e hanno altri metadati oltre all'unstructured.
+                                        Dopodiché, chiama il metodo privato <strong>_generate_crossref_query_from_metadata</strong>, che
+                                        trasforma i metadati in una stringa di query da lanciare tramite API di Crossref. Se la ricerca va a
+                                        buon fine, seleziona il primo risultato, cerca sul triplestore l'entità citante corrente, verifica
+                                        che il DOI name della citata trovata non esista già (FILTER NOT EXISTS) e solo allora crea
+                                        Identifier, BibliographicResource e Citation corrispondenti e li aggiunge al preexisting graph
+                                        dell'entità citante corrente. </li>
+                                    <li>Ho implementato il metodo <strong>add_crossref_reference_data</strong>, che arricchisce il dataset
+                                        corredando le risorse bibliografiche citate di numerose informazioni tratte da Crossref, quali
+                                        publisher, titolo, sottotitolo, volume, issue, data di pubblicazione, resource embodiment e autori,
+                                        ciascuna correttamente mappata seguendo l'OCDM. </li>
+                                    <li>Il metodo <strong>merge_by_id_from_triplestore</strong> unisce adesso anche le entità di tipo
+                                        datacite:Identifier associate alle entità unite sulla base dell'identificativo.</li>
+                                    <li>È stato implementato il metodo <strong>_get_entity_and_ids_from_res</strong>, che si occupa di
+                                        restituire un'entità e la lista delle entità degli id associati dato un URIRef e un triplestore.
+                                    </li>
+                                    <li>Il metodo <strong>_manage_br_type</strong> si occupa adesso di assegnare a ciascuna risorsa
+                                        bibliografica il tipo corretto, tra book, book-chapter, component, journal-article, monograph,
+                                        other, posted-content, proceeding-article, report e report-series. </li>
+                                    <li>Sono stati estratti dal metodo generate_graph tre nuovi metodi privati statici, i quali sono stati
+                                        riutilizzati dal metodo add_crossref_reference_data:
+                                        <ol>
+                                            <li><strong>_manage_author_ra_ar</strong>;</li>
+                                            <li><strong>_manage_volume_issue</strong>;</li>
+                                            <li><strong>_manage_resource_embdiment</strong>.</li>
+                                        </ol>
+                                    </li>
+                                    <li>Prima di avventurarmi nella scrittura di un programma di editing interattivo per Knowledge Graph, ho
+                                        esplorato la letteratura esistente sull'argomento:
+                                        <ol>
+                                            <li>Wright J., Rodríguez Méndez S.J., Haller A., Taylor K., Omran P.G. (2020) Schímatos: A
+                                                SHACL-Based Web-Form Generator for Knowledge Graph Editing. In: Pan J.Z. et al. (eds) The
+                                                Semantic Web – ISWC 2020. ISWC 2020. Lecture Notes in Computer Science, vol 12507. Springer,
+                                                Cham. https://doi.org/10.1007/978-3-030-62466-8_5.
+                                                <ol>
+                                                    <li>L'articolo introduce <strong>Schímatos</strong>, un editor di KG interattivo, che si
+                                                        occupa della validazione degli input utilizzando SHACL Shapes Constraint Language
+                                                        (https://www.w3.org/TR/shacl/). Non sembra esserci però un modo immediato per
+                                                        riutilizzare il software con KG che non siano WikiData. Sembra infatti essere
+                                                        soltanto una demo a scopo dimostrativo, per quanto molto interessante.</li>
+                                                </ol>
+                                            </li>
+                                            <li>Heyvaert P., Dimou A., Verborgh R., Mannens E., Van de Walle R. (2016) Graph-Based Editing
+                                                of Linked Data Mappings Using the RMLEditor. In: Sack H., Rizzo G., Steinmetz N., Mladenić
+                                                D., Auer S., Lange C. (eds) The Semantic Web. ESWC 2016. Lecture Notes in Computer Science,
+                                                vol 9989. Springer, Cham. https://doi.org/10.1007/978-3-319-47602-5_25.
+                                                <ol>
+                                                    <li><strong>RMLEditor</strong> offre una GUI per consentire ai data publishers, esperti
+                                                        di dominio, di modellare la conoscenza derivata da dati di origini multiple ed
+                                                        eterogenee. RMLEditor utilizza RML come linguaggio di mappatura sottostante. Ad oggi
+                                                        è presente una demo che permette di modellare fino a 20 nodi per un massimo di 2 MB
+                                                        per singolo file. </li>
+                                                </ol>
+                                            </li>
+                                            <li>Ho letto la documentazione e ho provato a usare <strong>Web-Karma</strong> (<a
+                                                    href="https://github.com/usc-isi-i2/Web-Karma" target="_blank"
+                                                    alt="Web-Karm documentation">https://github.com/usc-isi-i2/Web-Karma</a>), un tool per
+                                                modificare un KG in base a un'ontologia specificata. Problema: non ha un sistema di
+                                                validazione rispetto all'ontologia ed è possibile modificare l'ontologia stessa,
+                                                intenzionalmente o per errore. In sintesi, utilizzabile solo da chi conosce già molto bene
+                                                il data model. </li>
+                                        </ol>
+                                    </li>
+                                    <li>Ho letto la documentazione di <strong>Flask</strong>, allo scopo di utilizzare Python per il
+                                        back-end della mia applicazione di KG editing. Ho anche letto la documentazione di
+                                        <strong>Jinja</strong>, dato che è il template-engine predefinito di Flask.</li>
+                                    <li>Utilizzando Flask per il server, Jinja2 come motore di template e Blazegraph come database ho
+                                        implementato una prima interfaccia grafica che mostra dieci triple. </li>
+                                </ol>
+                                <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>Oltre ai due bug del metodo merge di oc_ocdm già rilevati in <a href="#d0704cnhc1">07/04/2021 (Cosa
+                                            non ho capito, punti 1 e 2)</a> credo di averne trovato un terzo specifico per il merge tra
+                                        entità di tipo datacite:Identifier. Ho miniaturizzato e commentato il codice utilizzato al fine di
+                                        rendere l'errore più facile da comprendere e riprodurre. Inoltre, mi piacerebbe capire se io stia
+                                        procedendo nel modo corretto prima di mandare un'altra mail a Simone.
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre>
+                                                                    <code class="prettyprint">
+    from oc_ocdm.graph.graph_entity import GraphEntity
+    from oc_ocdm.graph import GraphSet
+    from rdflib import URIRef, Graph
+    from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
+
+
+    def get_entity_from_res(res:URIRef, graphset:GraphSet) -> GraphEntity:
+        res = URIRef(res)
+        query = f"""
+            CONSTRUCT {{&lt;{res}&gt; ?p ?o}}
+            WHERE {{&lt;{res}&gt; ?p ?o}}
+        """
+        sparql.setQuery(query)
+        sparql.setReturnFormat(RDFXML)
+        results = sparql.query().convert()
+        preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
+        entity = graphset.add_id(resp_agent="https://orcid.org/0000-0002-8420-0696", res=res, preexisting_graph=preexisting_graph)
+        return entity
+
+    # Estrai Identifier e DOI name di tutte le br dal triplestore
+    queryString = """
+        PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
+        PREFIX fabio: &lt;http://purl.org/spar/fabio/&gt;
+        PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+        SELECT ?id ?literalValue
+        WHERE
+        {{
+            ?s a fabio:Expression;
+                datacite:hasIdentifier ?id.
+            ?id literal:hasLiteralValue ?literalValue.
+        }}
+    """
+    sparql = SPARQLWrapper("http://localhost:9999/bigdata/sparql")
+    sparql.setQuery(queryString)
+    sparql.setReturnFormat(JSON)
+    results = sparql.query().convert()
+    dois_found = dict()
+    graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/", wanted_label=False)
+    for result in results["results"]["bindings"]:
+        # Se il DOI name è già stato trovato e l'Identifier è diverso da quello già trovato
+        if result["literalValue"]["value"] in dois_found and result["id"]["value"] != dois_found[result["literalValue"]["value"]]:
+            id_duplicated_entity = get_entity_from_res(result["id"]["value"], graphset)
+            id_preexisting_entity = get_entity_from_res(dois_found[result["literalValue"]["value"]], graphset)
+            print(f"Merging entity {id_preexisting_entity.res} with {id_duplicated_entity.res}")
+            id_preexisting_entity.merge(id_duplicated_entity)
+        else:
+            # Registra di aver trovato questo DOI name e che è associato a questo Identifier
+            dois_found[result["literalValue"]["value"]] = result["id"]["value"]
+                                                                </code>
+                                                            </pre>
+                                        </div>
+                                        Se a questo punto provo a fare l'upload attraverso il metodo upload_all passando il graphset,
+                                        l'upload non avviene a causa di un errore nella formattazione della query di upload. In particolare,
+                                        pare che manchi un ";" prima di un INSERT.
+                                    </li>
+                                    <li>Per qualche ragione a volte l'update_query vuota non è "" ma None. Il metodo upload_all della classe
+                                        Storer di oc_ocdm non gestiste il caso in cui l'update_query sia None, sollevando un'eccezione nel
+                                        momento in cui viene fatta la seguente concatenazione: query_string += " ; " + update_query, dato
+                                        che non è possibile concatenare una stringa con None. Ho risolto in locale aggiungendo:
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre>
+                                                                <code class="prettyprint">
+    # for idx, entity in enumerate(self.a_set.res_to_entity.values()):
+        # update_query, n_added, n_removed = get_update_query(entity, entity_type=self._class_to_entity_type(entity))
+            if update_query == "" or update_query is None:
+                skipped_queries += 1
+                                                                </code>
+                                                            </pre>
+                                        </div>
+                                        Tuttavia, dato che l'update_query vuota dovrebbe sempre essere "" e non None, credo ci sia un altro
+                                        bug a monte.
+                                    </li>
+                                    <li>Non ho trovato documentazione su tutti i possibili metadati delle reference di un work restituite da
+                                        Crossref, quindi ho scoperto tramite un algoritmo che, sui quasi 7000 articoli citanti di
+                                        Scientometrics, i citati posso riportare le chiavi sotto elencate. Di fianco a ciascuna viene
+                                        indicato tramite quale notazione sono state usate nella query a Crossref al fine di recuperare il
+                                        DOI name:
+                                        <ul>
+                                            <li>journal-title → query.bibliographic=value&</li>
+                                            <li>author → query.author=value&</li>
+                                            <li>journal-title → query.container-title=value&</li>
+                                            <li>ISBN → filter=isbn:value</li>
+                                            <li>year → filter=from-index-date:value,
+                                                <ul>
+                                                    <li>Perché proprio from-index-date? Perché nella documentazione si legge:
+                                                        <blockquote class="blockquote ml-5 mt-3">
+                                                            When using time filters to retrieve periodic, incremental metadata updates, the
+                                                            from-index-date filter should be used over from-update-date, from-deposit-date,
+                                                            from-created-date and from-pub-date. The timestamp that from-index-date filters
+                                                            on is guaranteed to be updated every time there is a change to metadata
+                                                            requiring a reindex.
+                                                        </blockquote>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                        Tuttavia, ci sono molti altri campi per i quali Crossref non sembra non fornire né field queries né
+                                        filtri, ovvero:
+                                        <ul>
+                                            <li>issue</li>
+                                            <li>volume-title</li>
+                                            <li>series-title</li>
+                                            <li>edition</li>
+                                            <li>key</li>
+                                            <li>first-page</li>
+                                            <li>volume</li>
+                                            <li>isbn-type</li>
+                                        </ul>
+                                        Le domande a questo punto sono:
+                                        <ol>
+                                            <li>Ti risulta che io non possa fare query a Crossref utilizzando quelle informazioni?</li>
+                                            <li>È possibile utilizzare volume-title e series-title come valore della field query
+                                                <em>query.container-title</em>?</li>
+                                            <li>I risultati ottenuti finora sono sorprendentemente buoni, vale la pena restringere
+                                                ulteriormente la ricerca?</li>
+                                        </ol>
+                                    <li>Cristian mi ha detto che per il suo progetto un'informazione rilevante è l'affiliazione degli
+                                        autori. Credo che l'OCDM non la preveda, giusto?</li>
+                                    <li>Se una risorsa bibliografica viene indicata da Crossref come di tipo "posted-content" con quale tipo
+                                        di BibliographicResource presente nell'OCDM devo mapparla? </li>
+                                    </li>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-7" data-target="#panel-7" class="accordion-panel-header" data-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="panel-7">
+                            <span class="h6 mb-0 font-weight-bold">21/04/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-6">
