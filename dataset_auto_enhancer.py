@@ -32,20 +32,20 @@ class DatasetAutoEnhancer(object):
         data = sparql.query().convert()
         graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
         entity = switcher[entity]["add"](self.resp_agent, res=res, preexisting_graph=graph)
-        ids = entity.get_identifiers()
-        ids_entities = set()
-        for identifier in ids:
-            id_query = f"""
-                CONSTRUCT {{<{identifier.res}> ?p ?o}}
-                WHERE {{<{identifier.res}> ?p ?o}}
-            """
-            sparql.setQuery(id_query)
-            sparql.setReturnFormat(RDFXML)
-            id_data = sparql.query().convert()
-            id_graph = Graph().parse(data=id_data.serialize(format='xml'), format='xml')
-            id_entity = graphset.add_id(resp_agent=self.resp_agent, res=identifier.res, preexisting_graph=id_graph)
-            ids_entities.add(id_entity)
-        return entity, ids_entities
+        # ids = entity.get_identifiers()
+        # ids_entities = set()
+        # for identifier in ids:
+        #     id_query = f"""
+        #         CONSTRUCT {{<{identifier.res}> ?p ?o}}
+        #         WHERE {{<{identifier.res}> ?p ?o}}
+        #     """
+        #     sparql.setQuery(id_query)
+        #     sparql.setReturnFormat(RDFXML)
+        #     id_data = sparql.query().convert()
+        #     id_graph = Graph().parse(data=id_data.serialize(format='xml'), format='xml')
+        #     id_entity = graphset.add_id(resp_agent=self.resp_agent, res=identifier.res, preexisting_graph=id_graph)
+        #     ids_entities.add(id_entity)
+        return entity
     
     def merge_by_id(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
         enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
@@ -80,15 +80,15 @@ class DatasetAutoEnhancer(object):
             pbar = tqdm(total=len(results["results"]["bindings"]))
             for result in results["results"]["bindings"]:
                 if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
-                    preexisting_entity, preexisting_ids = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(ids_found[result["literalValue"]["value"]]), switcher=switcher, entity=entity)
-                    duplicated_entity, duplicated_ids = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(result["s"]["value"]), switcher=switcher, entity=entity)
+                    preexisting_entity = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(ids_found[result["literalValue"]["value"]]), switcher=switcher, entity=entity)
+                    duplicated_entity = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(result["s"]["value"]), switcher=switcher, entity=entity)
                     try:
                         print(f'[DatasetAutoEnhancer: INFO] Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
                         preexisting_entity.merge(duplicated_entity)
-                        for preexisting_id, duplicated_id in itertools.product(preexisting_ids, duplicated_ids):
-                            if preexisting_id != duplicated_id:
-                                print(f'[DatasetAutoEnhancer: INFO] Merging {preexisting_id.res} with {duplicated_id.res}')
-                                preexisting_id.merge(duplicated_id)
+                        # for preexisting_id, duplicated_id in itertools.product(preexisting_ids, duplicated_ids):
+                        #     if preexisting_id != duplicated_id:
+                        #         print(f'[DatasetAutoEnhancer: INFO] Merging {preexisting_id.res} with {duplicated_id.res}')
+                        #         preexisting_id.merge(duplicated_id)
                     except TypeError:
                         pass
                 else:
@@ -372,7 +372,7 @@ class DatasetAutoEnhancer(object):
         min_edit_distance = int(sol[-1,-1])
         return min_edit_distance
     
-    def _heuristic_match(self, source_metadata:dict, target_metadata:dict) -> float:
+    def _match_first_author(self, source_metadata:dict, target_metadata:dict) -> float:
         if "author" in source_metadata and "author" in target_metadata:
             if " " in source_metadata["author"]:
                 first_name_a = source_metadata["author"].split()[0]
@@ -398,18 +398,37 @@ class DatasetAutoEnhancer(object):
                         first_name_b = ""
                         last_name_b = target_metadata["author"][0]["family"]
             e = 0
+            first_name_a = "".join(re.findall("[A-Z]", first_name_a))
+            first_name_b = "".join(re.findall("[A-Z]", first_name_b))
             if first_name_a == first_name_b:
                 e = 1
             m_first_author = 0.8 - 0.8 * self._levenshtein_distance(last_name_a, last_name_b) / max(len(last_name_a), len(last_name_b)) + 0.2 * e
-            return m_first_author
         else:
-            return 0.0
+            m_first_author = 0.0
+        return m_first_author
+    
+    def _match_title(self, source_metadata:dict, target_metadata:dict) -> float:
+        if "volume-title" in source_metadata and "title" in target_metadata and len(target_metadata["title"][0]) > 0:
+            title_a = source_metadata["volume-title"]
+            title_b = target_metadata["title"][0]
+            match_title = 1 - self._levenshtein_distance(title_a, title_b) / max(len(title_a), len(title_b))
+        else:
+            match_title = 0.0
+        return match_title
+    
+    def _match_source(self, source_metadata:dict, target_metadata:dict) -> float:
+        pass
+
+    def _do_heuristic_match(self, source_metadata:dict, target_metadata:dict, manual_comparison:dict, key:int) -> float:
+        match_first_author = self._match_first_author(source_metadata, target_metadata)
+        match_title = self._match_title(source_metadata, target_metadata, manual_comparison, key)
     
     def add_reference_data_without_doi(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
         logs = dict()
+        manual_comparison = dict()
+        key = 0
         sparql = SPARQLWrapper(ts_url)
         graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
-        # add_reference_data_without_doi = dict()
         with open(journal_data_path) as journal_data:
             journal_data_items = json.load(journal_data)["message"]["items"]
         pbar = tqdm(total=len(journal_data_items))
@@ -420,10 +439,10 @@ class DatasetAutoEnhancer(object):
                         query_string = self._generate_crossref_query_from_metadata(reference)
                         search = Support().handle_request(url=query_string, cache_path="./cache/crossref_cache", error_log_dict=logs)
                         if len(search["message"]["items"]) > 0:
-                            for item in search["message"]["items"]:
-                                s = self._heuristic_match(reference, item)
-                                # print(s)
                             new_doi = search["message"]["items"][0]["DOI"]
+                            for item in search["message"]["items"]:
+                                self._do_heuristic_match(reference, item, manual_comparison, key)
+                                key += 1
                             citing_entity_query = f"""
                                 PREFIX datacite: <http://purl.org/spar/datacite/>
                                 PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
@@ -450,10 +469,6 @@ class DatasetAutoEnhancer(object):
                             # There could be duplicates if not already merged
                             for subject in subjects:
                                 citing_entity = graphset.add_br(self.resp_agent, res=subject, preexisting_graph=preexisting_graph)
-                                # add_reference_data_without_doi[citing_entity.res] = {
-                                #     "metadata": reference,
-                                #     "new_doi": new_doi
-                                # }
                                 # Identifier
                                 reference_id = graphset.add_id(self.resp_agent)
                                 reference_id.create_doi(new_doi)
@@ -469,7 +484,7 @@ class DatasetAutoEnhancer(object):
                                     reference_ci.has_citation_creation_date(str(subjects[subject]))
             pbar.update(1)
         pbar.close()
-        # Support().dump_json(add_reference_data_without_doi, "test/add_reference_data_without_doi.json")
+        Support().dump_json(manual_comparison, "test/manual_comparison.json")
         return graphset
 
 
