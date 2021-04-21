@@ -397,9 +397,20 @@ class DatasetAutoEnhancer(object):
                     else:
                         first_name_b = ""
                         last_name_b = target_metadata["author"][0]["family"]
+                elif "family" not in target_metadata["author"][0] and "given" in target_metadata["author"][0]:
+                    if " " in target_metadata["author"][0]["given"]:
+                        first_name_b = target_metadata["author"][0]["given"].replace("Dr. ", "").split()[0]
+                        last_name_b = target_metadata["author"][0]["given"].replace("Dr. ", "").split()[1]
+                    elif " " not in target_metadata["author"][0]["given"] and any(x.isupper() for x in target_metadata["author"][0]["given"][1:]):
+                        split_by_uppercase = re.findall('[A-Z][^A-Z]*', target_metadata["author"][0]["given"])
+                        first_name_b = split_by_uppercase[0]
+                        last_name_b = split_by_uppercase[-1]
             e = 0
             first_name_a = "".join(re.findall("[A-Z]", first_name_a))
-            first_name_b = "".join(re.findall("[A-Z]", first_name_b))
+            try:
+                first_name_b = "".join(re.findall("[A-Z]", first_name_b))
+            except UnboundLocalError:
+                print(target_metadata)
             if first_name_a == first_name_b:
                 e = 1
             m_first_author = 0.8 - 0.8 * self._levenshtein_distance(last_name_a, last_name_b) / max(len(last_name_a), len(last_name_b)) + 0.2 * e
@@ -416,12 +427,37 @@ class DatasetAutoEnhancer(object):
             match_title = 0.0
         return match_title
     
-    def _match_source(self, source_metadata:dict, target_metadata:dict) -> float:
-        pass
+    def _match_source(self, source_metadata:dict, target_metadata:dict, manual_comparison:dict, key) -> float:
+        if "ISBN" in source_metadata and "ISBN" in target_metadata:
+            if source_metadata["ISBN"] == target_metadata["ISBN"][0]:
+                match_source = 1.0
+                return match_source
+        if "journal-title" in source_metadata:
+            source_a = source_metadata["journal-title"]
+        elif "series-title" in source_metadata:
+            source_a = source_metadata["series-title"]
+        elif "volume-title" in source_metadata:
+            source_a = source_metadata["volume-title"]
+        else:
+            match_source = 0.0
+            return match_source
+        if "container-title" in target_metadata and len(target_metadata["container-title"][0]) > 0:
+            source_b_long = target_metadata["container-title"][0]
+            match_source_long = 1 - (self._levenshtein_distance(source_a, source_b_long) - abs(len(source_a) - len(source_b_long))) / min(len(source_a), len(source_b_long))
+            if "short-container-title" in target_metadata and len(target_metadata["short-container-title"][0]) > 0:
+                source_b_short = target_metadata["short-container-title"][0]
+                match_source_short = 1 - (self._levenshtein_distance(source_a, source_b_short) - abs(len(source_a) - len(source_b_short))) / min(len(source_a), len(source_b_short))
+                match_source = max(match_source_long, match_source_short)
+            else:
+                match_source = match_source_long
+        else:
+            match_source = 0.0
+        return match_source
 
     def _do_heuristic_match(self, source_metadata:dict, target_metadata:dict, manual_comparison:dict, key:int) -> float:
         match_first_author = self._match_first_author(source_metadata, target_metadata)
-        match_title = self._match_title(source_metadata, target_metadata, manual_comparison, key)
+        match_title = self._match_title(source_metadata, target_metadata)
+        match_source = self._match_source(source_metadata, target_metadata, manual_comparison, key)
     
     def add_reference_data_without_doi(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
         logs = dict()
@@ -438,53 +474,54 @@ class DatasetAutoEnhancer(object):
                     if "DOI" not in reference and len(reference) > 2: # That is, if there is more information than just key and unstructured
                         query_string = self._generate_crossref_query_from_metadata(reference)
                         search = Support().handle_request(url=query_string, cache_path="./cache/crossref_cache", error_log_dict=logs)
-                        if len(search["message"]["items"]) > 0:
-                            new_doi = search["message"]["items"][0]["DOI"]
-                            for item in search["message"]["items"]:
-                                self._do_heuristic_match(reference, item, manual_comparison, key)
-                                key += 1
-                            citing_entity_query = f"""
-                                PREFIX datacite: <http://purl.org/spar/datacite/>
-                                PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
-                                PREFIX cito: <http://purl.org/spar/cito/>
-                                CONSTRUCT {{?s ?p ?o}}
-                                WHERE {{
-                                    ?s datacite:hasIdentifier/literal:hasLiteralValue "{item["DOI"]}".
-                                    FILTER NOT EXISTS {{?s cito:cites/datacite:hasIdentifier/literal:hasLiteralValue "{new_doi}"}}
-                                    ?s ?p ?o.
-                                }}
-                            """
-                            sparql.setQuery(citing_entity_query)
-                            sparql.setReturnFormat(RDFXML)
-                            results = sparql.query().convert()
-                            preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
-                            subjects = dict()
-                            if (None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None) in results:
-                                for s, p, o in results.triples((None, None, None)):
-                                    if p == URIRef('http://prismstandard.org/namespaces/basic/2.0/publicationDate'):
-                                        subjects[s] = o
-                            else:
-                                for s in results.subjects():
-                                    subjects[s] = ""
-                            # There could be duplicates if not already merged
-                            for subject in subjects:
-                                citing_entity = graphset.add_br(self.resp_agent, res=subject, preexisting_graph=preexisting_graph)
-                                # Identifier
-                                reference_id = graphset.add_id(self.resp_agent)
-                                reference_id.create_doi(new_doi)
-                                # BibliographicResource
-                                reference_br = graphset.add_br(self.resp_agent)
-                                reference_br.has_identifier(reference_id)
-                                citing_entity.has_citation(reference_br)
-                                # Citation
-                                reference_ci = graphset.add_ci(self.resp_agent)
-                                reference_ci.has_citing_entity(citing_entity)
-                                reference_ci.has_cited_entity(reference_br)
-                                if subjects[subject] != "":
-                                    reference_ci.has_citation_creation_date(str(subjects[subject]))
+                        if search is not None:
+                            if len(search["message"]["items"]) > 0:
+                                new_doi = search["message"]["items"][0]["DOI"]
+                                for item in search["message"]["items"]:
+                                    self._do_heuristic_match(reference, item, manual_comparison, key)
+                                    key += 1
+                                citing_entity_query = f"""
+                                    PREFIX datacite: <http://purl.org/spar/datacite/>
+                                    PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
+                                    PREFIX cito: <http://purl.org/spar/cito/>
+                                    CONSTRUCT {{?s ?p ?o}}
+                                    WHERE {{
+                                        ?s datacite:hasIdentifier/literal:hasLiteralValue "{item["DOI"]}".
+                                        FILTER NOT EXISTS {{?s cito:cites/datacite:hasIdentifier/literal:hasLiteralValue "{new_doi}"}}
+                                        ?s ?p ?o.
+                                    }}
+                                """
+                                sparql.setQuery(citing_entity_query)
+                                sparql.setReturnFormat(RDFXML)
+                                results = sparql.query().convert()
+                                preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
+                                subjects = dict()
+                                if (None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None) in results:
+                                    for s, p, o in results.triples((None, None, None)):
+                                        if p == URIRef('http://prismstandard.org/namespaces/basic/2.0/publicationDate'):
+                                            subjects[s] = o
+                                else:
+                                    for s in results.subjects():
+                                        subjects[s] = ""
+                                # There could be duplicates if not already merged
+                                for subject in subjects:
+                                    citing_entity = graphset.add_br(self.resp_agent, res=subject, preexisting_graph=preexisting_graph)
+                                    # Identifier
+                                    reference_id = graphset.add_id(self.resp_agent)
+                                    reference_id.create_doi(new_doi)
+                                    # BibliographicResource
+                                    reference_br = graphset.add_br(self.resp_agent)
+                                    reference_br.has_identifier(reference_id)
+                                    citing_entity.has_citation(reference_br)
+                                    # Citation
+                                    reference_ci = graphset.add_ci(self.resp_agent)
+                                    reference_ci.has_citing_entity(citing_entity)
+                                    reference_ci.has_cited_entity(reference_br)
+                                    if subjects[subject] != "":
+                                        reference_ci.has_citation_creation_date(str(subjects[subject]))
             pbar.update(1)
         pbar.close()
-        Support().dump_json(manual_comparison, "test/manual_comparison.json")
+        # Support().dump_json(manual_comparison, "test/manual_comparison_source.json")
         return graphset
 
 

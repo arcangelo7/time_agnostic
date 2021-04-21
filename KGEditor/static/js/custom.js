@@ -86,17 +86,20 @@ $("#editButton").click(function(){
         }); 
         edit = false; 
     } else {
-        $.post("/done", data={res:$("#resName").text()});
-        $(this)
-            .html(`
-                <span class="mr-1"><span class="fas fa-pen-fancy"></span></span>
-                Edit
-            `)
-            .removeClass("btn-danger")
-            .addClass("btn-success")
-            .blur();
-        $(".deleteButton").remove();
-        edit = true;   
+        edit = true; 
+        $.get("/done", function(){
+            res = $("#resName").text()
+            window.location.href = `/entity/${res}`    
+        });
+        // $(this)
+        //     .html(`
+        //         <span class="mr-1"><span class="fas fa-pen-fancy"></span></span>
+        //         Edit
+        //     `)
+        //     .removeClass("btn-danger")
+        //     .addClass("btn-success")
+        //     .blur();
+        // $(".deleteButton").remove();   
     }
 
 });
@@ -118,6 +121,5 @@ $(document).on("click", "button.deleteButton", function(){
         "p": predicate,
         "o": object
     }
-    $.get("/delete", data={triple: triple}, function(data){
-    }, dataType="json");
+    $.get("/delete", data={triple: triple}, function(){}, dataType="json");
 });
