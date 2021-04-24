@@ -15,7 +15,7 @@ class Support(object):
     def _requests_retry_session(
         self,
         tries=1,
-        status_forcelist=(500, 502, 504, 520, 521),
+        status_forcelist=(500, 502, 504, 520, 521, 522),
         session=None
     ) -> Session:
         session = session or requests.Session()
