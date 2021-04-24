@@ -1,0 +1,57 @@
+{
+    "create": {
+        "http://purl.org/spar/datacite/Identifier": "add_id",
+        "http://purl.org/spar/pro/RoleInTime": "add_ar",
+        "http://purl.org/spar/biro/BibliographicReference": "add_be",
+        "http://purl.org/spar/fabio/Expression": "add_br",
+        "http://purl.org/spar/cito/Citation": "add_ci",
+        "http://purl.org/spar/fabio/Manifestation": "add_re",
+        "http://xmlns.com/foaf/0.1/Agent": "add_ra"
+    },
+    "delete": {
+        "http://purl.org/spar/pro/RoleInTime": {
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
+            "https://w3id.org/oc/ontology/hasNext": "remove_next",
+            "http://purl.org/spar/pro/isHeldBy": "remove_is_held_by",
+            "http://purl.org/spar/pro/withRole": "remove_role_type"
+        },
+        "http://purl.org/spar/biro/BibliographicReference": {
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
+            "http://purl.org/spar/c4o/hasContent": "remove_content",
+            "http://purl.org/spar/biro/references": "remove_referenced_br"
+        },
+        "http://purl.org/spar/fabio/Expression": {
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
+            "http://purl.org/spar/datacite/hasIdentifier": "remove_identifier",
+            "http://purl.org/dc/terms/title": "remove_title",
+            "http://purl.org/spar/fabio/hasSubtitle": "remove_subtitle",
+            "http://purl.org/vocab/frbr/core#partOf": "remove_is_part_of",
+            "http://purl.org/spar/cito/cites": "remove_citation",
+            "http://prismstandard.org/namespaces/basic/2.0/publicationDate": "remove_pub_date",
+            "http://purl.org/vocab/frbr/core#embodiment": "remove_format",
+            "http://purl.org/spar/fabio/hasSequenceIdentifier": "remove_number",
+            "http://purl.org/vocab/frbr/core#part": "remove_contained_in_reference_list",
+            "http://purl.org/spar/pro/isDocumentContextFor": "remove_contributor"
+        },
+        "http://purl.org/spar/cito/Citation": {
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
+            "http://purl.org/spar/cito/hasCitingEntity": "remove_citing_entity",
+            "http://purl.org/spar/cito/hasCitedEntity": "remove_cited_entity",
+            "http://purl.org/spar/cito/hasCitationCreationDate": "remove_citation_creation_date",
+            "http://purl.org/spar/cito/hasCitationTimeSpan": "remove_citation_time_span"
+        },
+        "http://purl.org/spar/fabio/Manifestation": {
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
+            "http://purl.org/dc/terms/format": "remove_media_type",
+            "http://prismstandard.org/namespaces/basic/2.0/startingPage": "remove_starting_page",
+            "http://prismstandard.org/namespaces/basic/2.0/endingPage": "remove_ending_page",
+            "http://purl.org/vocab/frbr/core#exemplar": "remove_url"
+        },
+        "http://xmlns.com/foaf/0.1/Agent": {
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
+            "http://xmlns.com/foaf/0.1/name": "remove_name",
+            "http://xmlns.com/foaf/0.1/givenName": "remove_given_name",
+            "http://xmlns.com/foaf/0.1/familyName": "remove_family_name"
+        }
+    }
+}

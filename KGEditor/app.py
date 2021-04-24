@@ -16,104 +16,60 @@ base_iri = "https://github.com/arcangelo7/time_agnostic/"
 info_dir = "./data/info_dir/graph/"
 resp_agent = "https://orcid.org/0000-0002-8420-0696"
 graphset = GraphSet(base_iri=base_iri, info_dir=info_dir, wanted_label=False)
+with open('KGEditor\static\config\config.json', 'r') as f:
+    config = json.load(f)
+update_query = dict()
 
-class Crud(object):
-    def __init__(self, graphset:GraphSet, subj:str, predicate:str, obj:str, endpoint:str, base_iri:str, resp_agent:str):
-        self.subj = subj
-        self.predicate = predicate
-        self.obj = obj
-        self.endpoint = endpoint
-        self.base_iri = base_iri
-        self.resp_agent = resp_agent
-        self.add_methods = {
-            "http://purl.org/spar/datacite/Identifier": graphset.add_id,
-            "http://purl.org/spar/pro/RoleInTime": graphset.add_ar,
-            "http://purl.org/spar/biro/BibliographicReference": graphset.add_be,
-            "http://purl.org/spar/fabio/Expression": graphset.add_br,
-            "http://purl.org/spar/cito/Citation": graphset.add_ci,
-            "http://purl.org/spar/fabio/Manifestation": graphset.add_re,
-            "http://xmlns.com/foaf/0.1/Agent": graphset.add_ra
-        } 
+def get_entity_type(base_iri:str, res:str) -> str:
+    type_of_entity = res.replace(base_iri, "").split("/")[0]
+    type_of_entity = str(GraphEntity.short_name_to_type_iri[type_of_entity])
+    return type_of_entity
 
-    def _get_entity_type(self, base_iri:str, res:str) -> str:
-        type_of_entity = res.replace(base_iri, "").split("/")[0]
-        type_of_entity = str(GraphEntity.short_name_to_type_iri[type_of_entity])
-        return type_of_entity
+def get_entity_from_res(
+        endpoint:str, res:URIRef, res_type:str, 
+        resp_agent:str, graphset:GraphSet, config:dict) -> GraphEntity:
+    sparql = SPARQLWrapper(endpoint)
+    query = f"""
+        CONSTRUCT {{<{res}> ?p ?o}}
+        WHERE {{<{res}> ?p ?o}}
+    """
+    sparql.setQuery(query)
+    sparql.setReturnFormat(RDFXML)
+    data = sparql.query().convert()
+    graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
+    entity = getattr(graphset, config["create"][res_type])(resp_agent=resp_agent, res=res, preexisting_graph=graph)
+    return entity
 
-    def _get_entity_from_res(self, endpoint:str, res:URIRef, res_type:str, resp_agent:str):
-        sparql = SPARQLWrapper(endpoint)
-        query = f"""
-            CONSTRUCT {{<{res}> ?p ?o}}
-            WHERE {{<{res}> ?p ?o}}
-        """
-        sparql.setQuery(query)
-        sparql.setReturnFormat(RDFXML)
-        data = sparql.query().convert()
-        graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
-        entity = self.add_methods[res_type](resp_agent=resp_agent, res=res, preexisting_graph=graph)
-        return entity
-    
-    def add(self) -> None:
-        pass
-    
-    def delete(self) -> None:
-        s_entity_type = self._get_entity_type(self.base_iri, self.subj)
-        s_entity = self._get_entity_from_res(self.endpoint, URIRef(self.subj), s_entity_type, self.resp_agent)
-        removal_methods = {
-            "http://purl.org/spar/pro/RoleInTime": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-                "https://w3id.org/oc/ontology/hasNext": "remove_next",
-                "http://purl.org/spar/pro/isHeldBy": "remove_is_held_by",
-                "http://purl.org/spar/pro/withRole": "remove_role_type"
-            },
-            "http://purl.org/spar/biro/BibliographicReference": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-                "http://purl.org/spar/c4o/hasContent": "remove_content",
-                "http://purl.org/spar/biro/references": "remove_referenced_br"
-            },
-            "http://purl.org/spar/fabio/Expression": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-                "http://purl.org/spar/datacite/hasIdentifier": "remove_identifier",
-                "http://purl.org/dc/terms/title": "remove_title",
-                "http://purl.org/spar/fabio/hasSubtitle": "remove_subtitle",
-                "http://purl.org/vocab/frbr/core#partOf": "remove_is_part_of",
-                "http://purl.org/spar/cito/cites": "remove_citation",
-                "http://prismstandard.org/namespaces/basic/2.0/publicationDate": "remove_pub_date",
-                "http://purl.org/vocab/frbr/core#embodiment": "remove_format",
-                "http://purl.org/spar/fabio/hasSequenceIdentifier": "remove_number",
-                "http://purl.org/vocab/frbr/core#part": "remove_contained_in_reference_list",
-                "http://purl.org/spar/pro/isDocumentContextFor": "remove_contributor"
-            },
-            "http://purl.org/spar/cito/Citation": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-                "http://purl.org/spar/cito/hasCitingEntity": "remove_citing_entity",
-                "http://purl.org/spar/cito/hasCitedEntity": "remove_cited_entity",
-                "http://purl.org/spar/cito/hasCitationCreationDate": "remove_citation_creation_date",
-                "http://purl.org/spar/cito/hasCitationTimeSpan": "remove_citation_time_span"
-            },
-            "http://purl.org/spar/fabio/Manifestation": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-                "http://purl.org/dc/terms/format": "remove_media_type",
-                "http://prismstandard.org/namespaces/basic/2.0/startingPage": "remove_starting_page",
-                "http://prismstandard.org/namespaces/basic/2.0/endingPage": "remove_ending_page",
-                "http://purl.org/vocab/frbr/core#exemplar": "remove_url"
-            },
-            "http://xmlns.com/foaf/0.1/Agent": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-                "http://xmlns.com/foaf/0.1/name": "remove_name",
-                "http://xmlns.com/foaf/0.1/givenName": "remove_given_name",
-                "http://xmlns.com/foaf/0.1/familyName": "remove_family_name"
-            }
+def create(self) -> None:
+    pass
+
+def save_delete_query(
+        subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
+        endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
+    ) -> None:
+    s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
+    s_entity = get_entity_from_res(
+        endpoint=endpoint, res=URIRef(subj), res_type=s_entity_type, 
+        resp_agent=resp_agent, graphset=graphset, config=config)
+    method_name = config["delete"][s_entity_type][predicate]
+    sig = signature(getattr(s_entity, method_name))
+    params_number = len(sig.parameters)
+    if params_number > 0:
+        o_entity_type = get_entity_type(base_iri, obj)
+        o_entity = get_entity_from_res(
+            endpoint=endpoint, res=URIRef(obj), res_type=o_entity_type, 
+            resp_agent=resp_agent, graphset=graphset, config=config)
+        update_query[subj+predicate+obj] = {
+            "s_entity": s_entity,
+            "method_name": method_name,
+            "o_entity": o_entity
         }
-        method_name = removal_methods[s_entity_type][self.predicate]
-        sig = signature(getattr(s_entity, method_name))
-        params_number = len(sig.parameters)
-        if params_number > 0:
-            o_entity_type = self._get_entity_type(self.base_iri, self.obj)
-            o_entity = self._get_entity_from_res(self.endpoint, URIRef(self.obj), o_entity_type, self.resp_agent)
-            getattr(s_entity, method_name)(o_entity)
-        else:
-            getattr(s_entity, method_name)()
+    else:
+        update_query[subj+predicate+obj] = {
+            "s_entity": s_entity,
+            "method_name": method_name,
+            "o_entity": ""
+        }
 
 @app.route("/")
 def home():
@@ -167,13 +123,24 @@ def delete():
     s = request.args.get("triple[s]", None)
     p = request.args.get("triple[p]", None)
     o = request.args.get("triple[o]", None)
-    crud = Crud(graphset, s, p, o, endpoint, base_iri, resp_agent)
-    crud.delete()
+    save_delete_query(subj=s, predicate=p, obj=o)
     return jsonify({"result": "Successful delete"})
+
+@app.route("/undo")
+def undo():
+    s = request.args.get("triple[s]", None)
+    p = request.args.get("triple[p]", None)
+    o = request.args.get("triple[o]", None)
+    update_query.pop(s+p+o, None)
+    return jsonify({"result": "Successful undo"})
 
 @app.route("/done")
 def done():
-    brs = graphset.get_br()
+    for k, v in update_query.items():
+        if v["o_entity"] != "":
+            getattr(v["s_entity"], v["method_name"])(v["o_entity"])
+        else:
+            getattr(v["s_entity"], v["method_name"])()
     storer = Storer(graphset)
     storer.upload_all(endpoint)
     return jsonify({"result": "Successful upload"})

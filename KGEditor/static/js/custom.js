@@ -20,6 +20,11 @@ $("#sparqlQuerySubmit").on("click", function(){
                     </button>
                 </div>                
             `)
+            $("#sparqlQuerySubmit").html(`
+                <span class="mr-1"><span class="fas fa-search"></span></span>
+                Submit the query
+            `);
+            $("#sparqlQuerySubmit").blur();
             return
         }
         var vars = data["head"]["vars"];
@@ -79,7 +84,7 @@ $("#editButton").click(function(){
             .blur();
         $("tbody tr").each(function(){
             $(this).append(`
-                <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 deleteButton" type="button" aria-label="love button" title="love button">
+                <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 deleteButton" type="button" aria-label="delete button" title="delete button">
                     <span aria-hidden="true" class="fas fa-minus"></span>
                 </button>
             `);
@@ -90,30 +95,20 @@ $("#editButton").click(function(){
         $.get("/done", function(){
             res = $("#resName").text()
             window.location.href = `/entity/${res}`    
-        });
-        // $(this)
-        //     .html(`
-        //         <span class="mr-1"><span class="fas fa-pen-fancy"></span></span>
-        //         Edit
-        //     `)
-        //     .removeClass("btn-danger")
-        //     .addClass("btn-success")
-        //     .blur();
-        // $(".deleteButton").remove();   
+        });  
     }
-
 });
 
 // Click on delete button
 $(document).on("click", "button.deleteButton", function(){
-    var toBeDeleted = $(this).prevAll();
-    if (toBeDeleted.attr("headers") == "outgoingObject"){
+    var toBeUpdated = $(this).prevAll();
+    if (toBeUpdated.attr("headers") == "outgoingObject"){
         var subject = $("#resName").text();
-        var predicate = toBeDeleted[1].outerText;
-        var object = toBeDeleted[0].outerText;    
+        var predicate = toBeUpdated[1].outerText;
+        var object = toBeUpdated[0].outerText;    
     } else {
-        var subject = toBeDeleted[1].outerText;
-        var predicate = toBeDeleted[0].outerText;
+        var subject = toBeUpdated[1].outerText;
+        var predicate = toBeUpdated[0].outerText;
         var object = $("#resName").text();   
     }
     var triple = {
@@ -121,5 +116,17 @@ $(document).on("click", "button.deleteButton", function(){
         "p": predicate,
         "o": object
     }
-    $.get("/delete", data={triple: triple}, function(){}, dataType="json");
+    if ($(this).hasClass("toBeDeleted")){
+        $(this).prevAll().css("text-decoration", "none");
+        $(this).removeClass("toBeDeleted");
+        $(this).children("span").eq(0).attr("class", "fas fa-minus");
+        $(this).blur();
+        $.get("/undo", data={triple: triple}, function(){}, dataType="json");    
+    } else {
+        $(this).prevAll().css("text-decoration", "line-through");
+        $(this).addClass("toBeDeleted");
+        $(this).children("span").eq(0).attr("class", "fas fa-plus");
+        $(this).blur();
+        $.get("/delete", data={triple: triple}, function(){}, dataType="json");    
+    }
 });
