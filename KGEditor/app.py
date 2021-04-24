@@ -117,6 +117,12 @@ def entity(res):
         app.logger.error('Something went wrong')
     return render_template("entity.jinja2", res=res, response_outgoing=response_outgoing, response_incoming=response_incoming, baseUri=base_iri)
 
+@app.route("/update")
+def update():
+    s = request.args.get("triple[s]", None)
+    p = request.args.get("triple[p]", None)
+    o = request.args.get("triple[o]", None)
+    return jsonify({"result": "Successful update"})
 
 @app.route("/delete")
 def delete():

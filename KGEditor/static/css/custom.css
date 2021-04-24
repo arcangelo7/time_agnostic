@@ -43,3 +43,13 @@ li ol > li:before {
     bottom: 5rem;
     right: 5rem;
 }
+
+.sparqlResults {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.sparqlResults th,
+.sparqlResults td {
+    width: 50%;
+}
