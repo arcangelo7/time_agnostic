@@ -1,57 +1,149 @@
 {
-    "create": {
-        "http://purl.org/spar/datacite/Identifier": "add_id",
-        "http://purl.org/spar/pro/RoleInTime": "add_ar",
-        "http://purl.org/spar/biro/BibliographicReference": "add_be",
-        "http://purl.org/spar/fabio/Expression": "add_br",
-        "http://purl.org/spar/cito/Citation": "add_ci",
-        "http://purl.org/spar/fabio/Manifestation": "add_re",
-        "http://xmlns.com/foaf/0.1/Agent": "add_ra"
+    "http://purl.org/spar/pro/RoleInTime": {
+        "add": "add_ar",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"
+        },
+        "https://w3id.org/oc/ontology/hasNext": {
+            "create": "has_next",
+            "delete": "remove_next"
+        },
+        "http://purl.org/spar/pro/isHeldBy": {
+            "create": "is_held_by",
+            "delete": "remove_is_held_by"
+        },
+        "http://purl.org/spar/pro/withRole": {
+            "create": "",
+            "delete": "remove_role_type"
+        }
     },
-    "delete": {
-        "http://purl.org/spar/pro/RoleInTime": {
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-            "https://w3id.org/oc/ontology/hasNext": "remove_next",
-            "http://purl.org/spar/pro/isHeldBy": "remove_is_held_by",
-            "http://purl.org/spar/pro/withRole": "remove_role_type"
+    "http://purl.org/spar/biro/BibliographicReference": {
+        "add": "add_be",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"
         },
-        "http://purl.org/spar/biro/BibliographicReference": {
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-            "http://purl.org/spar/c4o/hasContent": "remove_content",
-            "http://purl.org/spar/biro/references": "remove_referenced_br"
+        "http://purl.org/spar/c4o/hasContent": {
+            "create": "has_content",
+            "delete": "remove_content"
         },
-        "http://purl.org/spar/fabio/Expression": {
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-            "http://purl.org/spar/datacite/hasIdentifier": "remove_identifier",
-            "http://purl.org/dc/terms/title": "remove_title",
-            "http://purl.org/spar/fabio/hasSubtitle": "remove_subtitle",
-            "http://purl.org/vocab/frbr/core#partOf": "remove_is_part_of",
-            "http://purl.org/spar/cito/cites": "remove_citation",
-            "http://prismstandard.org/namespaces/basic/2.0/publicationDate": "remove_pub_date",
-            "http://purl.org/vocab/frbr/core#embodiment": "remove_format",
-            "http://purl.org/spar/fabio/hasSequenceIdentifier": "remove_number",
-            "http://purl.org/vocab/frbr/core#part": "remove_contained_in_reference_list",
-            "http://purl.org/spar/pro/isDocumentContextFor": "remove_contributor"
+        "http://purl.org/spar/biro/references": {
+            "create": "references_br",
+            "delete": "remove_referenced_br"
+        }
+    },
+    "http://purl.org/spar/fabio/Expression": {
+        "add": "add_br",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"
         },
-        "http://purl.org/spar/cito/Citation": {
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-            "http://purl.org/spar/cito/hasCitingEntity": "remove_citing_entity",
-            "http://purl.org/spar/cito/hasCitedEntity": "remove_cited_entity",
-            "http://purl.org/spar/cito/hasCitationCreationDate": "remove_citation_creation_date",
-            "http://purl.org/spar/cito/hasCitationTimeSpan": "remove_citation_time_span"
+        "http://purl.org/spar/datacite/hasIdentifier": {
+            "create": "has_identifier",
+            "delete": "remove_identifier"
         },
-        "http://purl.org/spar/fabio/Manifestation": {
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-            "http://purl.org/dc/terms/format": "remove_media_type",
-            "http://prismstandard.org/namespaces/basic/2.0/startingPage": "remove_starting_page",
-            "http://prismstandard.org/namespaces/basic/2.0/endingPage": "remove_ending_page",
-            "http://purl.org/vocab/frbr/core#exemplar": "remove_url"
+        "http://purl.org/dc/terms/title": {
+            "create": "has_title",
+            "delete": "remove_title"
         },
-        "http://xmlns.com/foaf/0.1/Agent": {
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "remove_type",
-            "http://xmlns.com/foaf/0.1/name": "remove_name",
-            "http://xmlns.com/foaf/0.1/givenName": "remove_given_name",
-            "http://xmlns.com/foaf/0.1/familyName": "remove_family_name"
+        "http://purl.org/spar/fabio/hasSubtitle": {
+            "create": "has_subtitle",
+            "delete": "remove_subtitle"
+        },
+        "http://purl.org/vocab/frbr/core#partOf": {
+            "create": "is_part_of",
+            "delete": "remove_is_part_of"
+        },
+        "http://purl.org/spar/cito/cites": {
+            "create": "has_citation",
+            "delete": "remove_citation"
+        },
+        "http://prismstandard.org/namespaces/basic/2.0/publicationDate": {
+            "create": "has_pub_date",
+            "delete": "remove_pub_date"
+        },
+        "http://purl.org/vocab/frbr/core#embodiment": {
+            "create": "has_format",
+            "delete": "remove_format"
+        },
+        "http://purl.org/spar/fabio/hasSequenceIdentifier": {
+            "create": "has_number",
+            "delete": "remove_number"
+        },
+        "http://purl.org/vocab/frbr/core#part": {
+            "create": "contains_in_reference_list",
+            "delete": "remove_contained_in_reference_list"
+        },
+        "http://purl.org/spar/pro/isDocumentContextFor": {
+            "create": "has_contributor",
+            "delete": "remove_contributor"
+        }
+    },
+    "http://purl.org/spar/cito/Citation": {
+        "add": "add_ci",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"
+        },
+        "http://purl.org/spar/cito/hasCitingEntity": {
+            "create": "has_citing_entity",
+            "delete": "remove_citing_entity"
+        },
+        "http://purl.org/spar/cito/hasCitedEntity": {
+            "create": "has_cited_entity",
+            "delete": "remove_cited_entity"
+        },
+        "http://purl.org/spar/cito/hasCitationCreationDate": {
+            "create": "has_citation_creation_date",
+            "delete": "remove_citation_creation_date"
+        },
+        "http://purl.org/spar/cito/hasCitationTimeSpan": {
+            "create": "has_citation_time_span",
+            "delete": "remove_citation_time_span"
+        }
+    },
+    "http://purl.org/spar/fabio/Manifestation": {
+        "create": "",
+        "add": "add_re",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"
+        },
+        "http://purl.org/dc/terms/format": {
+            "create": "has_media_type",
+            "delete": "remove_media_type"
+        },
+        "http://prismstandard.org/namespaces/basic/2.0/startingPage": {
+            "create": "has_starting_page",
+            "delete": "remove_starting_page"
+        },
+        "http://prismstandard.org/namespaces/basic/2.0/endingPage": {
+            "create": "has_ending_page",
+            "delete": "remove_ending_page"
+        },
+        "http://purl.org/vocab/frbr/core#exemplar": {
+            "create": "has_url",
+            "delete": "remove_url"
+        }
+    },
+    "http://xmlns.com/foaf/0.1/Agent": {
+        "add": "add_ra",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"
+        },
+        "http://xmlns.com/foaf/0.1/name": {
+            "create": "has_name",
+            "delete": "remove_name"
+        },
+        "http://xmlns.com/foaf/0.1/givenName": {
+            "create": "has_given_name",
+            "delete": "remove_given_name"
+        },
+        "http://xmlns.com/foaf/0.1/familyName": {
+            "create": "has_family_name",
+            "delete": "remove_family_name"
         }
     }
 }

@@ -146,15 +146,20 @@ $(document).on("click", "button.deleteButton", function(){
 
 // Click on update button
 $(document).on("click", "button.updateButton", function(){
+    var button = this
     var icon = $(this).children()
     var siblingDeleteButton = $(this).siblings()
-    triple = get_s_p_o(this)
     $(this).parent().prevAll().each(function(){
         if ($(this).find('.form-control').length){
             icon.attr("class", "fas fa-pencil-alt");
             siblingDeleteButton.removeAttr("disabled");
             var input = $(this).find('.form-control')
-            $(this).text($(input).val());
+            var t = $(input).val()
+            if (t.indexOf(baseUri) >= 0){
+                $(this).html(`<a href="" class="sparqlEntity">${t}</a>`)
+            } else {
+                $(this).text(t);
+            }
         } else {
             icon.attr("class", "fas fa-check");
             siblingDeleteButton.prop("disabled", "true");
@@ -174,6 +179,11 @@ $(document).on("click", "button.updateButton", function(){
             }
         }
     });
+    if (!$(this).parent().prevAll().find(".form-control").length) {
+        triple = get_s_p_o(button);
+        $.get("/update", data={triple: triple}, function(data){
+            console.log(data)
+        }, dataType="json");
+    }
     $(this).blur();
-    $.get("/update", data={triple: triple}, function(){}, dataType="json");
 });

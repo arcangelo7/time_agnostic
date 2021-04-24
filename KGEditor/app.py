@@ -37,11 +37,42 @@ def get_entity_from_res(
     sparql.setReturnFormat(RDFXML)
     data = sparql.query().convert()
     graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
-    entity = getattr(graphset, config["create"][res_type])(resp_agent=resp_agent, res=res, preexisting_graph=graph)
+    entity = getattr(graphset, config[res_type]["add"])(resp_agent=resp_agent, res=res, preexisting_graph=graph)
     return entity
 
-def create(self) -> None:
-    pass
+def save_create_query(subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
+        endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
+    ) -> None:
+    s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
+    s_entity = get_entity_from_res(
+        endpoint=endpoint, res=URIRef(subj), res_type=s_entity_type, 
+        resp_agent=resp_agent, graphset=graphset, config=config)
+    method_name = config[s_entity_type][predicate]["create"]
+    sig = signature(getattr(s_entity, method_name))
+    params_number = len(sig.parameters)
+    if params_number > 0:
+        o_entity_type = get_entity_type(base_iri, obj)
+        o_entity = get_entity_from_res(
+            endpoint=endpoint, res=URIRef(obj), res_type=o_entity_type, 
+            resp_agent=resp_agent, graphset=graphset, config=config)
+        update_query[subj+predicate+obj] = {
+            "s_entity": s_entity,
+            "method_name": method_name,
+            "o_entity": o_entity
+        }
+    else:
+        update_query[subj+predicate+obj] = {
+            "s_entity": s_entity,
+            "method_name": method_name,
+            "o_entity": ""
+        }
+
+def save_update_query(
+        subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
+        endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
+    ) -> None:
+    save_delete_query(subj, predicate, obj)
+    save_create_query(subj, predicate, obj)
 
 def save_delete_query(
         subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
@@ -51,7 +82,7 @@ def save_delete_query(
     s_entity = get_entity_from_res(
         endpoint=endpoint, res=URIRef(subj), res_type=s_entity_type, 
         resp_agent=resp_agent, graphset=graphset, config=config)
-    method_name = config["delete"][s_entity_type][predicate]
+    method_name = config[s_entity_type][predicate]["delete"]
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
     if params_number > 0:
@@ -117,12 +148,18 @@ def entity(res):
         app.logger.error('Something went wrong')
     return render_template("entity.jinja2", res=res, response_outgoing=response_outgoing, response_incoming=response_incoming, baseUri=base_iri)
 
+@app.route("/create")
+def create():
+    return jsonify({"result": "Successful creation"})
+
 @app.route("/update")
 def update():
     s = request.args.get("triple[s]", None)
     p = request.args.get("triple[p]", None)
     o = request.args.get("triple[o]", None)
-    return jsonify({"result": "Successful update"})
+    save_delete_query(subj=s, predicate=p, obj=o)
+    save_create_query(subj=s, predicate=p, obj=o)
+    return jsonify({"result": update_query})
 
 @app.route("/delete")
 def delete():
