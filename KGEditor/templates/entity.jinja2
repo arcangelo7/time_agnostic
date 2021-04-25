@@ -1,8 +1,6 @@
 {% extends 'base.jinja2' %}
 {% block content %}
-    {% if "/prov/" in res %}
-        
-    {% else %}
+    {% if "/prov/" not in res %}
         <button class="btn btn-pill btn-success btn-lg" type="button" id="editButton">
             <span class="mr-1"><span class="fas fa-pen-fancy"></span></span>
             Edit

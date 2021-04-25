@@ -26,8 +26,8 @@ def get_entity_type(base_iri:str, res:str) -> str:
     return type_of_entity
 
 def get_entity_from_res(
-        endpoint:str, res:URIRef, res_type:str, 
-        resp_agent:str, graphset:GraphSet, config:dict) -> GraphEntity:
+        res:URIRef, res_type:str, endpoint:str = endpoint,  
+        resp_agent:str = resp_agent, graphset:GraphSet = graphset, config:dict = config) -> GraphEntity:
     sparql = SPARQLWrapper(endpoint)
     query = f"""
         CONSTRUCT {{<{res}> ?p ?o}}
@@ -44,17 +44,13 @@ def save_create_query(subj:str, predicate:str, obj:str, base_iri:str=base_iri,
         endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
     ) -> None:
     s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
-    s_entity = get_entity_from_res(
-        endpoint=endpoint, res=URIRef(subj), res_type=s_entity_type, 
-        resp_agent=resp_agent, graphset=graphset, config=config)
+    s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type)
     method_name = config[s_entity_type][predicate]["create"]
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
     if params_number > 0:
         o_entity_type = get_entity_type(base_iri, obj)
-        o_entity = get_entity_from_res(
-            endpoint=endpoint, res=URIRef(obj), res_type=o_entity_type, 
-            resp_agent=resp_agent, graphset=graphset, config=config)
+        o_entity = get_entity_from_res(res=URIRef(obj), res_type=o_entity_type)
         update_query[subj+predicate+obj] = {
             "s_entity": s_entity,
             "method_name": method_name,
@@ -79,17 +75,13 @@ def save_delete_query(
         endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
     ) -> None:
     s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
-    s_entity = get_entity_from_res(
-        endpoint=endpoint, res=URIRef(subj), res_type=s_entity_type, 
-        resp_agent=resp_agent, graphset=graphset, config=config)
+    s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type)
     method_name = config[s_entity_type][predicate]["delete"]
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
     if params_number > 0:
         o_entity_type = get_entity_type(base_iri, obj)
-        o_entity = get_entity_from_res(
-            endpoint=endpoint, res=URIRef(obj), res_type=o_entity_type, 
-            resp_agent=resp_agent, graphset=graphset, config=config)
+        o_entity = get_entity_from_res(res=URIRef(obj), res_type=o_entity_type)
         update_query[subj+predicate+obj] = {
             "s_entity": s_entity,
             "method_name": method_name,
@@ -154,12 +146,15 @@ def create():
 
 @app.route("/update")
 def update():
-    s = request.args.get("triple[s]", None)
-    p = request.args.get("triple[p]", None)
-    o = request.args.get("triple[o]", None)
-    save_delete_query(subj=s, predicate=p, obj=o)
-    save_create_query(subj=s, predicate=p, obj=o)
-    return jsonify({"result": update_query})
+    prev_s = request.args.get("prev_triple[s]", None)
+    prev_p = request.args.get("prev_triple[p]", None)
+    prev_o = request.args.get("prev_triple[o]", None)
+    new_s = request.args.get("new_triple[s]", None)
+    new_p = request.args.get("new_triple[p]", None)
+    new_o = request.args.get("new_triple[o]", None)
+    save_create_query(subj=new_s, predicate=new_p, obj=new_o)
+    save_delete_query(subj=prev_s, predicate=prev_p, obj=prev_o)
+    return jsonify({"result": "Successful update"})
 
 @app.route("/delete")
 def delete():

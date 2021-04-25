@@ -82,15 +82,15 @@ class DatasetAutoEnhancer(object):
                 if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
                     preexisting_entity = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(ids_found[result["literalValue"]["value"]]), switcher=switcher, entity=entity)
                     duplicated_entity = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(result["s"]["value"]), switcher=switcher, entity=entity)
-                    try:
-                        print(f'[DatasetAutoEnhancer: INFO] Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
-                        preexisting_entity.merge(duplicated_entity)
-                        # for preexisting_id, duplicated_id in itertools.product(preexisting_ids, duplicated_ids):
-                        #     if preexisting_id != duplicated_id:
-                        #         print(f'[DatasetAutoEnhancer: INFO] Merging {preexisting_id.res} with {duplicated_id.res}')
-                        #         preexisting_id.merge(duplicated_id)
-                    except TypeError:
-                        pass
+                    # try:
+                    print(f'[DatasetAutoEnhancer: INFO] Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
+                    preexisting_entity.merge(duplicated_entity)
+                    # for preexisting_id, duplicated_id in itertools.product(preexisting_ids, duplicated_ids):
+                    #     if preexisting_id != duplicated_id:
+                    #         print(f'[DatasetAutoEnhancer: INFO] Merging {preexisting_id.res} with {duplicated_id.res}')
+                    #         preexisting_id.merge(duplicated_id)
+                    # except TypeError:
+                    #     pass
                 else:
                     ids_found[result["literalValue"]["value"]] = result["s"]["value"]
                 pbar.update(1)

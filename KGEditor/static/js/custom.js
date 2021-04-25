@@ -102,7 +102,6 @@ $("#editButton").click(function(){
             .addClass("btn-danger")
             .blur();
         $("tbody tr").each(function(){
-            console.log($(this).text())
             if ($(this).text().indexOf("/prov") == -1 && $("#resName").text().indexOf("/prov") == -1){
                 $(this).append(`
                     <div class="d-flex">
@@ -126,7 +125,6 @@ $("#editButton").click(function(){
     }
 });
 
-
 // Click on delete button
 $(document).on("click", "button.deleteButton", function(){
     triple = get_s_p_o(this)
@@ -148,10 +146,14 @@ $(document).on("click", "button.deleteButton", function(){
 });
 
 // Click on update button
+var prev_triple;
 $(document).on("click", "button.updateButton", function(){
     var button = this
     var icon = $(this).children()
     var siblingDeleteButton = $(this).siblings()
+    if (!$(this).parent().prevAll().find(".form-control").length) {
+        prev_triple = get_s_p_o(button);
+    } 
     $(this).parent().prevAll().each(function(){
         if ($(this).find('.form-control').length){
             icon.attr("class", "fas fa-pencil-alt");
@@ -183,10 +185,8 @@ $(document).on("click", "button.updateButton", function(){
         }
     });
     if (!$(this).parent().prevAll().find(".form-control").length) {
-        triple = get_s_p_o(button);
-        $.get("/update", data={triple: triple}, function(data){
-            console.log(data)
-        }, dataType="json");
-    }
+        new_triple = get_s_p_o(button);
+        $.get("/update", data={prev_triple: prev_triple, new_triple: new_triple}, function(){}, dataType="json");
+    } 
     $(this).blur();
 });

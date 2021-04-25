@@ -8,7 +8,7 @@ flask = "*"
 sparqlwrapper = "*"
 rdflib = "*"
 requests = "*"
-oc-ocdm = "*"
+oc-ocdm = {path = "./../oc_ocdm-5.0.0.tar.gz"}
 
 [dev-packages]
 
