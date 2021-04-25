@@ -102,16 +102,19 @@ $("#editButton").click(function(){
             .addClass("btn-danger")
             .blur();
         $("tbody tr").each(function(){
-            $(this).append(`
-                <div class="d-flex">
-                    <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 updateButton" type="button" aria-label="update button" title="update button">
-                        <span aria-hidden="true" class="fas fa-pencil-alt"></span>
-                    </button>
-                    <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 deleteButton" type="button" aria-label="delete button" title="delete button">
-                        <span aria-hidden="true" class="fas fa-minus"></span>
-                    </button>
-                </div>
-            `);
+            console.log($(this).text())
+            if ($(this).text().indexOf("/prov") == -1 && $("#resName").text().indexOf("/prov") == -1){
+                $(this).append(`
+                    <div class="d-flex">
+                        <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 updateButton" type="button" aria-label="update button" title="update button">
+                            <span aria-hidden="true" class="fas fa-pencil-alt"></span>
+                        </button>
+                        <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 deleteButton" type="button" aria-label="delete button" title="delete button">
+                            <span aria-hidden="true" class="fas fa-minus"></span>
+                        </button>
+                    </div>
+                `);
+            }
         }); 
         edit = false; 
     } else {

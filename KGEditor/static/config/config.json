@@ -1,4 +1,19 @@
 {
+    "http://purl.org/spar/datacite/Identifier": {
+        "add": "add_id",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"            
+        },
+        "http://purl.org/spar/datacite/usesIdentifierScheme": {
+            "create": "",
+            "delete": "remove_identifier_with_scheme"
+        },
+        "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue": {
+            "create": "",
+            "delete": "remove_identifier_with_scheme"
+        }	
+    },
     "http://purl.org/spar/pro/RoleInTime": {
         "add": "add_ar",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {

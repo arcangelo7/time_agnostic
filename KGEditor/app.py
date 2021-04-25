@@ -16,7 +16,7 @@ base_iri = "https://github.com/arcangelo7/time_agnostic/"
 info_dir = "./data/info_dir/graph/"
 resp_agent = "https://orcid.org/0000-0002-8420-0696"
 graphset = GraphSet(base_iri=base_iri, info_dir=info_dir, wanted_label=False)
-with open('KGEditor\static\config\config.json', 'r') as f:
+with open('KGEditor/static/config/config.json', 'r') as f:
     config = json.load(f)
 update_query = dict()
 
