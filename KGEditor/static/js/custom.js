@@ -209,3 +209,24 @@ $(document).on("click", "button.deleteButton", function(){
         $.get("/delete", data={triple: triple}, function(){}, dataType="json");    
     }
 });
+
+// Create triple autocompletion
+$(function() {
+    $.getJSON("/static/config/config.json", function(){
+    })
+    .done(function(data) {
+        var createPredicate = []
+        $.each(data, function(k, v){
+            $.each(v, function(k, v){
+                createPredicate.push(k)
+            });
+        });
+        $("#createPredicate").autocomplete({
+            source: createPredicate
+        });
+    })
+    .fail(function(e) {
+        console.log(e);
+    });
+
+  });

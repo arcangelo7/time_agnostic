@@ -53,3 +53,7 @@ li ol > li:before {
 .sparqlResults td {
     width: 50%;
 }
+
+ul.ui-autocomplete {
+    z-index: 1100;
+}
