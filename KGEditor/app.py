@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.graph.graph_entity import GraphEntity
 from oc_ocdm import Storer
@@ -6,15 +6,14 @@ from oc_ocdm.graph.entities.bibliographic.bibliographic_resource import Bibliogr
 from SPARQLWrapper import SPARQLWrapper, POST, DIGEST, JSON, RDFXML
 from SPARQLWrapper.SPARQLExceptions import QueryBadFormed
 from rdflib import Graph, URIRef
-import json, urllib, oc_ocdm.graph.entities as entities
+import json, urllib, os
 from inspect import signature
 
 app = Flask(__name__)
-
+app.config["SECRET_KEY"] = b'\x94R\x06?\xa4!+\xaa\xae\xb2\xf3Z\xb4\xb7\xab\xf8'
 endpoint = "http://localhost:9999/blazegraph/sparql"
 base_iri = "https://github.com/arcangelo7/time_agnostic/"
 info_dir = "./data/info_dir/graph/"
-resp_agent = "https://orcid.org/0000-0002-8420-0696"
 graphset = GraphSet(base_iri=base_iri, info_dir=info_dir, wanted_label=False)
 with open('KGEditor/static/config/config.json', 'r') as f:
     config = json.load(f)
@@ -26,8 +25,8 @@ def get_entity_type(base_iri:str, res:str) -> str:
     return type_of_entity
 
 def get_entity_from_res(
-        res:URIRef, res_type:str, endpoint:str = endpoint,  
-        resp_agent:str = resp_agent, graphset:GraphSet = graphset, config:dict = config) -> GraphEntity:
+        res:URIRef, res_type:str, resp_agent:str, 
+        endpoint:str = endpoint, graphset:GraphSet = graphset, config:dict = config) -> GraphEntity:
     sparql = SPARQLWrapper(endpoint)
     query = f"""
         CONSTRUCT {{<{res}> ?p ?o}}
@@ -40,17 +39,17 @@ def get_entity_from_res(
     entity = getattr(graphset, config[res_type]["add"])(resp_agent=resp_agent, res=res, preexisting_graph=graph)
     return entity
 
-def save_create_query(subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
-        endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
+def save_create_query(subj:str, predicate:str, obj:str, resp_agent:str,  
+        base_iri:str=base_iri, endpoint:str=endpoint, graphset:GraphSet=graphset, config:dict=config
     ) -> None:
     s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
-    s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type)
+    s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type, resp_agent=resp_agent)
     method_name = config[s_entity_type][predicate]["create"]
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
     if params_number > 0 and base_iri in obj:
         o_entity_type = get_entity_type(base_iri, obj)
-        o_entity = get_entity_from_res(res=URIRef(obj), res_type=o_entity_type)
+        o_entity = get_entity_from_res(res=URIRef(obj), res_type=o_entity_type, resp_agent=resp_agent)
         update_query[subj+predicate+obj] = {
             "s_entity": s_entity,
             "method_name": method_name,
@@ -64,24 +63,24 @@ def save_create_query(subj:str, predicate:str, obj:str, base_iri:str=base_iri,
         }
 
 def save_update_query(
-        subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
-        endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
+        subj:str, predicate:str, obj:str, resp_agent:str,
+        base_iri:str=base_iri, endpoint:str=endpoint, graphset:GraphSet=graphset, config:dict=config
     ) -> None:
     save_create_query(subj, predicate, obj)
     save_delete_query(subj, predicate, obj)
 
 def save_delete_query(
-        subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
-        endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
+        subj:str, predicate:str, obj:str, resp_agent:str,
+        base_iri:str=base_iri, endpoint:str=endpoint, graphset:GraphSet=graphset, config:dict=config
     ) -> None:
     s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
-    s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type)
+    s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type, resp_agent=resp_agent)
     method_name = config[s_entity_type][predicate]["delete"]
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
     if params_number > 0 and base_iri in obj:
         o_entity_type = get_entity_type(base_iri, obj)
-        o_entity = get_entity_from_res(res=URIRef(obj), res_type=o_entity_type)
+        o_entity = get_entity_from_res(res=URIRef(obj), res_type=o_entity_type, resp_agent=resp_agent)
         update_query[subj+predicate+obj] = {
             "s_entity": s_entity,
             "method_name": method_name,
@@ -92,7 +91,7 @@ def save_delete_query(
             "s_entity": s_entity,
             "method_name": method_name,
             "o_entity": ""
-        }        
+        }     
 
 @app.route("/")
 def home():
@@ -145,7 +144,7 @@ def create():
     s = request.args.get("triple[s]", None).strip()
     p = request.args.get("triple[p]", None).strip()
     o = request.args.get("triple[o]", None).strip()
-    save_create_query(subj=s, predicate=p, obj=o)
+    save_create_query(subj=s, predicate=p, obj=o, resp_agent=session["resp_agent"])
     return jsonify({"result": "Successful creation"})
 
 @app.route("/update")
@@ -156,8 +155,8 @@ def update():
     new_s = request.args.get("new_triple[s]", None).strip()
     new_p = request.args.get("new_triple[p]", None).strip()
     new_o = request.args.get("new_triple[o]", None).strip()
-    save_create_query(subj=new_s, predicate=new_p, obj=new_o)
-    save_delete_query(subj=prev_s, predicate=prev_p, obj=prev_o)
+    save_create_query(subj=new_s, predicate=new_p, obj=new_o, resp_agent=session["resp_agent"])
+    save_delete_query(subj=prev_s, predicate=prev_p, obj=prev_o, resp_agent=session["resp_agent"])
     return jsonify({"result": "Successful update"})
 
 @app.route("/delete")
@@ -165,7 +164,7 @@ def delete():
     s = request.args.get("triple[s]", None).strip()
     p = request.args.get("triple[p]", None).strip()
     o = request.args.get("triple[o]", None).strip()
-    save_delete_query(subj=s, predicate=p, obj=o)
+    save_delete_query(subj=s, predicate=p, obj=o, resp_agent=session["resp_agent"])
     return jsonify({"result": "Successful delete"})
 
 @app.route("/undo")
@@ -190,6 +189,19 @@ def done():
     graphset.commit_changes()
     update_query = {}
     return jsonify({"result": "Successful upload"})
+
+@app.route("/saveRA")
+def save_resp_agent():
+    resp_agent = request.args.get("resp_agent", None)
+    session["resp_agent"] = resp_agent
+    return jsonify({"result": "Successful authentication"})
+
+@app.route("/getRA")
+def get_resp_agent():
+    if "resp_agent"  in session:
+        return jsonify({"result": session["resp_agent"]})
+    else:
+        return jsonify({"result": ""})
 
 if __name__ == "__main__":
     app.run(debug=True)

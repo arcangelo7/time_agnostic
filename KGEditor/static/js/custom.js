@@ -93,34 +93,13 @@ $(document).on("click", "a.sparqlEntity", function(e){
 var edit = true;
 $("#editButton").click(function(){
     if (edit){
-        $(this)
-            .html(`
-                <span class="mr-1"><span class="fas fa-check"></span></span>
-                Done
-            `)
-            .removeClass("btn-success")
-            .addClass("btn-danger")
-            .blur();
-        $("#resName").append(`
-            <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 createButton" type="button" aria-label="create button" title="create button" data-toggle="modal" data-target="#modalCreateEntity">
-                <span aria-hidden="true" class="fas fa-plus"></span>
-            </button>
-        `);
-        $("tbody tr").each(function(){
-            if ($(this).text().indexOf("/prov") == -1 && $("#resName").text().indexOf("/prov") == -1){
-                $(this).append(`
-                    <div class="d-flex">
-                        <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 updateButton" type="button" aria-label="update button" title="update button">
-                            <span aria-hidden="true" class="fas fa-pencil-alt"></span>
-                        </button>
-                        <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 deleteButton" type="button" aria-label="delete button" title="delete button">
-                            <span aria-hidden="true" class="fas fa-minus"></span>
-                        </button>
-                    </div>
-                `);
+        $.get("/getRA", function(data){
+            if (data["result"] == ""){
+                $("#modalResponsibleAgent").modal("show");
+            } else {
+                $("#submitResponsibleAgent").trigger("click");
             }
-        }); 
-        edit = false; 
+        });
     } else {
         edit = true; 
         $.get("/done", function(){
@@ -128,6 +107,60 @@ $("#editButton").click(function(){
             window.location.href = `/entity/${res}`    
         });  
     }
+});
+
+$(document).on("click", "#submitResponsibleAgent", function(){ 
+    let orcid_re = /(https?:\/\/orcid.org\/)?([0-9]{4})-([0-9]{4})-([0-9]{4})-([0-9]{4})/i
+    $.get("/getRA", function(data){
+        if (data["result"] == ""){
+            resp_agent = $("#inputResponsibleAgent").val();
+            is_an_orcid = orcid_re.exec(resp_agent)
+            if (is_an_orcid){
+                $.get("/saveRA", data={resp_agent: resp_agent}, function(){}, dataType="json");
+                $("#modalResponsibleAgent").modal("hide");    
+            } else {
+                $("#invalidOrcid").removeAttr("hidden");
+                $("#submitResponsibleAgent").blur();
+            }
+        } else {
+            resp_agent = data["result"];
+            is_an_orcid = true;
+        }
+        if (edit && is_an_orcid){
+            $("#editButton")
+                .html(`
+                    <span class="mr-1"><span class="fas fa-check"></span></span>
+                    Done
+                `)
+                .removeClass("btn-success")
+                .addClass("btn-danger")
+                .blur();
+            $("#resName").append(`
+                <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 createButton" type="button" aria-label="create button" title="create button" data-toggle="modal" data-target="#modalCreateEntity">
+                    <span aria-hidden="true" class="fas fa-plus"></span>
+                </button>
+            `);
+            $("tbody tr").each(function(){
+                if ($(this).text().indexOf("/prov") == -1 && $("#resName").text().indexOf("/prov") == -1){
+                    $(this).append(`
+                        <div class="d-flex">
+                            <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 updateButton" type="button" aria-label="update button" title="update button">
+                                <span aria-hidden="true" class="fas fa-pencil-alt"></span>
+                            </button>
+                            <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 deleteButton" type="button" aria-label="delete button" title="delete button">
+                                <span aria-hidden="true" class="fas fa-minus"></span>
+                            </button>
+                        </div>
+                    `);
+                }
+            }); 
+            edit = false; 
+        }     
+    });
+});
+
+$('#modalResponsibleAgent').on('hidden.bs.modal', function (e) {
+    $("#invalidOrcid").prop("hidden", "true");
 });
 
 // Click on create button 
@@ -228,5 +261,4 @@ $(function() {
     .fail(function(e) {
         console.log(e);
     });
-
-  });
+});

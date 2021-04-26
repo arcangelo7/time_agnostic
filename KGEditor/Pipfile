@@ -9,6 +9,11 @@ sparqlwrapper = "*"
 rdflib = "*"
 requests = "*"
 oc-ocdm = {path = "./../oc_ocdm-5.0.0.tar.gz"}
+flask-login = "*"
+flask-sqlalchemy = "*"
+flask-wtf = "*"
+wtforms = "*"
+flask-bootstrap = "*"
 
 [dev-packages]
 
