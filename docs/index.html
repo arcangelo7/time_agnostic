@@ -54,107 +54,137 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (21/04/2021)</h2>
+                    <h2>Prossimo incontro (28/04/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
+                <p>Tutte le novità di questa settimana sono relative al <strong>Knowledge Graph Editor</strong>.</p>
                     <ol>
-                        <li>Novità relative al <strong>Knowledge Graph Editor</strong>:
-                            <ol>
-                                <li>È stata aggiunta una textarea che permette di effettuare query SPARQL.
-                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                        <img src="./assets/img/sparql_textarea.png" alt="SPARQL textarea">
-                                    </div>
-                                </li>
-                                <li>Se la query richiede molto tempo, un'icona di caricamento comunica all'utente lo stato interno del sistema.
-                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                        <img src="./assets/img/sparql_loading.png" alt="SPARQL loading">
-                                    </div>
-                                </li>
-                                <li>L'output della query viene mostrato in una tabella, in cui ogni colonna rappresenta una variabile della query stessa. Le entità vengono riportate come link, mentre non è possibile interagire con i predicati, con gli oggetti di tipo literal e in generale con gli oggetti il cui URI non contiene l'URI base del dataset.
-                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                        <img src="./assets/img/sparql_results.png" alt="SPARQL results">
-                                    </div>
-                                </li>
-                                <li>Cliccando su un'entità, vengono mostrati tutti gli outgoing links e tutti gli incoming links relativi a quell'entità. 
-                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                        <img src="./assets/img/sparql_entity.png" alt="SPARQL entity">
-                                    </div>
-                                </li>
-                                <li>Il pulsante "Edit" permette di accedere alla modalità di modifica.</li>
-                            </ol>
-                        </li>
-                        <li>Novità relative al metodo per ottenere i DOI names delle reference riportate da Crossref senza DOI.
-                            <ol>
-                                <li>Il metodo <strong>add_reference_data_without_doi</strong> non utilizza più data di pubblicazione e ISBN per fare query su Crossref, mentre usa volume-title e series-title oltre al journal-title.</li>
-                                <li>Sono state aggiunti diversi metodi il cui scopo complessivo è quello di calcolare il <strong>matching score</strong> tra due dizionari di metadati, ovvero quelli sintentici e grezzi riportati da Crossref nel campo "reference" e quelli approfonditi risultanti da una query. L'algoritmo è stato mutuato dai capitoli 3.2 and soprattuttutto dall'appendice dell'articolo <em>Large-scale comparison of bibliographic data.
-                                    sources: Scopus, Web of Science, Dimensions,
-                                    Crossref, and Microsoft Academic</em> (Visser, Martijn et al., 2005), reperibile al seguente indirizzo: <a href="https://arxiv.org/abs/2005.10732" alt="Link to the paper" target="_blank">https://arxiv.org/abs/2005.10732</a>. La formula adottata, rispetto a quella originale, non considera i DOI names, poiché, date le premesse, non sono mai presenti nei metadati di partenza.
-                                    <ol>
-                                        <li>Il metodo <strong>_do_heuristic_match</strong> combina gli score derivanti dai singoli match in un unico score finale.</li>
-                                        <li>Il metodo <strong>_levenshtein_distance</strong> calcola la distanza di Levenshtein, ovvero il minimo numero di modifiche (cancellazioni, aggiunte e sostituzioni) necessarie per trasformare una stringa in un'altra. È stato adottato l'algoritmo iterativo basato su una matrice, poiché le soluzioni ricorsiva e tramite tecnica di dynamic programming richiedevano innumerevoli passaggi in più, risultando meno efficienti.
-                                            <p>Questa funzione vince il premio algoritmo più entusiasmante della settimana, se non del mese. È talmente bella che la riporto nel diario:</p>
-                                            <div class="card bg-primary shadow-inset border-light"><pre><code class="prettyprint">
-    import numpy as np
-
-    def levenshtein_distance(target:str, source:str) -> int:
-        target = [k for k in "#" + target]
-        source = [k for k in "#" + source]
-        sol = np.zeros(shape=(len(source), len(target)))
-        sol[0] = [j for j in range(len(target))]
-        sol[:,0] = [j for j in range(len(source))]
-        if target[1] != source[1]:
-            sol[1,1] = 2
-        for c in range(1, len(target)):
-            for r in range(1, len(source)):
-                if target[c] != source[r]:
-                    sol[r,c] = min(sol[r-1,c], sol[r,c-1]) + 1
-                else:
-                    sol[r,c] = sol[r-1,c-1]
-        min_edit_distance = int(sol[-1,-1])
-        return min_edit_distance
-                                            </code></pre></div>
-                                        </li>
-                                        <li>
-                                            <p>Il metodo <strong>_match_first_author</strong> compara le iniziali del nome e il cognome dei primi autori dei due lavori, tramite la seguente formula:</p>
-                                            <div class="card bg-primary shadow-inset border-light">
-                                                <pre><code class="prettyprint">
-    𝑚<sub>firstauthor</sub> = 0.8 − 0.8𝐷(𝑙<sub>A</sub>, 𝑙<sub>B</sub>) ⁄ max(𝐿(𝑙<sub>A</sub>), 𝐿(𝑙<sub>B</sub>)) + 0.2𝐸(𝑓<sub>A, 𝑓<sub>B</sub>)
-                                                </code></pre>
-                                            </div>
-                                            <p>Dove l<sub>X</sub> ed f<sub>X</sub> denotano rispettivamente il cognome e le iniziali del nome del primo autore del documento X. L(a) è uguale alla lunghezza della stringa. D(a,b) è la distanza di Levenshtein tra la stringa a e la stringa b. E(a,b) è uguale a 1 se a è uguale a b, altrimenti 0. Dunque, 𝑚<sub>firstauthor</sub> è uguale a 1 se i primi autori dei documenti A e B hanno gli stessi cognomi e iniziali dei nomi.</p>
-                                        </li>
-                                        <li>
-                                            <p>Il metodo <strong>_match_title</strong> compara i titoli dei due lavori, tramite la seguente formula:</p>
-                                            <div class="card bg-primary shadow-inset border-light">
-                                                <pre><code class="prettyprint">
-    𝑚<sub>title</sub> = 1 − 𝐷(𝑡<sub>A</sub>, 𝑡<sub>B</sub>) ⁄ max(𝐿(𝑡<sub>A</sub>), 𝐿(𝑡<sub>B</sub>))
-                                                </code></pre>
-                                            </div>
-                                            <p>Anche in questo caso, 𝑚<sub>title</sub> è uguale a 1 se i titoli dei documenti A e B sono identici. </p>
-                                        </li>
-                                    </ol>
-                                </li>
-                            </ol>
-                        </li>
-                        <li>Ho aperto il seguente issue: <a href="https://github.com/opencitations/oc_ocdm/issues/8" alt="Link to the GitHub issue on oc-ocdm" target="_blank">https://github.com/opencitations/oc_ocdm/issues/8</a>.</li>
-                    </ol>
-                <h3>Cosa non ho capito</h3>
-                <ol>
-                    <li>
-                        <p>Per effettuare un'operazione di aggiunta, cancellazione e modifica sulle triple del dataset attraverso il KGEditor, devo necessariamente utilizzare oc_ocdm. Se lanciassi query di update in autonomia, infatti, perderei tutte le informazioni contenute negli indici del dataset e della provenance, oltre al fatto che dovrei riscrivere lo stesso codice già scritto da Simone per effettuare le medesime operazioni. Problema: come dico a Python quale metodo di oc_ocdm invocare per fare un delete, un create o un update? Mi spiego meglio con un esempio: poniamo che l'utente voglia eliminare una delle triple in figura cliccando sull'apposito pulsante "-":</p>
-                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                            <img src="./assets/img/sparql_remove.png" alt="SPARQL remove entity">
-                        </div>
-                        <p>Ad esempio, potrebbe voler eliminare la prima tripla:
+                        <li>È stato creato un file di configurazione in formato json, che mappa diversi tipi di entità e predicato con i relativi metodo di creazione e cancellazione di oc-ocdm. È possibile visualizzarlo a questo indirizzo: <a href="https://raw.githubusercontent.com/arcangelo7/time_agnostic/main/KGEditor/static/config/config.json" target="_blank" alt="Link to the config file">https://raw.githubusercontent.com/arcangelo7/time_agnostic/main/KGEditor/static/config/config.json</a>. Se ne riporta qui un'anteprima.
                             <div class="card bg-primary shadow-inset border-light">
                                 <pre><code class="prettyprint">
-&lt;https://github.com/arcangelo7/time_agnostic/br/1&gt; &lt;http://purl.org/spar/datacite/hasIdentifier&gt; &lt;https://github.com/arcangelo7/time_agnostic/id/1&gt;
+    "http://purl.org/spar/fabio/Expression": {
+        "add": "add_br",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"
+        },
+        "http://purl.org/spar/datacite/hasIdentifier": {
+            "create": "has_identifier",
+            "delete": "remove_identifier"
+        },
+        "http://purl.org/dc/terms/title": {
+            "create": "has_title",
+            "delete": "remove_title"
+        },
+        "http://purl.org/spar/fabio/hasSubtitle": {
+            "create": "has_subtitle",
+            "delete": "remove_subtitle"
+        },
+        "http://purl.org/vocab/frbr/core#partOf": {
+            "create": "is_part_of",
+            "delete": "remove_is_part_of"
+        },
+        "http://purl.org/spar/cito/cites": {
+            "create": "has_citation",
+            "delete": "remove_citation"
+        },
+        "http://prismstandard.org/namespaces/basic/2.0/publicationDate": {
+            "create": "has_pub_date",
+            "delete": "remove_pub_date"
+        },
+        "http://purl.org/vocab/frbr/core#embodiment": {
+            "create": "has_format",
+            "delete": "remove_format"
+        },
+        "http://purl.org/spar/fabio/hasSequenceIdentifier": {
+            "create": "has_number",
+            "delete": "remove_number"
+        },
+        "http://purl.org/vocab/frbr/core#part": {
+            "create": "contains_in_reference_list",
+            "delete": "remove_contained_in_reference_list"
+        },
+        "http://purl.org/spar/pro/isDocumentContextFor": {
+            "create": "has_contributor",
+            "delete": "remove_contributor"
+        }
+    }
                                 </code></pre>
                             </div>
-                        </p>
-                        <p>Niente di più facile, oc_ocdm mette a disposizione il metodo remove_identifier a questo scopo. Tuttavia, il pulsante "-" è generico e l'unica informazione per capire quale metodo di cancellazione invocare è il predicato <http://purl.org/spar/datacite/hasIdentifier>. Come faccio dal predicato a risalire a quale metodo di cancellazione utilizzare? Il problema è il medesimo anche per aggiungere e modificare. Devo creare un enorme dizionario che mappi ogni predicato con il suo metodo? A mio parere, una soluzione più pulita sarebbe un unico metodo delete generico per una bibliographic_entity che prende in input qualunque oggetto e cancella la tripla.</p>
-                    </li>
-                </ol>
+                        </li>
+                        <li>
+                            La funzione di cancellazione delle triple è ora funzionante. Tramite la <strong>reflection</strong>, viene dinamicamente invocato il metodo appropriato in base al soggetto e predicato selezionati dall'utente per la cancellazione. In particolare, viene utilizzata la funzione <strong>getattr</strong> per invocare il metodo vero e proprio. Nel caso in cui questo metodo voglia un argomento, viene passata l'entità relativa all'oggetto. Per capire quanti parametri siano richiesti dal metodo è stata usata la funzione <strong>signature</strong> del modulo inspect di Python. 
+                        </li>
+                        <li>
+                            Cliccando sul pulsante di cancellazione, la tripla viene decorata con un line-through e il bottone diventa un pulsante di aggiunta per annullare l'azione precedente. Finché non viene cliccato il pulsante "Done", tutte le query vengono salvate in un dizionario. Cliccando sul "+" viene cancellata dal dizionario l'operazione di cancellazione corrispondente. Lo schema delle chiavi del dizionario di update è "soggetto + predicato + oggetto". 
+                            <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                <img src="./assets/img/sparql-line-through.png" alt="line-through">
+                            </div>
+                        </li>
+                        <li>
+                            È stato introdotto il pulsante di <strong>update</strong>, contraddistinto dall'icona della matita, poiché le modifiche sono reversibili finché non si preme il tasto "Done". Quest'ultimo, al contrario, è contraddistinto dall'icona della penna a inchiostro, poiché causa la modifica permanente del dataset e della provenance. Cliccando sul pulsante di update, la tripla da testo diventa input (textarea nel caso di valori che contengono spazi) e si può modificare. Così facendo, la funzione di cancellazione viene disabilitata. Viceversa, la funzione di cancellazione disabilita quella di update. Una volta completata la modifica, è possibile premere il pulsante con l'icona del "check" per salvare la relativa query, che non verrà effettuata fino al click sul tasto "Done". 
+                            <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                <img src="./assets/img/editor-update.png" alt="editor update">
+                            </div>
+                        </li>
+                        <li>
+                            È stato introdotta la funzionalità per <strong>creare</strong> una nuova tripla. Cliccando sul pulsante "+" di fianco a un'entità si apre un modale, nel quale è possibile inserire un nuovo predicato e un nuovo oggetto per quell'entità. L'input del predicato è dotato di una funzione di auto-completamento, che si basa sul medesimo file di configurazione utilizzato per mappare soggetti e predicati con relativi metodi di aggiunta e cancellazione di oc-ocdm.
+                            <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                <img src="./assets/img/editor-create.png" alt="editor create.png">
+                            </div>
+                        </li>
+                        <li>
+                            Nel caso in cui l'utente non si sia ancora autenticato tramite ORCID, cliccando sul pulsante "Edit" viene aperto un modale per specificare il <strong>responsible agent</strong>.
+                            <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                <img src="./assets/img/editor-ra.png" alt="editor responsible agent.png">
+                            </div>
+                            Il valore inserito dev'essere necessariamente un ORCID. Il campo viene infatti validato tramite la seguente espressione regolare.
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    /(https?:\/\/orcid.org\/)?([0-9]{4})-([0-9]{4})-([0-9]{4})-([0-9]{4})/i
+                                </code></pre>
+                            </div>
+                            Una volta specificato il responsible agent, viene generato un <strong>cookie</strong> e l'ORCID viene salvato nella <strong>sessione</strong>, per cui non verrà più chiesto. 
+                        </li>
+                        <li>Le <strong>triple</strong> di <strong>provenance</strong> sono adesso <strong>immutabili</strong>. Nel contesto di un'entità di provenance il pulsante di modifica non appare, mentre nel contesto di un qualunque altro tipo di entità non compaiono i pulsanti di modifica e cancellazione di fianco agli incoming links legati alla provenance.</li>
+                        <li>Risolto un bug per cui la rotella di caricamento girava all'infinito in caso di errori nella query o di database irraggiungibile. </li>
+                    </ol>
+                <h3>Cosa non ho capito</h3>
+                    <ol>
+                        <li>
+                            Implementando l'operazione di update del KGEditor mi sono nuovamente imbattuto nel bug delle query malformate, ovvero prive di ";" tra un'operazione di update e l'altra. L'update consiste infatti di due operazione, una di cancellazione e una di aggiunta. In questo modo ho potuto comprendere meglio cosa causi il bug e scrivere del codice per riprodurlo, che riporto qui sotto:
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    from oc_ocdm.graph import GraphSet
+    from oc_ocdm.storer import Storer
+    from rdflib import URIRef, Graph
+    from SPARQLWrapper import SPARQLWrapper, RDFXML
+    
+    def get_entity_from_res(res:URIRef, graphset:GraphSet, ts_url:str="http://localhost:9999/blazegraph/sparql", resp_agent="https://orcid.org/0000-0002-8420-0696"):
+        query = f"""
+            CONSTRUCT {{<{res}> ?p ?o}}
+            WHERE {{<{res}> ?p ?o}}
+        """
+        sparql = SPARQLWrapper(ts_url)
+        sparql.setQuery(query)
+        sparql.setReturnFormat(RDFXML)
+        data = sparql.query().convert()
+        graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
+        entity = graphset.add_br(resp_agent=resp_agent, res=res, preexisting_graph=graph)
+        return entity
+    
+    graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/", wanted_label=False)
+    br_16 = get_entity_from_res(res=URIRef("https://github.com/arcangelo7/time_agnostic/br/16"), graphset=graphset)
+    br_19 = get_entity_from_res(res=URIRef("https://github.com/arcangelo7/time_agnostic/br/19"), graphset=graphset)
+    br_99 = get_entity_from_res(res=URIRef("https://github.com/arcangelo7/time_agnostic/br/99"), graphset=graphset)
+    br_16.remove_citation(br_19)
+    br_16.has_citation(br_99)
+    storer = Storer(graphset)
+    storer.upload_all("http://localhost:9999/blazegraph/sparql")                                </code></pre>
+                            </div>
+                            Purtroppo non sarà possibile parlarne con Simone, perché ha già pubblicato la versione 6.0.0 di oc_ocdm e mi ha detto che non metterà più mano al codice. 
+                        </li>
+                    </ol>
             </div>
         </section>
 
@@ -1252,12 +1282,168 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                         </div>
                     </div>
                     <div class="card card-sm card-body bg-primary border-light mb-0">
-                        <a href="#panel-7" data-target="#panel-7" class="accordion-panel-header" data-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="panel-7">
+                        <a href="#panel-7" data-target="#panel-7" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-7">
                             <span class="h6 mb-0 font-weight-bold">21/04/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
-                        <div class="collapse" id="panel-6">
+                        <div class="collapse" id="panel-7">
+                            <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>Novità relative al <strong>Knowledge Graph Editor</strong>:
+                                        <ol>
+                                            <li>È stata aggiunta una textarea che permette di effettuare query SPARQL.
+                                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                                    <img src="./assets/img/sparql_textarea.png" alt="SPARQL textarea">
+                                                </div>
+                                            </li>
+                                            <li>Se la query richiede molto tempo, un'icona di caricamento comunica all'utente lo stato
+                                                interno del sistema.
+                                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                                    <img src="./assets/img/sparql_loading.png" alt="SPARQL loading">
+                                                </div>
+                                            </li>
+                                            <li>L'output della query viene mostrato in una tabella, in cui ogni colonna rappresenta una
+                                                variabile della query stessa. Le entità vengono riportate come link, mentre non è possibile
+                                                interagire con i predicati, con gli oggetti di tipo literal e in generale con gli oggetti il
+                                                cui URI non contiene l'URI base del dataset.
+                                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                                    <img src="./assets/img/sparql_results.png" alt="SPARQL results">
+                                                </div>
+                                            </li>
+                                            <li>Cliccando su un'entità, vengono mostrati tutti gli outgoing links e tutti gli incoming links
+                                                relativi a quell'entità.
+                                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                                    <img src="./assets/img/sparql_entity.png" alt="SPARQL entity">
+                                                </div>
+                                            </li>
+                                            <li>Il pulsante "Edit" permette di accedere alla modalità di modifica.</li>
+                                        </ol>
+                                    </li>
+                                    <li>Novità relative al metodo per ottenere i DOI names delle reference riportate da Crossref senza DOI.
+                                        <ol>
+                                            <li>Il metodo <strong>add_reference_data_without_doi</strong> non utilizza più data di
+                                                pubblicazione e ISBN per fare query su Crossref, mentre usa volume-title e series-title
+                                                oltre al journal-title.</li>
+                                            <li>Sono state aggiunti diversi metodi il cui scopo complessivo è quello di calcolare il
+                                                <strong>matching score</strong> tra due dizionari di metadati, ovvero quelli sintentici e
+                                                grezzi riportati da Crossref nel campo "reference" e quelli approfonditi risultanti da una
+                                                query. L'algoritmo è stato mutuato dai capitoli 3.2 and soprattuttutto dall'appendice
+                                                dell'articolo <em>Large-scale comparison of bibliographic data.
+                                                    sources: Scopus, Web of Science, Dimensions,
+                                                    Crossref, and Microsoft Academic</em> (Visser, Martijn et al., 2005), reperibile al
+                                                seguente indirizzo: <a href="https://arxiv.org/abs/2005.10732" alt="Link to the paper"
+                                                    target="_blank">https://arxiv.org/abs/2005.10732</a>. La formula adottata, rispetto a
+                                                quella originale, non considera i DOI names, poiché, date le premesse, non sono mai presenti
+                                                nei metadati di partenza.
+                                                <ol>
+                                                    <li>Il metodo <strong>_do_heuristic_match</strong> combina gli score derivanti dai
+                                                        singoli match in un unico score finale.</li>
+                                                    <li>Il metodo <strong>_levenshtein_distance</strong> calcola la distanza di Levenshtein,
+                                                        ovvero il minimo numero di modifiche (cancellazioni, aggiunte e sostituzioni)
+                                                        necessarie per trasformare una stringa in un'altra. È stato adottato l'algoritmo
+                                                        iterativo basato su una matrice, poiché le soluzioni ricorsiva e tramite tecnica di
+                                                        dynamic programming richiedevano innumerevoli passaggi in più, risultando meno
+                                                        efficienti.
+                                                        <p>Questa funzione vince il premio algoritmo più entusiasmante della settimana, se
+                                                            non del mese. È talmente bella che la riporto nel diario:</p>
+                                                        <div class="card bg-primary shadow-inset border-light">
+                                                            <pre><code class="prettyprint">
+    import numpy as np
+
+    def levenshtein_distance(target:str, source:str) -> int:
+        target = [k for k in "#" + target]
+        source = [k for k in "#" + source]
+        sol = np.zeros(shape=(len(source), len(target)))
+        sol[0] = [j for j in range(len(target))]
+        sol[:,0] = [j for j in range(len(source))]
+        if target[1] != source[1]:
+            sol[1,1] = 2
+        for c in range(1, len(target)):
+            for r in range(1, len(source)):
+                if target[c] != source[r]:
+                    sol[r,c] = min(sol[r-1,c], sol[r,c-1]) + 1
+                else:
+                    sol[r,c] = sol[r-1,c-1]
+        min_edit_distance = int(sol[-1,-1])
+        return min_edit_distance
+                                                                            </code></pre>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <p>Il metodo <strong>_match_first_author</strong> compara le iniziali del nome e il
+                                                            cognome dei primi autori dei due lavori, tramite la seguente formula:</p>
+                                                        <div class="card bg-primary shadow-inset border-light">
+                                                            <pre><code class="prettyprint">
+    𝑚<sub>firstauthor</sub> = 0.8 − 0.8𝐷(𝑙<sub>A</sub>, 𝑙<sub>B</sub>) ⁄ max(𝐿(𝑙<sub>A</sub>), 𝐿(𝑙<sub>B</sub>)) + 0.2𝐸(𝑓<sub>A, 𝑓<sub>B</sub>)
+                                                                                </code></pre>
+                                                        </div>
+                                                        <p>Dove l<sub>X</sub> ed f<sub>X</sub> denotano rispettivamente il cognome e le
+                                                            iniziali del nome del primo autore del documento X. L(a) è uguale alla lunghezza
+                                                            della stringa. D(a,b) è la distanza di Levenshtein tra la stringa a e la stringa
+                                                            b. E(a,b) è uguale a 1 se a è uguale a b, altrimenti 0. Dunque,
+                                                            𝑚<sub>firstauthor</sub> è uguale a 1 se i primi autori dei documenti A e B
+                                                            hanno gli stessi cognomi e iniziali dei nomi.</p>
+                                                    </li>
+                                                    <li>
+                                                        <p>Il metodo <strong>_match_title</strong> compara i titoli dei due lavori, tramite
+                                                            la seguente formula:</p>
+                                                        <div class="card bg-primary shadow-inset border-light">
+                                                            <pre><code class="prettyprint">
+    𝑚<sub>title</sub> = 1 − 𝐷(𝑡<sub>A</sub>, 𝑡<sub>B</sub>) ⁄ max(𝐿(𝑡<sub>A</sub>), 𝐿(𝑡<sub>B</sub>))
+                                                                                </code></pre>
+                                                        </div>
+                                                        <p>Anche in questo caso, 𝑚<sub>title</sub> è uguale a 1 se i titoli dei documenti A
+                                                            e B sono identici. </p>
+                                                    </li>
+                                                </ol>
+                                            </li>
+                                        </ol>
+                                    </li>
+                                    <li>Ho aperto il seguente issue: <a href="https://github.com/opencitations/oc_ocdm/issues/8"
+                                            alt="Link to the GitHub issue on oc-ocdm"
+                                            target="_blank">https://github.com/opencitations/oc_ocdm/issues/8</a>.</li>
+                                </ol>
+                                <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>
+                                        <p>Per effettuare un'operazione di aggiunta, cancellazione e modifica sulle triple del dataset
+                                            attraverso il KGEditor, devo necessariamente utilizzare oc_ocdm. Se lanciassi query di update in
+                                            autonomia, infatti, perderei tutte le informazioni contenute negli indici del dataset e della
+                                            provenance, oltre al fatto che dovrei riscrivere lo stesso codice già scritto da Simone per
+                                            effettuare le medesime operazioni. Problema: come dico a Python quale metodo di oc_ocdm invocare
+                                            per fare un delete, un create o un update? Mi spiego meglio con un esempio: poniamo che l'utente
+                                            voglia eliminare una delle triple in figura cliccando sull'apposito pulsante "-":</p>
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                            <img src="./assets/img/sparql_remove.png" alt="SPARQL remove entity">
+                                        </div>
+                                        <p>Ad esempio, potrebbe voler eliminare la prima tripla:</p>
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    &lt;https://github.com/arcangelo7/time_agnostic/br/1&gt; &lt;http://purl.org/spar/datacite/hasIdentifier&gt; &lt;https://github.com/arcangelo7/time_agnostic/id/1&gt;
+                                            </code></pre>
+                                        </div>
+                                        <p>Niente di più facile, oc_ocdm mette a disposizione il metodo remove_identifier a questo scopo.
+                                            Tuttavia, il pulsante "-" è generico e l'unica informazione per capire quale metodo di
+                                            cancellazione invocare è il predicato <http: //purl.org/spar/datacite/hasIdentifier>. Come
+                                                faccio dal predicato a risalire a quale metodo di cancellazione utilizzare? Il problema è il
+                                                medesimo anche per aggiungere e modificare. Devo creare un enorme dizionario che mappi ogni
+                                                predicato con il suo metodo? A mio parere, una soluzione più pulita sarebbe un unico metodo
+                                                delete generico per una bibliographic_entity che prende in input qualunque oggetto e
+                                                cancella la tripla.</p>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-8" data-target="#panel-8" class="accordion-panel-header" data-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="panel-8">
+                            <span class="h6 mb-0 font-weight-bold">28/04/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-8">
                             <div class="pt-3">
                                 <p class="mb-0"></p>
                             </div>
