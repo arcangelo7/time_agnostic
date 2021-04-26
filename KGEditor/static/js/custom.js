@@ -101,6 +101,11 @@ $("#editButton").click(function(){
             .removeClass("btn-success")
             .addClass("btn-danger")
             .blur();
+        $("#resName").append(`
+            <button class="btn btn-icon-only btn-primary btn-pill ml-3 mr-3 createButton" type="button" aria-label="create button" title="create button" data-toggle="modal" data-target="#modalCreateEntity">
+                <span aria-hidden="true" class="fas fa-plus"></span>
+            </button>
+        `);
         $("tbody tr").each(function(){
             if ($(this).text().indexOf("/prov") == -1 && $("#resName").text().indexOf("/prov") == -1){
                 $(this).append(`
@@ -125,24 +130,18 @@ $("#editButton").click(function(){
     }
 });
 
-// Click on delete button
-$(document).on("click", "button.deleteButton", function(){
-    triple = get_s_p_o(this)
-    if ($(this).hasClass("toBeDeleted")){
-        $(this).parent().prevAll().css("text-decoration", "none");
-        $(this).removeClass("toBeDeleted");
-        $(this).siblings().removeAttr("disabled");
-        $(this).children("span").eq(0).attr("class", "fas fa-minus");
-        $(this).blur();
-        $.get("/undo", data={triple: triple}, function(){}, dataType="json");    
-    } else {
-        $(this).parent().prevAll().css("text-decoration", "line-through");
-        $(this).addClass("toBeDeleted");
-        $(this).siblings().prop("disabled", "true");
-        $(this).children("span").eq(0).attr("class", "fas fa-plus");
-        $(this).blur();
-        $.get("/delete", data={triple: triple}, function(){}, dataType="json");    
+// Click on create button 
+$(document).on("click", "button#submitCreate", function(){
+    $('#modalCreateEntity').modal('hide')
+    subject = $("#createSubject").val();
+    predicate = $("#createPredicate").val();
+    object = $("#createObject").val();
+    var triple = {
+        "s": subject,
+        "p": predicate,
+        "o": object
     }
+    $.get("/create", data={triple: triple}, function(){}, dataType="json");
 });
 
 // Click on update button
@@ -189,4 +188,24 @@ $(document).on("click", "button.updateButton", function(){
         $.get("/update", data={prev_triple: prev_triple, new_triple: new_triple}, function(){}, dataType="json");
     } 
     $(this).blur();
+});
+
+// Click on delete button
+$(document).on("click", "button.deleteButton", function(){
+    triple = get_s_p_o(this)
+    if ($(this).hasClass("toBeDeleted")){
+        $(this).parent().prevAll().css("text-decoration", "none");
+        $(this).removeClass("toBeDeleted");
+        $(this).siblings().removeAttr("disabled");
+        $(this).children("span").eq(0).attr("class", "fas fa-minus");
+        $(this).blur();
+        $.get("/undo", data={triple: triple}, function(){}, dataType="json");    
+    } else {
+        $(this).parent().prevAll().css("text-decoration", "line-through");
+        $(this).addClass("toBeDeleted");
+        $(this).siblings().prop("disabled", "true");
+        $(this).children("span").eq(0).attr("class", "fas fa-plus");
+        $(this).blur();
+        $.get("/delete", data={triple: triple}, function(){}, dataType="json");    
+    }
 });

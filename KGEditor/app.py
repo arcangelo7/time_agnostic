@@ -48,7 +48,7 @@ def save_create_query(subj:str, predicate:str, obj:str, base_iri:str=base_iri,
     method_name = config[s_entity_type][predicate]["create"]
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
-    if params_number > 0:
+    if params_number > 0 and base_iri in obj:
         o_entity_type = get_entity_type(base_iri, obj)
         o_entity = get_entity_from_res(res=URIRef(obj), res_type=o_entity_type)
         update_query[subj+predicate+obj] = {
@@ -60,15 +60,15 @@ def save_create_query(subj:str, predicate:str, obj:str, base_iri:str=base_iri,
         update_query[subj+predicate+obj] = {
             "s_entity": s_entity,
             "method_name": method_name,
-            "o_entity": ""
+            "o_entity": obj
         }
 
 def save_update_query(
         subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
         endpoint:str=endpoint, resp_agent:str=resp_agent, graphset:GraphSet=graphset, config:dict=config
     ) -> None:
-    save_delete_query(subj, predicate, obj)
     save_create_query(subj, predicate, obj)
+    save_delete_query(subj, predicate, obj)
 
 def save_delete_query(
         subj:str, predicate:str, obj:str, base_iri:str=base_iri, 
@@ -79,7 +79,7 @@ def save_delete_query(
     method_name = config[s_entity_type][predicate]["delete"]
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
-    if params_number > 0:
+    if params_number > 0 and base_iri in obj:
         o_entity_type = get_entity_type(base_iri, obj)
         o_entity = get_entity_from_res(res=URIRef(obj), res_type=o_entity_type)
         update_query[subj+predicate+obj] = {
@@ -92,7 +92,7 @@ def save_delete_query(
             "s_entity": s_entity,
             "method_name": method_name,
             "o_entity": ""
-        }
+        }        
 
 @app.route("/")
 def home():
@@ -142,6 +142,10 @@ def entity(res):
 
 @app.route("/create")
 def create():
+    s = request.args.get("triple[s]", None)
+    p = request.args.get("triple[p]", None)
+    o = request.args.get("triple[o]", None)
+    save_create_query(subj=s, predicate=p, obj=o)
     return jsonify({"result": "Successful creation"})
 
 @app.route("/update")
@@ -158,9 +162,9 @@ def update():
 
 @app.route("/delete")
 def delete():
-    s = request.args.get("triple[s]", None)
-    p = request.args.get("triple[p]", None)
-    o = request.args.get("triple[o]", None)
+    s = request.args.get("triple[s]", None).strip()
+    p = request.args.get("triple[p]", None).strip()
+    o = request.args.get("triple[o]", None).strip()
     save_delete_query(subj=s, predicate=p, obj=o)
     return jsonify({"result": "Successful delete"})
 
@@ -174,6 +178,8 @@ def undo():
 
 @app.route("/done")
 def done():
+    global update_query
+    global graphset
     for k, v in update_query.items():
         if v["o_entity"] != "":
             getattr(v["s_entity"], v["method_name"])(v["o_entity"])
@@ -181,6 +187,8 @@ def done():
             getattr(v["s_entity"], v["method_name"])()
     storer = Storer(graphset)
     storer.upload_all(endpoint)
+    graphset.commit_changes()
+    update_query = {}
     return jsonify({"result": "Successful upload"})
 
 if __name__ == "__main__":

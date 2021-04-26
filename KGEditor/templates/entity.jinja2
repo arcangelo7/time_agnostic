@@ -9,7 +9,6 @@
     <section class="section">
         <div class="container">
             <h1 class="mb-5" id="resName">{{res}}</h1>
-                {# <span class="badge badge-lg badge-dark mb-5"></span> #}
             <h2 class="mb-5">Outgoing Links</h2>
                 <table class ="sparqlResults table table-responsive shadow-soft rounded col-sm-11 mb-5">
                     <thead>
@@ -54,4 +53,52 @@
                 </table>
         </div>
     </section>
+    <!-- Create entity modal content -->
+    <div class="modal fade" id="modalCreateEntity" tabindex="-1" role="dialog" aria-labelledby="modalCreateEntity" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <div class="card bg-primary shadow-soft border-light p-4">
+                        <button type="button" class="close ml-auto" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                        <div class="card-header text-center pb-0">
+                            <h2 class="mb-0 h5">Create triple</h2>                               
+                        </div>
+                        <div class="card-body">
+                            <form action="#">
+                                <!-- Form -->
+                                <div class="form-group">
+                                    <label for="createSubject">Subject</label>
+                                    <div class="input-group mb-4">
+                                        <input class="form-control" id="createSubject" value="{{res}}" type="text" aria-label="create subject">
+                                    </div>
+                                </div>
+                                <!-- End of Form -->
+                                <div class="form-group">
+                                    <!-- Form -->
+                                    <div class="form-group">
+                                        <label for="createPredicate">Predicate</label>
+                                        <div class="input-group mb-4">
+                                            <input class="form-control" id="createPredicate" placeholder="" type="text" aria-label="create predicate" required>
+                                        </div>
+                                    </div>
+                                    <!-- End of Form -->
+                                    <!-- Form -->
+                                    <div class="form-group">
+                                        <label for="createObject">Object</label>
+                                        <div class="input-group">
+                                            <input class="form-control" id="createObject" placeholder="" type="text" aria-label="create object" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-block btn-primary mt-5" id="submitCreate">Submit</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End of Create entity modal content -->
 {% endblock %}
