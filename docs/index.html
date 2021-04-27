@@ -152,7 +152,7 @@
                 <h3>Cosa non ho capito</h3>
                     <ol>
                         <li>
-                            Implementando l'operazione di update del KGEditor mi sono nuovamente imbattuto nel bug delle query malformate, ovvero prive di ";" tra un'operazione di update e l'altra. L'update consiste infatti di due operazione, una di cancellazione e una di aggiunta. In questo modo ho potuto comprendere meglio cosa causi il bug e scrivere del codice per riprodurlo, che riporto qui sotto:
+                            Implementando l'operazione di update del KGEditor mi sono nuovamente imbattuto nel bug delle query malformate, ovvero prive di ";" tra un'operazione di update e l'altra. L'update consiste infatti di due operazioni, una di cancellazione e una di aggiunta. In questo modo ho potuto astrarre il problema e scrivere del codice per riprodurre il bug, che riporto qui sotto:
                             <div class="card bg-primary shadow-inset border-light">
                                 <pre><code class="prettyprint">
     from oc_ocdm.graph import GraphSet
@@ -1444,6 +1444,182 @@ qres = Reader().import_entity_from_triplestore(g, "http://localhost:9999/blazegr
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-8">
+                            <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <p>Tutte le novità di questa settimana sono relative al <strong>Knowledge Graph Editor</strong>.</p>
+                                <ol>
+                                    <li>È stato creato un file di configurazione in formato json, che mappa diversi tipi di entità e predicato
+                                        con i relativi metodo di creazione e cancellazione di oc-ocdm. È possibile visualizzarlo a questo
+                                        indirizzo: <a
+                                            href="https://raw.githubusercontent.com/arcangelo7/time_agnostic/main/KGEditor/static/config/config.json"
+                                            target="_blank"
+                                            alt="Link to the config file">https://raw.githubusercontent.com/arcangelo7/time_agnostic/main/KGEditor/static/config/config.json</a>.
+                                        Se ne riporta qui un'anteprima.
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    "http://purl.org/spar/fabio/Expression": {
+        "add": "add_br",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "",
+            "delete": "remove_type"
+        },
+        "http://purl.org/spar/datacite/hasIdentifier": {
+            "create": "has_identifier",
+            "delete": "remove_identifier"
+        },
+        "http://purl.org/dc/terms/title": {
+            "create": "has_title",
+            "delete": "remove_title"
+        },
+        "http://purl.org/spar/fabio/hasSubtitle": {
+            "create": "has_subtitle",
+            "delete": "remove_subtitle"
+        },
+        "http://purl.org/vocab/frbr/core#partOf": {
+            "create": "is_part_of",
+            "delete": "remove_is_part_of"
+        },
+        "http://purl.org/spar/cito/cites": {
+            "create": "has_citation",
+            "delete": "remove_citation"
+        },
+        "http://prismstandard.org/namespaces/basic/2.0/publicationDate": {
+            "create": "has_pub_date",
+            "delete": "remove_pub_date"
+        },
+        "http://purl.org/vocab/frbr/core#embodiment": {
+            "create": "has_format",
+            "delete": "remove_format"
+        },
+        "http://purl.org/spar/fabio/hasSequenceIdentifier": {
+            "create": "has_number",
+            "delete": "remove_number"
+        },
+        "http://purl.org/vocab/frbr/core#part": {
+            "create": "contains_in_reference_list",
+            "delete": "remove_contained_in_reference_list"
+        },
+        "http://purl.org/spar/pro/isDocumentContextFor": {
+            "create": "has_contributor",
+            "delete": "remove_contributor"
+        }
+    }
+                                                                        </code></pre>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        La funzione di cancellazione delle triple è ora funzionante. Tramite la <strong>reflection</strong>,
+                                        viene dinamicamente invocato il metodo appropriato in base al soggetto e predicato selezionati
+                                        dall'utente per la cancellazione. In particolare, viene utilizzata la funzione <strong>getattr</strong>
+                                        per invocare il metodo vero e proprio. Nel caso in cui questo metodo voglia un argomento, viene passata
+                                        l'entità relativa all'oggetto. Per capire quanti parametri siano richiesti dal metodo è stata usata la
+                                        funzione <strong>signature</strong> del modulo inspect di Python.
+                                    </li>
+                                    <li>
+                                        Cliccando sul pulsante di cancellazione, la tripla viene decorata con un line-through e il bottone
+                                        diventa un pulsante di aggiunta per annullare l'azione precedente. Finché non viene cliccato il pulsante
+                                        "Done", tutte le query vengono salvate in un dizionario. Cliccando sul "+" viene cancellata dal
+                                        dizionario l'operazione di cancellazione corrispondente. Lo schema delle chiavi del dizionario di update
+                                        è "soggetto + predicato + oggetto".
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                            <img src="./assets/img/sparql-line-through.png" alt="line-through">
+                                        </div>
+                                    </li>
+                                    <li>
+                                        È stato introdotto il pulsante di <strong>update</strong>, contraddistinto dall'icona della matita,
+                                        poiché le modifiche sono reversibili finché non si preme il tasto "Done". Quest'ultimo, al contrario, è
+                                        contraddistinto dall'icona della penna a inchiostro, poiché causa la modifica permanente del dataset e
+                                        della provenance. Cliccando sul pulsante di update, la tripla da testo diventa input (textarea nel caso
+                                        di valori che contengono spazi) e si può modificare. Così facendo, la funzione di cancellazione viene
+                                        disabilitata. Viceversa, la funzione di cancellazione disabilita quella di update. Una volta completata
+                                        la modifica, è possibile premere il pulsante con l'icona del "check" per salvare la relativa query, che
+                                        non verrà effettuata fino al click sul tasto "Done".
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                            <img src="./assets/img/editor-update.png" alt="editor update">
+                                        </div>
+                                    </li>
+                                    <li>
+                                        È stato introdotta la funzionalità per <strong>creare</strong> una nuova tripla. Cliccando sul pulsante
+                                        "+" di fianco a un'entità si apre un modale, nel quale è possibile inserire un nuovo predicato e un
+                                        nuovo oggetto per quell'entità. L'input del predicato è dotato di una funzione di auto-completamento,
+                                        che si basa sul medesimo file di configurazione utilizzato per mappare soggetti e predicati con relativi
+                                        metodi di aggiunta e cancellazione di oc-ocdm.
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                            <img src="./assets/img/editor-create.png" alt="editor create.png">
+                                        </div>
+                                    </li>
+                                    <li>
+                                        Nel caso in cui l'utente non si sia ancora autenticato tramite ORCID, cliccando sul pulsante "Edit"
+                                        viene aperto un modale per specificare il <strong>responsible agent</strong>.
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                            <img src="./assets/img/editor-ra.png" alt="editor responsible agent.png">
+                                        </div>
+                                        Il valore inserito dev'essere necessariamente un ORCID. Il campo viene infatti validato tramite la
+                                        seguente espressione regolare.
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    /(https?:\/\/orcid.org\/)?([0-9]{4})-([0-9]{4})-([0-9]{4})-([0-9]{4})/i
+                                                                        </code></pre>
+                                        </div>
+                                        Una volta specificato il responsible agent, viene generato un <strong>cookie</strong> e l'ORCID viene
+                                        salvato nella <strong>sessione</strong>, per cui non verrà più chiesto.
+                                    </li>
+                                    <li>Le <strong>triple</strong> di <strong>provenance</strong> sono adesso <strong>immutabili</strong>. Nel
+                                        contesto di un'entità di provenance il pulsante di modifica non appare, mentre nel contesto di un
+                                        qualunque altro tipo di entità non compaiono i pulsanti di modifica e cancellazione di fianco agli
+                                        incoming links legati alla provenance.</li>
+                                    <li>Risolto un bug per cui la rotella di caricamento girava all'infinito in caso di errori nella query o di
+                                        database irraggiungibile. </li>
+                                </ol>
+                                <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>
+                                        Implementando l'operazione di update del KGEditor mi sono nuovamente imbattuto nel bug delle query
+                                        malformate, ovvero prive di ";" tra un'operazione di update e l'altra. L'update consiste infatti di due
+                                        operazione, una di cancellazione e una di aggiunta. In questo modo ho potuto astrarre il problema e scrivere del codice per riprodurlo, che riporto qui sotto:
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    from oc_ocdm.graph import GraphSet
+    from oc_ocdm.storer import Storer
+    from rdflib import URIRef, Graph
+    from SPARQLWrapper import SPARQLWrapper, RDFXML
+    
+    def get_entity_from_res(res:URIRef, graphset:GraphSet, ts_url:str="http://localhost:9999/blazegraph/sparql", resp_agent="https://orcid.org/0000-0002-8420-0696"):
+        query = f"""
+            CONSTRUCT {{<{res}> ?p ?o}}
+            WHERE {{<{res}> ?p ?o}}
+        """
+        sparql = SPARQLWrapper(ts_url)
+        sparql.setQuery(query)
+        sparql.setReturnFormat(RDFXML)
+        data = sparql.query().convert()
+        graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
+        entity = graphset.add_br(resp_agent=resp_agent, res=res, preexisting_graph=graph)
+        return entity
+    
+    graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/", wanted_label=False)
+    br_16 = get_entity_from_res(res=URIRef("https://github.com/arcangelo7/time_agnostic/br/16"), graphset=graphset)
+    br_19 = get_entity_from_res(res=URIRef("https://github.com/arcangelo7/time_agnostic/br/19"), graphset=graphset)
+    br_99 = get_entity_from_res(res=URIRef("https://github.com/arcangelo7/time_agnostic/br/99"), graphset=graphset)
+    br_16.remove_citation(br_19)
+    br_16.has_citation(br_99)
+    storer = Storer(graphset)
+    storer.upload_all("http://localhost:9999/blazegraph/sparql")                                </code></pre>
+                                        </div>
+                                        Purtroppo non sarà possibile parlarne con Simone, perché ha già pubblicato la versione 6.0.0 di oc_ocdm
+                                        e mi ha detto che non metterà più mano al codice.
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                        </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-9" data-target="#panel-9" class="accordion-panel-header" data-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="panel-9">
+                            <span class="h6 mb-0 font-weight-bold">05/05/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-9">
                             <div class="pt-3">
                                 <p class="mb-0"></p>
                             </div>
