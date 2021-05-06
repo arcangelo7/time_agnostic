@@ -76,6 +76,11 @@ class Support(object):
         storer = Storer(data)
         storer.upload_all(ts_url)
     
+    @staticmethod
+    def upload_and_store_dataset(data:GraphSet, path:str, ts_url:str="http://localhost:9999/blazegraph/sparql", base_iri:str="https://github.com/arcangelo7/time_agnostic/"):
+        storer = Storer(data)
+        storer.upload_and_store(base_dir="./", triplestore=ts_url, base_iri=self.base_iri, context_path=path)
+    
     def dump_json(self, json_data:dict, path:str):
         with open(path, 'w') as outfile:
             print("[Support: INFO] Writing to file")

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from oc_ocdm.graph import GraphSet
+from oc_ocdm.prov import ProvSet
 from oc_ocdm.graph.graph_entity import GraphEntity
 from oc_ocdm import Storer
 from oc_ocdm.graph.entities.bibliographic.bibliographic_resource import BibliographicResource
@@ -13,11 +14,14 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = b'\x94R\x06?\xa4!+\xaa\xae\xb2\xf3Z\xb4\xb7\xab\xf8'
 endpoint = "http://localhost:9999/blazegraph/sparql"
 base_iri = "https://github.com/arcangelo7/time_agnostic/"
-info_dir = "./data/info_dir/graph/"
-graphset = GraphSet(base_iri=base_iri, info_dir=info_dir, wanted_label=False)
+info_dir_graph = "./data/info_dir/graph/"
+info_dir_prov = "./data/info_dir/prov/"
+graphset = GraphSet(base_iri=base_iri, info_dir=info_dir_graph, wanted_label=False)
 with open('KGEditor/static/config/config.json', 'r') as f:
     config = json.load(f)
 update_query = dict()
+
+os.system("ls -l")
 
 def get_entity_type(base_iri:str, res:str) -> str:
     type_of_entity = res.replace(base_iri, "").split("/")[0]
@@ -184,8 +188,12 @@ def done():
             getattr(v["s_entity"], v["method_name"])(v["o_entity"])
         else:
             getattr(v["s_entity"], v["method_name"])()
-    storer = Storer(graphset)
-    storer.upload_all(endpoint)
+    provset = ProvSet(prov_subj_graph_set=graphset, base_iri=base_iri, info_dir=info_dir_prov, wanted_label=False)
+    provset.generate_provenance()
+    storer_graph = Storer(graphset)
+    storer_prov = Storer(provset)
+    storer_graph.upload_all(endpoint)
+    storer_prov.upload_all(endpoint)
     graphset.commit_changes()
     update_query = {}
     return jsonify({"result": "Successful upload"})
