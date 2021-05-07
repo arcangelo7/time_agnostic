@@ -10,9 +10,10 @@ from rdflib import Graph, URIRef
 import json, urllib, os
 from inspect import signature
 
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = b'\x94R\x06?\xa4!+\xaa\xae\xb2\xf3Z\xb4\xb7\xab\xf8'
-endpoint = "http://localhost:9999/blazegraph/sparql"
+endpoint = "http://localhost:19999/blazegraph/sparql"
 base_iri = "https://github.com/arcangelo7/time_agnostic/"
 info_dir_graph = "./data/info_dir/graph/"
 info_dir_prov = "./data/info_dir/prov/"
@@ -20,8 +21,6 @@ graphset = GraphSet(base_iri=base_iri, info_dir=info_dir_graph, wanted_label=Fal
 with open('KGEditor/static/config/config.json', 'r') as f:
     config = json.load(f)
 update_query = dict()
-
-os.system("ls -l")
 
 def get_entity_type(base_iri:str, res:str) -> str:
     type_of_entity = res.replace(base_iri, "").split("/")[0]
@@ -49,6 +48,14 @@ def save_create_query(subj:str, predicate:str, obj:str, resp_agent:str,
     s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
     s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type, resp_agent=resp_agent)
     method_name = config[s_entity_type][predicate]["create"]
+    if (isinstance(method_name, dict)):
+        if predicate == "http://purl.org/spar/pro/withRole" or obj in ["http://purl.org/spar/fabio/DigitalManifestation", "http://purl.org/spar/fabio/PrintObject"]:
+            method_name = method_name[obj]
+        elif predicate == "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue":
+            identifier_scheme = s_entity.get_scheme()
+            method_name = method_name[str(identifier_scheme)]
+        else:
+            method_name = method_name[obj]
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
     if params_number > 0 and base_iri in obj:
@@ -58,6 +65,18 @@ def save_create_query(subj:str, predicate:str, obj:str, resp_agent:str,
             "s_entity": s_entity,
             "method_name": method_name,
             "o_entity": o_entity
+        }
+    if params_number > 0 and "http" in obj: # e.g. for types
+        update_query[subj+predicate+obj] = {
+            "s_entity": s_entity,
+            "method_name": method_name,
+            "o_entity": URIRef(obj)
+        }
+    elif params_number == 0: # e.g. create_digital_embodiment, create_journal_article, create_publisher
+        update_query[subj+predicate+obj] = {
+            "s_entity": s_entity,
+            "method_name": method_name,
+            "o_entity": ""
         }
     else:
         update_query[subj+predicate+obj] = {
@@ -70,8 +89,8 @@ def save_update_query(
         subj:str, predicate:str, obj:str, resp_agent:str,
         base_iri:str=base_iri, endpoint:str=endpoint, graphset:GraphSet=graphset, config:dict=config
     ) -> None:
-    save_create_query(subj, predicate, obj)
     save_delete_query(subj, predicate, obj)
+    save_create_query(subj, predicate, obj)
 
 def save_delete_query(
         subj:str, predicate:str, obj:str, resp_agent:str,
@@ -159,8 +178,8 @@ def update():
     new_s = request.args.get("new_triple[s]", None).strip()
     new_p = request.args.get("new_triple[p]", None).strip()
     new_o = request.args.get("new_triple[o]", None).strip()
-    save_create_query(subj=new_s, predicate=new_p, obj=new_o, resp_agent=session["resp_agent"])
     save_delete_query(subj=prev_s, predicate=prev_p, obj=prev_o, resp_agent=session["resp_agent"])
+    save_create_query(subj=new_s, predicate=new_p, obj=new_o, resp_agent=session["resp_agent"])
     return jsonify({"result": "Successful update"})
 
 @app.route("/delete")

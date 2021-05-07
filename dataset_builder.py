@@ -1,7 +1,6 @@
 import requests, requests_cache, json, urllib, re, os
 from oc_ocdm.graph.entities.bibliographic_entity import BibliographicEntity
 from oc_ocdm.graph import GraphSet, GraphEntity
-from oc_ocdm.prov import ProvSet
 from oc_ocdm.support import create_date
 from oc_ocdm.metadata import MetadataSet
 from oc_ocdm.reader import Reader
@@ -51,13 +50,22 @@ class DatasetBuilder(object):
             "book": br.create_book,
             "book-chapter": br.create_book_chapter,
             "component": br.create_component,
+            "dataset": br.create_dataset,
+            "dissertation": br.create_dissertation,
+            "journal": br.create_journal,
             "journal-article": br.create_journal_article,
+            "journal-issue": br.create_issue,
             "monograph": br.create_monograph,
             "other": br.create_other,
             "posted-content": br.create_other,
+            "proceedings": br.create_proceedings,
             "proceedings-article": br.create_proceedings_article,
+            "reference-book": br.create_reference_book,
+            "reference-entry": br.create_reference_entry,
             "report": br.create_report,
-            "report-series": br.create_report_series
+            "report-series": br.create_report_series,
+            "None": br.create_other,
+            None: br.create_other
         }
         switch[item["type"]]()
     
@@ -231,9 +239,3 @@ class DatasetBuilder(object):
             pbar.update(1)
         pbar.close()
         return journal_graphset
-    
-    def generate_provenance(self, graphset:GraphSet, info_dir:str = "") -> ProvSet:
-        print("Generating Provenance...")
-        provset = ProvSet(prov_subj_graph_set=graphset, base_iri=self.base_uri, info_dir=info_dir, wanted_label=False)
-        provset.generate_provenance()
-        return provset

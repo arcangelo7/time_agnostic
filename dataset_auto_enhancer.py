@@ -22,10 +22,12 @@ class DatasetAutoEnhancer(object):
         self.resp_agent = resp_agent
         self.info_dir = info_dir
 
-    def _get_entity_and_ids_from_res(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, switcher:dict, entity:str):
+    def _get_entity_and_ids_from_res(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, switcher:dict, entity:str) -> GraphEntity:
         query = f"""
             CONSTRUCT {{<{res}> ?p ?o}}
-            WHERE {{<{res}> ?p ?o}}
+            WHERE {{
+                <{res}> ?p ?o.
+            }}
         """
         sparql.setQuery(query)
         sparql.setReturnFormat(RDFXML)
@@ -83,8 +85,9 @@ class DatasetAutoEnhancer(object):
                     preexisting_entity = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(ids_found[result["literalValue"]["value"]]), switcher=switcher, entity=entity)
                     duplicated_entity = self._get_entity_and_ids_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(result["s"]["value"]), switcher=switcher, entity=entity)
                     # try:
-                    print(f'[DatasetAutoEnhancer: INFO] Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
+                    # print(f'[DatasetAutoEnhancer: INFO] Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
                     preexisting_entity.merge(duplicated_entity)
+                    return
                     # for preexisting_id, duplicated_id in itertools.product(preexisting_ids, duplicated_ids):
                     #     if preexisting_id != duplicated_id:
                     #         print(f'[DatasetAutoEnhancer: INFO] Merging {preexisting_id.res} with {duplicated_id.res}')
