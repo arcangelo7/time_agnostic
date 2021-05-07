@@ -13,7 +13,7 @@ from inspect import signature
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = b'\x94R\x06?\xa4!+\xaa\xae\xb2\xf3Z\xb4\xb7\xab\xf8'
-endpoint = "http://localhost:19999/blazegraph/sparql"
+endpoint = "http://localhost:9999/blazegraph/sparql"
 base_iri = "https://github.com/arcangelo7/time_agnostic/"
 info_dir_graph = "./data/info_dir/graph/"
 info_dir_prov = "./data/info_dir/prov/"
