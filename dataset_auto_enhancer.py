@@ -381,41 +381,21 @@ class DatasetAutoEnhancer(object):
                 first_name_a = source_metadata["author"].split()[0]
                 last_name_a = source_metadata["author"].split()[1]
             else:
-                first_name_a = source_metadata["author"]
-                last_name_a = source_metadata["author"]
-            if "name" in target_metadata["author"][0]:
-                first_name_b = target_metadata["author"][0]["name"]
-                last_name_b = target_metadata["author"][0]["name"]
-            else:
-                if "family" in target_metadata["author"][0] and "given" in target_metadata["author"][0]:
-                    first_name_b = target_metadata["author"][0]["given"].replace(".", "")
-                    last_name_b = target_metadata["author"][0]["family"]
-                elif "family" in target_metadata["author"][0] and "given" not in target_metadata["author"][0]:
-                    if ", " in target_metadata["author"][0]["family"]:
-                        first_name_b = target_metadata["author"][0]["family"].split(", ")[0]
-                        last_name_b = target_metadata["author"][0]["family"].split(", ")[1]
-                    elif " " in target_metadata["author"][0]["family"]:
-                        first_name_b = target_metadata["author"][0]["family"].split()[0]
-                        last_name_b = target_metadata["author"][0]["family"].split()[1]
-                    else:
-                        first_name_b = ""
-                        last_name_b = target_metadata["author"][0]["family"]
-                elif "family" not in target_metadata["author"][0] and "given" in target_metadata["author"][0]:
-                    if " " in target_metadata["author"][0]["given"]:
-                        first_name_b = target_metadata["author"][0]["given"].replace("Dr. ", "").split()[0]
-                        last_name_b = target_metadata["author"][0]["given"].replace("Dr. ", "").split()[1]
-                    elif " " not in target_metadata["author"][0]["given"] and any(x.isupper() for x in target_metadata["author"][0]["given"][1:]):
-                        split_by_uppercase = re.findall('[A-Z][^A-Z]*', target_metadata["author"][0]["given"])
-                        first_name_b = split_by_uppercase[0]
-                        last_name_b = split_by_uppercase[-1]
-            e = 0
-            first_name_a = "".join(re.findall("[A-Z]", first_name_a))
-            try:
-                first_name_b = "".join(re.findall("[A-Z]", first_name_b))
-            except UnboundLocalError:
-                print(target_metadata)
+                return 0.0
+            if "family" in target_metadata["author"][0] and "given" in target_metadata["author"][0]:
+                first_name_b = target_metadata["author"][0]["given"].replace(".", "")
+                last_name_b = target_metadata["author"][0]["family"]
+            else: 
+                return 0.0
+            first_name_a = first_name_a.title()
+            last_name_a = last_name_a.title()
+            first_name_b = first_name_b.title()
+            last_name_b = last_name_b.title()
+            first_name_a = "".join(re.findall("[A-Z]", first_name_a)) 
+            first_name_b = "".join(re.findall("[A-Z]", first_name_b))
+            e = 0.0
             if first_name_a == first_name_b:
-                e = 1
+                e = 1.0
             m_first_author = 0.8 - 0.8 * self._levenshtein_distance(last_name_a, last_name_b) / max(len(last_name_a), len(last_name_b)) + 0.2 * e
         else:
             m_first_author = 0.0
@@ -430,20 +410,19 @@ class DatasetAutoEnhancer(object):
             match_title = 0.0
         return match_title
     
-    def _match_source(self, source_metadata:dict, target_metadata:dict, manual_comparison:dict, key) -> float:
+    def _match_source(self, source_metadata:dict, target_metadata:dict) -> float:
         if "ISBN" in source_metadata and "ISBN" in target_metadata:
             if source_metadata["ISBN"] == target_metadata["ISBN"][0]:
                 match_source = 1.0
                 return match_source
         if "journal-title" in source_metadata:
             source_a = source_metadata["journal-title"]
-        elif "series-title" in source_metadata:
-            source_a = source_metadata["series-title"]
         elif "volume-title" in source_metadata:
             source_a = source_metadata["volume-title"]
+        elif "series-title" in source_metadata:
+            source_a = source_metadata["series-title"]
         else:
-            match_source = 0.0
-            return match_source
+            return 0.0
         if "container-title" in target_metadata and len(target_metadata["container-title"][0]) > 0:
             source_b_long = target_metadata["container-title"][0]
             match_source_long = 1 - (self._levenshtein_distance(source_a, source_b_long) - abs(len(source_a) - len(source_b_long))) / min(len(source_a), len(source_b_long))
@@ -456,16 +435,48 @@ class DatasetAutoEnhancer(object):
         else:
             match_source = 0.0
         return match_source
+    
+    def _match_other(self, source_metadata:dict, target_metadata:dict):
+        e_y = 0.0
+        e_v = 0.0
+        e_i = 0.0
+        e_b = 0.0
+        if "year" in source_metadata and "issued" in target_metadata:
+            year_a = int(source_metadata["year"])
+            year_b = target_metadata["issued"]["date-parts"][0][0]
+            if year_a == year_b:
+                e_y = 1.0
+        if "volume" in source_metadata and "volume" in target_metadata:
+            volume_number_a = source_metadata["volume"]
+            volume_number_b = target_metadata["volume"]
+            if volume_number_a == volume_number_b:
+                e_v = 1.0          
+        if "issue" in source_metadata and "issue" in target_metadata:
+            issue_number_a = source_metadata["issue"]
+            issue_number_b = target_metadata["issue"]
+            if issue_number_a == issue_number_b:
+                e_i = 1.0     
+        if "first-page" in source_metadata and "page" in target_metadata:       
+            begin_page_a = source_metadata["first-page"]
+            begin_page_b = target_metadata["page"].split("-")[0]
+            if begin_page_a == begin_page_b:
+                e_b = 1.0
+        match_other = 0.1 * e_y + 0.2 * e_v + 0.1 * e_i + 0.6 * e_b 
+        return match_other
 
-    def _do_heuristic_match(self, source_metadata:dict, target_metadata:dict, manual_comparison:dict, key:int) -> float:
+    def _is_a_match(self, source_metadata:dict, target_metadata:dict) -> (bool, float):
         match_first_author = self._match_first_author(source_metadata, target_metadata)
         match_title = self._match_title(source_metadata, target_metadata)
-        match_source = self._match_source(source_metadata, target_metadata, manual_comparison, key)
+        match_source = self._match_source(source_metadata, target_metadata)
+        match_other = self._match_other(source_metadata, target_metadata)
+        similarity_a_b = 7 * match_first_author + 14 * match_title + 5 * match_source + 14 * match_other
+        if similarity_a_b >= 15.0:
+            return True, similarity_a_b
+        else:
+            return False, similarity_a_b
     
     def add_reference_data_without_doi(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
         logs = dict()
-        manual_comparison = dict()
-        key = 0
         sparql = SPARQLWrapper(ts_url)
         graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         with open(journal_data_path) as journal_data:
@@ -479,10 +490,17 @@ class DatasetAutoEnhancer(object):
                         search = Support().handle_request(url=query_string, cache_path="./cache/crossref_cache", error_log_dict=logs)
                         if search is not None:
                             if len(search["message"]["items"]) > 0:
-                                new_doi = search["message"]["items"][0]["DOI"]
-                                for item in search["message"]["items"]:
-                                    self._do_heuristic_match(reference, item, manual_comparison, key)
-                                    key += 1
+                                best_matches = list()
+                                for item in search["message"]["items"][:10]: # Check only the first 10 results, which are already ordered by score
+                                    is_a_match, score = self._is_a_match(reference, item)
+                                    if is_a_match:
+                                        best_matches.append({"item": item, "score": score})
+                                if len(best_matches) > 0:
+                                    best_match = sorted(best_matches, key=lambda k: k["score"], reverse=True)[0]["item"]
+                                    new_doi = best_match["DOI"]
+                                else:
+                                    pbar.update(1)
+                                    continue
                                 citing_entity_query = f"""
                                     PREFIX datacite: <http://purl.org/spar/datacite/>
                                     PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
@@ -524,7 +542,6 @@ class DatasetAutoEnhancer(object):
                                         reference_ci.has_citation_creation_date(str(subjects[subject]))
             pbar.update(1)
         pbar.close()
-        # Support().dump_json(manual_comparison, "test/manual_comparison_source.json")
         return graphset
 
 

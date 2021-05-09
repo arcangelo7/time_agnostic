@@ -68,10 +68,10 @@ class Support(object):
         end = time.time()
         print(end - start)
 
-    def dump_dataset(self, data:GraphSet, path:str) -> None:
+    @staticmethod
+    def dump_dataset(data:GraphSet, path:str) -> None:
         storer = Storer(data)
         storer.store_graphs_in_file(file_path=path, context_path=None)
-        # data.commit_changes()
     
     @staticmethod
     def upload_dataset(data:GraphSet, ts_url:str="http://localhost:9999/blazegraph/sparql") -> None:
