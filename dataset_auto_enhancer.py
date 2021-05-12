@@ -280,59 +280,7 @@ class DatasetAutoEnhancer(object):
             Support().dump_json(logs, "./logs/crossref.json")
         pbar.close()
         return enhanced_graphset
-    
-    def add_unstructured_reference_data(self, journal_data_path:str, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
-        with open(journal_data_path) as journal_data:
-            journal_data_items = json.load(journal_data)["message"]["items"]
-        unstructured = dict()
-        structured = dict()
-        for item in journal_data_items:
-            if "reference" in item:
-                for reference in item["reference"]:
-                    if "DOI" not in reference:
-                        unstructured[item["DOI"]] = {"unstructured": reference["unstructured"]}
-        logs = dict()
-        pbar = tqdm(total=len(unstructured))
-        for doi, unstructured in unstructured.items():
-            unstructured_field = unstructured["unstructured"]
-            doi_in_unstructured = re.search("10.\d{4,9}/[-._;()/:A-Z0-9]+", unstructured_field, flags=re.IGNORECASE)
-            if doi_in_unstructured is not None:
-                doi_in_unstructured = doi_in_unstructured.group()
-                structured[doi] = {"reference_doi": doi_in_unstructured, "unstructured": unstructured_field, "method": "regex"}
-            else:
-                search = Support().handle_request(f"https://api.crossref.org/works?query.bibliographic={urllib.parse.quote(unstructured['unstructured'])}", cache_path="./cache/crossref_cache", error_log_dict=logs)
-                if search is None:
-                    continue
-                hits = search["message"]["items"]
-                score = dict()
-                for hit in hits:
-                    score[hit["DOI"]] = hit["score"]
-                    if "author" in hit:
-                        for author in hit["author"]:
-                            if "family" in author:
-                                if author["family"].lower() in unstructured_field.lower():
-                                    score[hit["DOI"]] += 50
-                            if "given" in author:
-                                if author["given"].lower() in unstructured_field.lower():
-                                    score[hit["DOI"]] += 50
-                    if "publisher" in hit:
-                        if hit["publisher"].lower() in unstructured_field.lower():
-                            score[hit["DOI"]] += 50
-                    if "title" in hit:
-                        if hit["title"][0].lower() in unstructured_field.lower():
-                            score[hit["DOI"]] += 100
-                v_score = list(score.values())
-                k_score = list(score.keys())
-                max_score = k_score[v_score.index(max(v_score))]
-                if max(v_score) > 200:
-                    structured[doi] = {"reference_doi": max_score, "unstructured": unstructured_field, "method": f"Crossref ({max(v_score)})"}
-            pbar.update(1)
-        pbar.close()
-        Support().dump_json(structured, "./test/structured.json")
-        if len(logs) > 0:
-            print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/crossref.json")
-            Support().dump_json(logs, "./logs/crossref.json")
-    
+        
     def _generate_crossref_query_from_metadata(self, metadata:dict) -> str:
         switch = {
             "unstructured": "bibliographic", 
@@ -442,10 +390,11 @@ class DatasetAutoEnhancer(object):
         e_i = 0.0
         e_b = 0.0
         if "year" in source_metadata and "issued" in target_metadata:
-            year_a = int(source_metadata["year"])
-            year_b = target_metadata["issued"]["date-parts"][0][0]
-            if year_a == year_b:
-                e_y = 1.0
+            if target_metadata["issued"]["date-parts"][0][0] is not None:
+                year_a = int(source_metadata["year"].replace("–", "-").replace("/", "-").replace(".", "").split("-")[0])
+                year_b = target_metadata["issued"]["date-parts"][0][0]
+                if year_a == year_b:
+                    e_y = 1.0
         if "volume" in source_metadata and "volume" in target_metadata:
             volume_number_a = source_metadata["volume"]
             volume_number_b = target_metadata["volume"]
@@ -464,7 +413,7 @@ class DatasetAutoEnhancer(object):
         match_other = 0.1 * e_y + 0.2 * e_v + 0.1 * e_i + 0.6 * e_b 
         return match_other
 
-    def _is_a_match(self, source_metadata:dict, target_metadata:dict) -> (bool, float):
+    def _is_a_match(self, source_metadata:dict, target_metadata:dict) -> tuple[bool, float]:
         match_first_author = self._match_first_author(source_metadata, target_metadata)
         match_title = self._match_title(source_metadata, target_metadata)
         match_source = self._match_source(source_metadata, target_metadata)
@@ -499,7 +448,6 @@ class DatasetAutoEnhancer(object):
                                     best_match = sorted(best_matches, key=lambda k: k["score"], reverse=True)[0]["item"]
                                     new_doi = best_match["DOI"]
                                 else:
-                                    pbar.update(1)
                                     continue
                                 citing_entity_query = f"""
                                     PREFIX datacite: <http://purl.org/spar/datacite/>
