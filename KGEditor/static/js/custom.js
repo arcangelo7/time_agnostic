@@ -17,6 +17,16 @@ function get_s_p_o(jQueryButtonSelector){
     return triple
 }
 
+function transformEntitiesInLinks(){
+    $(".tripleMember").each(function(){
+        var tripleMember = $(this).html();
+        predicatesWithLiteralObjects = ["https://w3id.org/oc/ontology/hasUpdateQuery", "http://purl.org/dc/terms/description"]
+        if (tripleMember.indexOf(baseUri) != -1 && !predicatesWithLiteralObjects.includes($(this).siblings("td[headers='outgoingPredicate']").text())){
+            $(this).wrapInner(`<a href='' class='sparqlEntity'></a>`)
+        }
+    });
+} 
+
 // Click on sumbit query
 $("#sparqlQuerySubmit").on("click", function(){
     var query = $("textarea#sparqlEndpoint").val()
@@ -57,21 +67,11 @@ $("#sparqlQuerySubmit").on("click", function(){
             $("#sparqlResults tbody").append(`<tr id="sparqlResults${i}"></tr>`)
             $.each(vars, function(j, variable){
                 var res = result[variable]["value"]
-                if (res.includes(baseUri) && variable != "p"){
-                    $(`tr#sparqlResults${i}`).append(`
-                        <td headers="sparqlVar-${variable}">
-                            <a href="#" class="sparqlEntity">
-                                ${res}
-                            </a>
-                        </td>
-                    `)
-                } else {
-                    $(`tr#sparqlResults${i}`).append(`
-                        <td headers="sparqlVar-${variable}">
-                            ${res}
-                        </td>
-                    `)                    
-                }
+                $(`tr#sparqlResults${i}`).append(`
+                    <td headers="sparqlVar-${variable}" class='tripleMember'>
+                        ${res}
+                    </td>
+                `)                    
             });
         });
         $("#sparqlQuerySubmit").html(`
@@ -79,6 +79,7 @@ $("#sparqlQuerySubmit").on("click", function(){
             Submit the query
         `);
         $("#sparqlQuerySubmit").blur();
+        transformEntitiesInLinks();
     });
 });
 
@@ -243,8 +244,8 @@ $(document).on("click", "button.deleteButton", function(){
     }
 });
 
-// Create triple autocompletion
 $(function() {
+    // Create triple autocompletion
     $.getJSON("/static/config/config.json", function(){
     })
     .done(function(data) {
@@ -261,4 +262,6 @@ $(function() {
     .fail(function(e) {
         console.log(e);
     });
+
+    transformEntitiesInLinks();
 });

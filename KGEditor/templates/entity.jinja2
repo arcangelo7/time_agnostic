@@ -20,12 +20,8 @@
                     <tbody>
                         {% for triple in response_outgoing["results"]["bindings"] %}
                             <tr>
-                                <td headers="outgoingPredicate">{{triple["predicate"]["value"]}}</td>
-                                {% if baseUri in triple["object"]["value"] %}
-                                    <td headers="outgoingObject"><a href="" class="sparqlEntity">{{triple["object"]["value"]}}</a></td>
-                                {% else %}
-                                    <td headers="outgoingObject">{{triple["object"]["value"]}}</td>
-                                {% endif %}
+                                <td headers="outgoingPredicate" class="tripleMember">{{triple["predicate"]["value"]}}</td>
+                                <td headers="outgoingObject" class="tripleMember">{{triple["object"]["value"]}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>     
@@ -41,12 +37,8 @@
                     <tbody>
                         {% for triple in response_incoming["results"]["bindings"] %}
                             <tr>
-                                {% if baseUri in triple["subject"]["value"] %}
-                                    <td headers="incomingSubject"><a href="" class="sparqlEntity">{{triple["subject"]["value"]}}</a></td>
-                                {% else %}
-                                    <td headers="incomingSubject">{{triple["subject"]["value"]}}</td>
-                                {% endif %}
-                                <td headers="incomingPredicate">{{triple["predicate"]["value"]}}</td>
+                                <td headers="incomingSubject" class="tripleMember">{{triple["subject"]["value"]}}</td>
+                                <td headers="incomingPredicate" class="tripleMember">{{triple["predicate"]["value"]}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>     

@@ -9,6 +9,7 @@ from SPARQLWrapper.SPARQLExceptions import QueryBadFormed
 from rdflib import Graph, URIRef
 import json, urllib, os
 from inspect import signature
+from itertools import zip_longest
 
 
 app = Flask(__name__)
@@ -114,7 +115,19 @@ def save_delete_query(
             "s_entity": s_entity,
             "method_name": method_name,
             "o_entity": ""
-        }     
+        }    
+
+def decode_html(string:str) -> str:
+    map = {
+        '&': '&#38;',
+        '<': '&#60;',
+        '>': '&#62;',
+        '"': '&#34;',
+        "'": '&#039;',
+        "/": "&#47;"
+    }
+    decoded_string = "".join([map[char] if char in map else char for char in string])
+    return decoded_string
 
 @app.route("/")
 def home():
@@ -158,8 +171,20 @@ def entity(res):
         sparql.setQuery(query_incoming)
         sparql.setReturnFormat(JSON)
         response_incoming = sparql.query().convert()
+        for triple_incoming in response_incoming["results"]["bindings"]:
+            triple_incoming["subject"]["value"] = decode_html(triple_incoming["subject"]["value"])
+            triple_incoming["predicate"]["value"] = decode_html(triple_incoming["predicate"]["value"])
+            triple_incoming["object"]["value"] = decode_html(triple_incoming["object"]["value"])
+        for triple_outgoing in response_outgoing["results"]["bindings"]:
+            triple_outgoing["subject"]["value"] = decode_html(triple_outgoing["subject"]["value"])
+            triple_outgoing["predicate"]["value"] = decode_html(triple_outgoing["predicate"]["value"])
+            triple_outgoing["object"]["value"] = decode_html(triple_outgoing["object"]["value"])
+        res = decode_html(res)
+        global base_iri
+        base_iri = decode_html(base_iri)
     except Exception as e:
         app.logger.error('Something went wrong')
+        print(e)
     return render_template("entity.jinja2", res=res, response_outgoing=response_outgoing, response_incoming=response_incoming, baseUri=base_iri)
 
 @app.route("/create")
@@ -202,7 +227,7 @@ def undo():
 def done():
     global update_query
     global graphset
-    for k, v in update_query.items():
+    for _, v in update_query.items():
         if v["o_entity"] != "":
             getattr(v["s_entity"], v["method_name"])(v["o_entity"])
         else:
