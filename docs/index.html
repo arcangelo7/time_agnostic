@@ -54,59 +54,152 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (13/05/2021)</h2>
+                    <h2>Prossimo incontro (19/05/2021)</h2>
                 </div>
+                <h3>Brainstorming sul Time Agnostic Browser</h3>
+                <ol>
+                    <li>La libreria si deve basare su RDF e dev'essere il più riutilizzabile possibile in diversi contesti, per tutti quei dataset che utilizzano lo stesso modello di provenance di OpenCitations.</li>
+                    <li>Modello usato per la provenance: PROV-O ontology + oco:hasUpdateQuery.
+                        <ol>
+                            <li><em>oco:hasUpdateQuery</em>: proprietà che registra le aggiunte e le cancellazioni come query SPARQL INSERT e DELETE, mentre l'uso di variabili SPARQL è proibito nelle query di update.</li>
+                            <li>Ogni entità del dataset è rappresentata da uno o più snapshot (cioè da un'istanza della classe pro:Entity).</li>
+                            <li>Ogni snapshot registra la composizione dell'entità in un preciso momento temporale, descritto tramite la proprietà pro:generatedAtTime. Ogni snapshot è collegato ai precedenti tramite la proprietà pro:wasDerivedFrom, all'entità descritta tramite pro:specializationOf e all'agente responsabile tramite pro:wasAttributedTo.</li>
+                            <li>Vantaggi:
+                                <ol>
+                                    <li>Facilità nell'ottenere gli statement correnti di un'entità, siccome sono quelli correntemente disponibili nel dataset.</li>
+                                    <li>Facilità nel ripristinare un'entità a un certo snapshot applicando l'operazione inversa (INSERT anziché DELETE e viceversa).</li>
+                                </ol>
+                            </li>
+                        </ol>
+                    </li>
+                    <li>Cosa significa fare una query agnostica sul tempo?
+                        <ol>
+                            <li>Poniamo che l'utente effettui la seguente ricerca:
+                                <div class="card bg-primary shadow-inset border-light">
+                                    <pre><code class="prettyprint">
+    CONSTRUCT {
+        &lt;res&gt; ?p ?o
+    } 
+    WHERE {
+        &lt;res&gt; ?p ?o.
+    }
+                                    </code></pre>
+                                </div>
+                                Dove res è l'URI di una risorsa. Cosa avviene dietro le quinte? 
+                                <ol>
+                                    <li>La query viene arricchita in modo da includere informazioni sulla provenance e, in particolare, sul tempo di generazione dello snapshot e sulla query di update:
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    PREFIX oco: &lt;https://w3id.org/oc/ontology/&gt;
+    PREFIX pro: &lt;http://www.w3.org/ns/prov#&gt;
+    CONSTRUCT {
+        &lt;res&gt; ?p ?o. 
+        ?snapshot pro:generatedAtTime ?t;      
+                oco:hasUpdateQuery ?updateQuery.
+    }
+    WHERE {
+        &lt;res&gt; ?p ?o.
+        ?snapshot pro:specializationOf &lt;res&gt;;
+                pro:generatedAtTime ?t.
+        OPTIONAL {
+            ?snapshot oco:hasUpdateQuery ?updateQuery.
+        }        
+    }
+                                            </code></pre>
+                                        </div>
+                                        Dal numero di triple di provenance ritornate è possibile dedurre quanti snapshot esistono di quella risorsa e, dal tempo in cui sono state generate, il loro ordine. 
+                                    </li>
+                                    <li>
+                                        Viene effettuata la query dell'utente arricchita, che restituisce lo stato corrente del dataset rispetto a quella risorsa più le informazioni sulla provenance. Il risultato viene salvato in un dizionario, che potrebbe avere la seguente struttura:
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    snapshots = {
+        &lt;t&gt;: {
+            "graph": &lt;grafo della risorsa al tempo t&gt;,
+            "hasUpdateQuery": &lt;update query&gt;
+        },
+        &lt;t-1&gt;: {
+            "graph": &lt;grafo della risorsa al tempo t-1&gt;,
+            "hasUpdateQuery": &lt;update query&gt;
+        },
+        &lt;t-n&gt;: {
+            "graph": &lt;grafo della risorsa al tempo t-n&gt;,
+            "hasUpdateQuery": ""
+        },
+    }
+                                            </code></pre>
+                                        </div>
+                                        Dove le chiavi corrispondono alle proprietà pro:generatedAtTime degli snapshot ritornati. Da notare che il dizionario al tempo t-n non ha updateQuery, perché corrisponde al grafo dell'entità nel momento in cui è stata creata. 
+                                    </li>
+                                    <li>
+                                        Se la query di update è presente, per ottenere lo stato del grafo rispetto alla risorsa al tempo t-1, bisogna effettuare la query inversa rispetto a quella di update. Per farlo, è sufficiente sostituire "DELETE" con "INSERT" e "INSERT" con "DELETE". Nota bene: la query di update non viene effettuata sul triplestore, ma sul grafo della risorsa al tempo t, in modo da non alterare lo stato del triplestore. 
+                                    </li>
+                                    <li>
+                                        Effettuata la query inversa, il nuovo stato della risorsa viene salvato alla chiave "graph" della chiave &lt;t-1&gt; del dizionario degli snapshots. Questa operazione viene effettuata ricorsivamente per ogni query di update n ritornata sul grafo della risorsa al tempo t-n+1. 
+                                    </li>
+                                </ol>
+                                <li>
+                                    <strong><i class="fas fa-exclamation-circle"></i> Problema</strong>: nel momento in cui ho una serie di snapshot di un'entità, ogni serie potrebbe essere collegata ad altre entità, che a loro volta hanno una serie di snapshot, quindi devono essere riallineate temporalmente per fare la query corretta. 
+                                    <ol>
+                                        <li><i class="far fa-lightbulb"></i> Poniamo che l'utente voglia andare da una risorsa al tempo t-n a un'altra risorsa collegata che sia sempre al tempo t-n. Lo snapshot corretto della risorsa collegata è quello la cui proprietà pro:generatedAtTime è la minima antecedente o coincidente a t-n.</li>
+                                        <li><strong><i class="fas fa-exclamation-circle"></i> Problema</strong>: è più conveniente allineare le risorse al momento della richiesta dell'utente o pre-processare l'intero dataset in modo da avere un nuovo dataset con le risorse allineate?</li>
+                                    </ol>
+                                </li>
+                            </li>
+                        </ol>
+                    </li>
+                    <li>La libreria dev'essere configurabile, pluggabile per usare metodi di altre librerie per semplificare alcuni compiti.</li>
+                    <li>Cosa mi serve? Quali librerie mi servono in Python?
+                        <ol>
+                            <li>RDFLib per la manipolazione delle triple RDF.</li>
+                            <li>sparqlwrapper per leggere i dati da un triplestore.
+                                <ol>
+                                    <li><strong><i class="fas fa-exclamation-circle"></i> Problema</strong>: devo prevedere la possibilità di lavorare anche su file?</li>
+                                </ol>
+                            </li>
+                            <li>oc-ocdm, per mostrare un caso d'uso.</li>
+                        </ol>
+                    </li>
+                    <li>Bisogna realizzare un browser che utilizzi la libreria nel back-end.
+                        <ol>
+                            <li><strong><i class="fas fa-exclamation-circle"></i> Problema</strong>: solo un browser o anche un editor?</li>
+                        </ol>
+                    </li>
+                </ol>
                 <h3>Cosa ho fatto</h3>
                     <ol>
-                        <li>È stata ultimata la funzione <strong>add_reference_data_without_doi</strong>, che aggiunge al grafo le reference senza DOI, dopo aver trovato il DOI tramite query a Crossref e match euristico dei risultati.
-                            <ol>
-                                <li>È stata implementata la funzione <strong>_match_other</strong>, che calcola il match basandosi sull'anno di pubblicazione, il volume, l'issue e la pagina iniziale (quella finale non è mai indicata nel campo reference, <em>for reasons</em>), secondo la seguente formula:
-                                    <div class="card bg-primary shadow-inset border-light">
-                                        <pre><code class="prettyprint">
-    match<sub>other</sub> = 0.1𝐸(𝑦<sub>A</sub>, 𝑦<sub>B</sub>) + 0.2𝐸(𝑣<sub>A</sub>, 𝑣<sub>B</sub>) + 0.1𝐸(𝑖<sub>A</sub>, 𝑖<sub>B</sub>) + 0.6𝐸(𝑏<sub>A</sub>, 𝑏<sub>B</sub>)</code></pre>
-                                    </div>
-                                    dove y<sub>x</sub>, v<sub>x</sub>, i<sub>x</sub> e b<sub>x</sub> denotano, rispettivamente, l'anno di pubblicazione, il numero del volume, il numero dell'issue e la pagina iniziale del documento x. E(a,b) è uguale a 1 se a e b sono identici, 0 in caso contrario. La formula originale proposta da Martijn Visser (<a href="https://arxiv.org/ftp/arxiv/papers/2005/2005.10732.pdf" target="_blank", alt="Link to the Martijn Visser paper">https://arxiv.org/ftp/arxiv/papers/2005/2005.10732.pdf</a>) prevede anche la pagina finale e assegna un moltiplicatore di 0.3 sia alla pagina finale che a quella finale: per far fronte all'assenza della pagina finale, si è assegnato un moltiplicatore di 0.6 a quella iniziale, in modo che il risultato finale oscilli tra 0 e 1. 
-                                </li>
-                                <li>
-                                    È stata implementata la funzione <strong>_is_a_match</strong>, che combina i match basati sul primo autore, sul titolo, sulla fonte e sugli altri valori in un unico score finale, secondo la seguente formula:
-                                    <div class="card bg-primary shadow-inset border-light">
-                                        <pre><code class="prettyprint">
-    similarity<sub>A,B</sub> = 7 * match_first_author + 14 * match_title + 5 * match_source + 14 * match_other</code></pre>
-                                    </div>
-                                    La formula originale prevedeva anche l'aggiunta di 15 punti per il match tra il DOI della fonte e del target, valore che è stato rimosso perché il DOI della fonte non è mai disponibile, essendo l'incognita che si intende individuare. Per questo motivo, è stato ridotto il <em>threshold</em> oltre il quale viene stabilito un match, che nel paper di Martijn Visser era fissato a 30, mentre nel nostro caso è di 15, ovvero 30 meno i 15 punti del match tra DOI. 
-                                </li>
-                            </ol>
-                        </li>
-                        <li>
-                            Ho generato i seguenti livelli di provenance:
-                            <ol>
-                                <li>Livello 0: creazione del grafo.</li>
-                                <li>Livello 1: aggiunta delle reference presenti in COCI e non nel grafo del livello 0, quindi creazione dei rispettivi br, id e ci. Se la reference era già presente nel livello 0, aggiunta del timespan e del tipo di citazione (journal self-citation o author self-citation).</li>
-                                <li>Livello 2: arricchimento dei dati delle reference tramite Crossref, in particolare aggiunta della rivista di origine (br, id, ra, ar), aggiunta del tipo di br della reference, del titolo, sottotitolo, data di pubblicazione, autore (ra, ar), volume, issue e resource embodiment.</li>
-                                <li>Livello 3 (<em>in progress</em>, è al 28% alle 11:36 del 12/05/2021): aggiunta di alcune citazioni andate perse poiché riportate da Crossref senza DOI.</li>
-                                <li>Ogni livello di provenance è stato salvato sia sul triplestore che in due file json (uno per i dati, l'altro per la provenance) . Inoltre, sono stati creati dei backup di ogni singolo stato del database, dei file json e degli info_dir.</li>
-                                <li><strong>Nota bene</strong>: i livelli di provenance attuali sono temporanei. Servono soltanto ad avere una base su cui lavorare per la creazione del Time agnostic browser. Quando la funzione di merge sarà funzionante, essa verrà lanciata dopo ogni livello, in modo da ottimizzare i processi successivi, che dovendo lavorare su meno entità impiegheranno meno tempo e meno RAM.</li>
-                            </ol>
-                        </li>
-                        <li>
-                            Novità sul <strong>Knowledge Graph Editor</strong>:
-                            <ol>
-                                <li>La funzione di update è ora pienamente funzionante. Simone ha infatti corretto il bug delle query malformate.</li>
-                                <li>L'editor crea e aggiorna i grafi di provenance.</li>
-                                <li>L'editor gestisce la creazione e l'update dei valori letterali degli identificatori.</li>
-                                <li>È adesso possibile creare e modificare il tipo delle entità di tipo pro:RoleInTime, fabio:Expression, foaf:Agent, fabio:Manifestation, datacite:Identifier, biro:BibliographicReference e cito:Citation.</li>
-                            </ol>
-                        </li>
+                        <li>Risolto il bug dell'updateQuery "DELETE DATA { GRAPH { .} }; INSERT DATA { GRAPH { .} }". Il bug era nel codice dell'editor, non in quello di oc-ocdm. La ragione del bug era che i caratteri riservati di HTML contenuti nella query di update non erano riportati come entità carattere e venivano interpretati dal browser come markup.</li>
+                        <li>Risolto un bug nel KG Editor per cui le proprietà oco:hasUpdateQuery e dc:description venivano visualizzate come link poiché contenevano l'URI base.</li>
                     </ol>
                 <h3>Cosa non ho capito</h3>
-                <ol>
-                    <li>
-                        La funzione di merge è stata modificata, ma i bug sono aumentati. Ora non solo ci sono tutti quelli di cui abbiamo discusso (identificatori non uniti, incoming links a entità cancellate), ma ce n'è uno nuovo, ovvero che, se A e B vengono uniti, A viene privata di tutti i suoi outgoing links meno il tipo. Ti mostro il codice com'è adesso e provo a dare una spiegazione del perché non funziona.
-                        <div class="card bg-primary shadow-inset border-light">
-                            <pre><code class="prettyprint">
+                    <ol>
+                        <li>
+                            Il problema della funzione di merge non funzionante è più profondo del previsto. Ricapitolando, il merge deve reindirizzare su self le triple che hanno come oggetto other. È Per farla funzionare occorre modificare il design del preexisting graph così come è stato previsto dalla libreria, ovvero tutte le triple che hanno un'entità come soggetto. Anche aggiungendo al preexisting_graph le triple che hanno l'entità come oggetto, queste ultime vengono rimosse dal preexisting_graph, attraverso il seguente codice:
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    if preexisting_graph is not None:
+        self.remove_every_triple()
+        for p, o in preexisting_graph.predicate_objects(self.res):
+            self.g.add((self.res, p, o))
+            self.preexisting_graph.add((self.res, p, o))
+                                </code></pre>
+                            </div>
+                            Come si vede, vengono considerate solo le triple che hanno self come soggetto. Perché il merge funzioni, ho modificato il codice nel seguente modo:
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    if preexisting_graph is not None:
+        self.remove_every_triple()
+        for s, p, o in preexisting_graph.triples((None, None, None)):
+            self.g.add((s, p, o))
+            self.preexisting_graph.add((s, p, o))                                
+                                    </code></pre>
+                            </div>
+                        </li>
+                        <li>Infine, ho modificato la funzione di merge, di cui riporto prima la versione attuale e poi quella modificata.
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    # Versione attuale
     def merge(self, other: GraphEntity) -> None:
-        # Here we must REDIRECT triples pointing
-        # to 'other' to make them point to 'self':
         for res, entity in self.g_set.res_to_entity.items():
             triples_list: List[Tuple] = list(entity.g.triples((res, None, other.res)))
             for triple in triples_list:
@@ -129,72 +222,62 @@
         # triples pointing to it, since mark_as_to_be_deleted
         # also removes every triple pointing to 'other'
         other.mark_as_to_be_deleted()
-                            </code></pre>
-                        </div>
-                        La parte problematica è "triples_list = list(entity.g.triples((res, None, other.res)))". L'idea è quella di ottenere tutte le triple che puntano a other, in modo da poterle reindirizzare su self. Tuttavia la lista triples_list sarà pressoché sempre vuota, perché viene riempita da triple che da self puntano a other, condizione che non si verifica quasi mai. In generale, non è possibile risalire alle triple che hanno come oggetto self o other in questo modo, perché il preexisting_graph contiene solo le triple che hanno self o other come soggetto, mai come oggetto. 
-                    </li>
-                    <li>
-                        Credo ci sia un bug in oc-ocdm per quanto riguarda la rimozione di triple che hanno come soggetto un'entità di tipo foaf:Agent. Ad esempio, i metodi remove_name, remove_given_name, remove_family_name non fanno alcunché. Purtroppo, il codice scritto da Simone mi sembra corretto, non sono riuscito a capire cosa causi l'errore. Riporto del codice utile a riprodurre il problema:
+    
+    # Versione modificata
+    def merge(self, other: GraphEntity) -> None:
+        # Il ciclo non avviene sul grafo di self, ma di other, 
+        # poiché è nel grafo di other che sono presenti le triple
+        # che hanno other come oggetto. 
+        for _, entity in other.g_set.res_to_entity.items():
+            # res, entity -> _, entity, poiché res non viene utilizzata
+            triples_list: List[Tuple] = list(entity.g.triples((None, None, other.res)))
+            # Le triple considerate sono solo quelle che hanno other come oggetto
+            for triple in triples_list:
+                if triple[1] != URIRef("http://www.w3.org/ns/prov#specializationOf"):
+                    # Questa condizione è stata aggiunta per evitare che venga 
+                    # associata a self la provenance di other. 
+                    # Sarebbe meglio riferirsi a quel predicato 
+                    # come PROV.iri_specialization_of, ma non posso importare 
+                    # la classe perché si verifica un'importazione circolare
+
+                    # entity.g.remove(triple) è stato rimosso perché lo stesso
+                    # compito è assolto da other.mark_as_to_be_deleted() in fondo
+                    new_triple = (triple[0], triple[1], self.res)
+                    self.g.add(new_triple)
+
+        types: List[URIRef] = other.get_types()
+        for cur_type in types:
+            self._create_type(cur_type)
+
+        label: Optional[str] = other.get_label()
+        if label is not None:
+            self.create_label(label)
+
+        self._was_merged = True
+        self._merge_list = (*self._merge_list, other)
+
+        other.mark_as_to_be_deleted()
+                                </code></pre>
+                            </div>
+                            Dopo queste modifiche, le triple che hanno come oggetto other vengono correttamente rendirizzate su self, eccetto le triple di provenance. Tuttavia, ci sono ancora due bug:
+                            <ul>
+                                <li>Self viene spogliata di tutti i suoi outgoing links eccetto il tipo.</li>
+                                <li>Other viene correttamente spogliata di tutti i suoi outgoing links, ma non è stato possibile cancellare gli incoming links. </li>
+                            </ul>
+                        </li>
+                    </ol>
+                <h3>Proposta di modifica a oc-ocdm:</h3>
+                <ol>
+                    <li>Ho trovato e risolto i bug dei <em>remove_name</em>, <em>remove_given_name</em> e <em>remove_family_name</em> non funzionanti. Per usare un termine tecnico, era una <em>stronzata</em>. Riporto il codice con e senza il bug per quanto riguarda <em>remove_family_name</em>, ma vale lo stesso discorso anche le altre due funzioni:
                         <div class="card bg-primary shadow-inset border-light">
                             <pre><code class="prettyprint">
-    from oc_ocdm.graph import GraphSet
-    from oc_ocdm.storer import Storer
-    from rdflib import URIRef, Graph
-    from SPARQLWrapper import SPARQLWrapper, RDFXML
+    # Codice col bug: self.g non è il soggetto
+    def remove_family_name(self) -> None:
+        self.g.remove((self.g, GraphEntity.iri_family_name, None))
     
-    def get_entity_from_res(res:URIRef, graphset:GraphSet, ts_url:str="http://localhost:9999/blazegraph/sparql", resp_agent="https://orcid.org/0000-0002-8420-0696"):
-        query = f"""
-            CONSTRUCT {{<{res}> ?p ?o}}
-            WHERE {{<{res}> ?p ?o}}
-        """
-        sparql = SPARQLWrapper(ts_url)
-        sparql.setQuery(query)
-        sparql.setReturnFormat(RDFXML)
-        data = sparql.query().convert()
-        graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
-        entity = graphset.add_ra(resp_agent=resp_agent, res=res, preexisting_graph=graph)
-        return entity
-    
-    graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/", wanted_label=False)
-    ra_399 = get_entity_from_res(res=URIRef("https://github.com/arcangelo7/time_agnostic/ra/339"), graphset=graphset)
-    ra_399.remove_family_name()
-    storer = Storer(graphset)
-    storer.upload_all("http://localhost:9999/blazegraph/sparql")
-                            </code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        Credo ci sia un bug in oc-ocdm relativo alla creazione del grafo di provenance di entità di tipo pro:RoleInTime e fabio:Expression. Qualunque sia la modifica all'entità, lo snapshot riporta come update query la seguente stringa: "INSERT DATA { GRAPH { .} }". Riporto del codice utile a riprodurre il problema.                
-                        <div class="card bg-primary shadow-inset border-light">
-                            <pre><code class="prettyprint">
-    from oc_ocdm.graph import GraphSet
-    from oc_ocdm.prov import ProvSet
-    from oc_ocdm.storer import Storer
-    from rdflib import URIRef, Graph
-    from SPARQLWrapper import SPARQLWrapper, RDFXML
-    
-    def get_entity_from_res(res:URIRef, graphset:GraphSet, ts_url:str="http://localhost:9999/blazegraph/sparql", resp_agent="https://orcid.org/0000-0002-8420-0696"):
-        query = f"""
-            CONSTRUCT {{<{res}> ?p ?o}}
-            WHERE {{<{res}> ?p ?o}}
-        """
-        sparql = SPARQLWrapper(ts_url)
-        sparql.setQuery(query)
-        sparql.setReturnFormat(RDFXML)
-        data = sparql.query().convert()
-        graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
-        entity = graphset.add_ar(resp_agent=resp_agent, res=res, preexisting_graph=graph)
-        return entity
-    
-    graphset = GraphSet(base_iri="https://github.com/arcangelo7/time_agnostic/")
-    ar_338 = get_entity_from_res(res=URIRef("https://github.com/arcangelo7/time_agnostic/ar/338"), graphset=graphset)
-    ar_338.create_publisher()
-    storer = Storer(graphset)
-    provset = ProvSet(prov_subj_graph_set=graphset, base_iri="https://github.com/arcangelo7/time_agnostic/", info_dir="./data/info_dir/prov/")
-    provset.generate_provenance()
-    storer_prov = Storer(provset)
-    storer.upload_all("http://localhost:9999/blazegraph/sparql")       
-    storer_prov.upload_all("http://localhost:9999/blazegraph/sparql")
+    # Codice fixato: self.g -> self.res
+    def remove_family_name(self) -> None:
+        self.g.remove((self.res, GraphEntity.iri_family_name, None))
                             </code></pre>
                         </div>
                     </li>
