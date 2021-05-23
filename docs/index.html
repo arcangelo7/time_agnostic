@@ -54,233 +54,154 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (19/05/2021)</h2>
+                    <h2>Prossimo incontro (25/05/2021)</h2>
                 </div>
-                <h3>Brainstorming sul Time Agnostic Browser</h3>
-                <ol>
-                    <li>La libreria si deve basare su RDF e dev'essere il più riutilizzabile possibile in diversi contesti, per tutti quei dataset che utilizzano lo stesso modello di provenance di OpenCitations.</li>
-                    <li>Modello usato per la provenance: PROV-O ontology + oco:hasUpdateQuery.
-                        <ol>
-                            <li><em>oco:hasUpdateQuery</em>: proprietà che registra le aggiunte e le cancellazioni come query SPARQL INSERT e DELETE, mentre l'uso di variabili SPARQL è proibito nelle query di update.</li>
-                            <li>Ogni entità del dataset è rappresentata da uno o più snapshot (cioè da un'istanza della classe pro:Entity).</li>
-                            <li>Ogni snapshot registra la composizione dell'entità in un preciso momento temporale, descritto tramite la proprietà pro:generatedAtTime. Ogni snapshot è collegato ai precedenti tramite la proprietà pro:wasDerivedFrom, all'entità descritta tramite pro:specializationOf e all'agente responsabile tramite pro:wasAttributedTo.</li>
-                            <li>Vantaggi:
-                                <ol>
-                                    <li>Facilità nell'ottenere gli statement correnti di un'entità, siccome sono quelli correntemente disponibili nel dataset.</li>
-                                    <li>Facilità nel ripristinare un'entità a un certo snapshot applicando l'operazione inversa (INSERT anziché DELETE e viceversa).</li>
-                                </ol>
-                            </li>
-                        </ol>
-                    </li>
-                    <li>Cosa significa fare una query agnostica sul tempo?
-                        <ol>
-                            <li>Poniamo che l'utente effettui la seguente ricerca:
-                                <div class="card bg-primary shadow-inset border-light">
-                                    <pre><code class="prettyprint">
-    CONSTRUCT {
-        &lt;res&gt; ?p ?o
-    } 
-    WHERE {
-        &lt;res&gt; ?p ?o.
-    }
-                                    </code></pre>
-                                </div>
-                                Dove res è l'URI di una risorsa. Cosa avviene dietro le quinte? 
-                                <ol>
-                                    <li>La query viene arricchita in modo da includere informazioni sulla provenance e, in particolare, sul tempo di generazione dello snapshot e sulla query di update:
-                                        <div class="card bg-primary shadow-inset border-light">
-                                            <pre><code class="prettyprint">
-    PREFIX oco: &lt;https://w3id.org/oc/ontology/&gt;
-    PREFIX pro: &lt;http://www.w3.org/ns/prov#&gt;
-    CONSTRUCT {
-        &lt;res&gt; ?p ?o. 
-        ?snapshot pro:generatedAtTime ?t;      
-                oco:hasUpdateQuery ?updateQuery.
-    }
-    WHERE {
-        &lt;res&gt; ?p ?o.
-        ?snapshot pro:specializationOf &lt;res&gt;;
-                pro:generatedAtTime ?t.
-        OPTIONAL {
-            ?snapshot oco:hasUpdateQuery ?updateQuery.
-        }        
-    }
-                                            </code></pre>
-                                        </div>
-                                        Dal numero di triple di provenance ritornate è possibile dedurre quanti snapshot esistono di quella risorsa e, dal tempo in cui sono state generate, il loro ordine. 
-                                    </li>
-                                    <li>
-                                        Viene effettuata la query dell'utente arricchita, che restituisce lo stato corrente del dataset rispetto a quella risorsa più le informazioni sulla provenance. Il risultato viene salvato in un dizionario, che potrebbe avere la seguente struttura:
-                                        <div class="card bg-primary shadow-inset border-light">
-                                            <pre><code class="prettyprint">
-    snapshots = {
-        &lt;t&gt;: {
-            "graph": &lt;grafo della risorsa al tempo t&gt;,
-            "hasUpdateQuery": &lt;update query&gt;
-        },
-        &lt;t-1&gt;: {
-            "graph": &lt;grafo della risorsa al tempo t-1&gt;,
-            "hasUpdateQuery": &lt;update query&gt;
-        },
-        &lt;t-n&gt;: {
-            "graph": &lt;grafo della risorsa al tempo t-n&gt;,
-            "hasUpdateQuery": ""
-        },
-    }
-                                            </code></pre>
-                                        </div>
-                                        Dove le chiavi corrispondono alle proprietà pro:generatedAtTime degli snapshot ritornati. Da notare che il dizionario al tempo t-n non ha updateQuery, perché corrisponde al grafo dell'entità nel momento in cui è stata creata. 
-                                    </li>
-                                    <li>
-                                        Se la query di update è presente, per ottenere lo stato del grafo rispetto alla risorsa al tempo t-1, bisogna effettuare la query inversa rispetto a quella di update. Per farlo, è sufficiente sostituire "DELETE" con "INSERT" e "INSERT" con "DELETE". Nota bene: la query di update non viene effettuata sul triplestore, ma sul grafo della risorsa al tempo t, in modo da non alterare lo stato del triplestore. 
-                                    </li>
-                                    <li>
-                                        Effettuata la query inversa, il nuovo stato della risorsa viene salvato alla chiave "graph" della chiave &lt;t-1&gt; del dizionario degli snapshots. Questa operazione viene effettuata ricorsivamente per ogni query di update n ritornata sul grafo della risorsa al tempo t-n+1. 
-                                    </li>
-                                </ol>
-                                <li>
-                                    <strong><i class="fas fa-exclamation-circle"></i> Problema</strong>: nel momento in cui ho una serie di snapshot di un'entità, ogni serie potrebbe essere collegata ad altre entità, che a loro volta hanno una serie di snapshot, quindi devono essere riallineate temporalmente per fare la query corretta. 
-                                    <ol>
-                                        <li><i class="far fa-lightbulb"></i> Poniamo che l'utente voglia andare da una risorsa al tempo t-n a un'altra risorsa collegata che sia sempre al tempo t-n. Lo snapshot corretto della risorsa collegata è quello la cui proprietà pro:generatedAtTime è la minima antecedente o coincidente a t-n.</li>
-                                        <li><strong><i class="fas fa-exclamation-circle"></i> Problema</strong>: è più conveniente allineare le risorse al momento della richiesta dell'utente o pre-processare l'intero dataset in modo da avere un nuovo dataset con le risorse allineate?</li>
-                                    </ol>
-                                </li>
-                            </li>
-                        </ol>
-                    </li>
-                    <li>La libreria dev'essere configurabile, pluggabile per usare metodi di altre librerie per semplificare alcuni compiti.</li>
-                    <li>Cosa mi serve? Quali librerie mi servono in Python?
-                        <ol>
-                            <li>RDFLib per la manipolazione delle triple RDF.</li>
-                            <li>sparqlwrapper per leggere i dati da un triplestore.
-                                <ol>
-                                    <li><strong><i class="fas fa-exclamation-circle"></i> Problema</strong>: devo prevedere la possibilità di lavorare anche su file?</li>
-                                </ol>
-                            </li>
-                            <li>oc-ocdm, per mostrare un caso d'uso.</li>
-                        </ol>
-                    </li>
-                    <li>Bisogna realizzare un browser che utilizzi la libreria nel back-end.
-                        <ol>
-                            <li><strong><i class="fas fa-exclamation-circle"></i> Problema</strong>: solo un browser o anche un editor?</li>
-                        </ol>
-                    </li>
-                </ol>
                 <h3>Cosa ho fatto</h3>
                     <ol>
-                        <li>Risolto il bug dell'updateQuery "DELETE DATA { GRAPH { .} }; INSERT DATA { GRAPH { .} }". Il bug era nel codice dell'editor, non in quello di oc-ocdm. La ragione del bug era che i caratteri riservati di HTML contenuti nella query di update non erano riportati come entità carattere e venivano interpretati dal browser come markup.</li>
-                        <li>Risolto un bug nel KG Editor per cui le proprietà oco:hasUpdateQuery e dc:description venivano visualizzate come link poiché contenevano l'URI base.</li>
+                        <li>Novità relative al Time Agnostic Browser:
+                            <ol>
+                                <li>Tre nuovi moduli: <strong>agnostic_query.py</strong>, <strong>sparql.py</strong> e <strong>support.py</strong>: il primo contiene la classe <strong>Agnostic_query</strong>, che rappresenta una query agnostica, il secondo contiene la classe <strong>Sparql</strong>, che gestisce le query, il terzo contiene la classe <strong>File_manager</strong>, per la gestione dei file. Nei punti successivi ogni classe verrà descritta separatamente:</li>
+                                <li><strong>Agnostic_query</strong>: si istanzia passando come parametro una query SPARQL. Al momento dispone di un metodo pensato per l'utente e due metodi privati. Il metodo utilizzabile dall'utente è <strong>get_entity_history</strong>, che dato l'uri di una risorsa ne ricostruisce tutta la storia, restituendo in output un dizionario secondo il seguente modello:
+                                    <div class="card bg-primary shadow-inset border-light">
+                                        <pre><code class="prettyprint">
+    {
+        "URI_entità": {
+            "istante_creazione_snapshot_1": grafo_al_tempo_1,
+            "istante_creazione_snapshot_2": grafo_al_tempo_2,
+            "istante_creazione_snapshot_n": grafo_al_tempo_n
+        }
+    }
+                                        </code></pre>
+                                    </div>
+                                    <p>Cosa si intende per grafo? Per grafo si intendono tutte le triple che hanno l'entità come soggetto più le informazioni di provenance presenti al tempo t (non tutte quelle esistenti, solo quelle esistenti in quel dato istante).</p>
+                                    <p>Il metodo get_entity_history utilizza in sequenza due metodi privati, il cui principale scopo è quello di rendere il codice modulare e testabile:</p>
+                                    <ol>
+                                        <li><strong>_get_entity_current_state</strong> dato l'uri di una risorsa restituisce in output un dizionario secondo lo schema già visto, ma popolando solo l'istante al tempo t, ovvero quello presente.</li>
+                                        <li><strong>_get_old_graphs</strong> preso in input l'output di _get_entity_current_state popola i grafi relativi agli snapshot passati della risorsa. </li>
+                                    </ol>
+                                </li>
+                                <li>La classe <strong>Sparql</strong> si istanzia passando come parametro il percorso di un file di configurazione, la cui posizione predefinita è "./config.json". Il file di configurazione è un JSON il cui modello è il seguente:
+                                    <div class="card bg-primary shadow-inset border-light">
+                                        <pre><code class="prettyprint">
+    {
+        "triplestore_url": [
+            "url_1",
+                    "url_2",
+                    "url_n"
+        ],
+        "file_path": [
+            "path_1",
+                    "path_2",
+                    "path_n"			
+            ]
+    }
+                                        </code></pre>
+                                    </div>
+                                    <p>Il metodo <strong> execute_query</strong>, data una query, restituisce il risultato della query. Al momento vengono supportati i SELECT (a uso dell'utente) e i CONSTRUCT (a uso della libreria). L'output del SELECT è sempre un set di tuple, dove l'ordine degli elementi della tupla corrisponde all'ordine delle variabili richieste dall'utente. L'output del CONSTRUCT, invece, è sempre un rdflib.Graph(). Nota bene: l'utente e la libreria non dicono al metodo dove effettuare la query, ma predispongono il file di configurazione e invocano il metodo passando la query. È infatti il metodo stesso a occuparsi di gestire i vari casi in maniera automatica.</p>
+                                    <ol>
+                                        <li>Ecco un elenco dei casi gestiti e di come sono stati gestiti:
+                                            <ol>
+                                                <li>L'utente/la libreria effettua un SELECT su più triplestore e più file: la query viene effettuata su tutti i triplestore e tutti i file, i risultati uniti e ritornati come set di tuple, dove l'ordine degli elementi nelle tuple corrisponde all'ordine delle variabili indicate dall'utente.</li>
+                                                <li>L'utente/la libreria indica un LIMIT: ottenuti i risultati, il set viene tagliato secondo il limite impostato dall'utente.</li>
+                                                <li>La libreria (mai l'utente) effettua un CONSTRUCT su più triplestore e più file: la query viene effettuata su tutti i triplestore e tutti i file, i risultati uniti e ritornati come rdflib.Graph.</li>
+                                                <li>La libreria (mai l'utente) indica un LIMIT sul CONSTRUCT: ottenuti i risultati, l'rdflib.Graph viene tagliato secondo il limite impostato.</li>        
+                                            </ol>
+                                        </li>
+                                        <li>A seconda del contenuto del file di configurazione, vengono invocati i metodi privati <strong>_query_endpoints</strong>, che effettua la ricerca su tutti gli endpoint indicati, e <strong>_query_files</strong>, che effettua la ricerca su tutti i file indicati.</li>
+                                    </ol>
+                                    <li>La classe <strong>File_manager</strong> contiene i metodi:
+                                        <ol>
+                                            <li><strong>import_json</strong>, che dato il percorso di un file json restituisce un dizionario con il contenuto del file.</li>
+                                            <li><strong>zip_data</strong>, che dato un percorso di un file restituisce il corrispondente file zippato. </li>
+                                            <li><strong>minify_json</strong>, che dato un percorso di un file json restituisce il medesimo file compresso. </li>
+                                        </ol>
+                                    </li>
+                                </li>
+                            </ol>
+                        </li>
                     </ol>
                 <h3>Cosa non ho capito</h3>
-                    <ol>
-                        <li>
-                            Il problema della funzione di merge non funzionante è più profondo del previsto. Ricapitolando, il merge deve reindirizzare su self le triple che hanno come oggetto other. È Per farla funzionare occorre modificare il design del preexisting graph così come è stato previsto dalla libreria, ovvero tutte le triple che hanno un'entità come soggetto. Anche aggiungendo al preexisting_graph le triple che hanno l'entità come oggetto, queste ultime vengono rimosse dal preexisting_graph, attraverso il seguente codice:
-                            <div class="card bg-primary shadow-inset border-light">
-                                <pre><code class="prettyprint">
-    if preexisting_graph is not None:
-        self.remove_every_triple()
-        for p, o in preexisting_graph.predicate_objects(self.res):
-            self.g.add((self.res, p, o))
-            self.preexisting_graph.add((self.res, p, o))
-                                </code></pre>
-                            </div>
-                            Come si vede, vengono considerate solo le triple che hanno self come soggetto. Perché il merge funzioni, ho modificato il codice nel seguente modo:
-                            <div class="card bg-primary shadow-inset border-light">
-                                <pre><code class="prettyprint">
-    if preexisting_graph is not None:
-        self.remove_every_triple()
-        for s, p, o in preexisting_graph.triples((None, None, None)):
-            self.g.add((s, p, o))
-            self.preexisting_graph.add((s, p, o))                                
-                                    </code></pre>
-                            </div>
-                        </li>
-                        <li>Infine, ho modificato la funzione di merge, di cui riporto prima la versione attuale e poi quella modificata.
-                            <div class="card bg-primary shadow-inset border-light">
-                                <pre><code class="prettyprint">
-    # Versione attuale
-    def merge(self, other: GraphEntity) -> None:
-        for res, entity in self.g_set.res_to_entity.items():
-            triples_list: List[Tuple] = list(entity.g.triples((res, None, other.res)))
-            for triple in triples_list:
-                entity.g.remove(triple)
-                new_triple = (triple[0], triple[1], self.res)
-                entity.g.add(new_triple)
-
-        types: List[URIRef] = other.get_types()
-        for cur_type in types:
-            self._create_type(cur_type)
-
-        label: Optional[str] = other.get_label()
-        if label is not None:
-            self.create_label(label)
-
-        self._was_merged = True
-        self._merge_list = (*self._merge_list, other)
-
-        # 'other' must be deleted AFTER the redirection of
-        # triples pointing to it, since mark_as_to_be_deleted
-        # also removes every triple pointing to 'other'
-        other.mark_as_to_be_deleted()
-    
-    # Versione modificata
-    def merge(self, other: GraphEntity) -> None:
-        # Il ciclo non avviene sul grafo di self, ma di other, 
-        # poiché è nel grafo di other che sono presenti le triple
-        # che hanno other come oggetto. 
-        for _, entity in other.g_set.res_to_entity.items():
-            # res, entity -> _, entity, poiché res non viene utilizzata
-            triples_list: List[Tuple] = list(entity.g.triples((None, None, other.res)))
-            # Le triple considerate sono solo quelle che hanno other come oggetto
-            for triple in triples_list:
-                if triple[1] != URIRef("http://www.w3.org/ns/prov#specializationOf"):
-                    # Questa condizione è stata aggiunta per evitare che venga 
-                    # associata a self la provenance di other. 
-                    # Sarebbe meglio riferirsi a quel predicato 
-                    # come PROV.iri_specialization_of, ma non posso importare 
-                    # la classe perché si verifica un'importazione circolare
-
-                    # entity.g.remove(triple) è stato rimosso perché lo stesso
-                    # compito è assolto da other.mark_as_to_be_deleted() in fondo
-                    new_triple = (triple[0], triple[1], self.res)
-                    self.g.add(new_triple)
-
-        types: List[URIRef] = other.get_types()
-        for cur_type in types:
-            self._create_type(cur_type)
-
-        label: Optional[str] = other.get_label()
-        if label is not None:
-            self.create_label(label)
-
-        self._was_merged = True
-        self._merge_list = (*self._merge_list, other)
-
-        other.mark_as_to_be_deleted()
-                                </code></pre>
-                            </div>
-                            Dopo queste modifiche, le triple che hanno come oggetto other vengono correttamente rendirizzate su self, eccetto le triple di provenance. Tuttavia, ci sono ancora due bug:
-                            <ul>
-                                <li>Self viene spogliata di tutti i suoi outgoing links eccetto il tipo.</li>
-                                <li>Other viene correttamente spogliata di tutti i suoi outgoing links, ma non è stato possibile cancellare gli incoming links. </li>
-                            </ul>
-                        </li>
-                    </ol>
-                <h3>Proposta di modifica a oc-ocdm:</h3>
                 <ol>
-                    <li>Ho trovato e risolto i bug dei <em>remove_name</em>, <em>remove_given_name</em> e <em>remove_family_name</em> non funzionanti. Per usare un termine tecnico, era una <em>stronzata</em>. Riporto il codice con e senza il bug per quanto riguarda <em>remove_family_name</em>, ma vale lo stesso discorso anche le altre due funzioni:
+                    <li>Tra i vari metodi implementati, _query_endpoints si occupa di eseguire una query dato uno o più triplestore. Come faccio a testare questo metodo in maniera riproducibile da altri? L'esito della query è infatti dipendente dai triplestore. Devo comprendere dei triplestore di test nella cartella di test?</li>
+                    <li>Il metodo get_entity_current_state ritorna un dizionario nella forma:
                         <div class="card bg-primary shadow-inset border-light">
                             <pre><code class="prettyprint">
-    # Codice col bug: self.g non è il soggetto
-    def remove_family_name(self) -> None:
-        self.g.remove((self.g, GraphEntity.iri_family_name, None))
-    
-    # Codice fixato: self.g -> self.res
-    def remove_family_name(self) -> None:
-        self.g.remove((self.res, GraphEntity.iri_family_name, None))
+    {
+        "URI_entità": {
+            "istante_creazione": grafo
+        }
+    }
                             </code></pre>
                         </div>
+                        Ad esempio:
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    {
+        'https://github.com/arcangelo7/time_agnostic/id/1': {
+            rdflib.term.Literal('2021-05-14T17:07:03+00:00', datatype=rdflib.term.URIRef('http://www.w3.org/2001/XMLSchema#dateTime')): 
+                None, 
+            rdflib.term.Literal('2021-05-21T19:08:56+00:00', datatype=rdflib.term.URIRef('http://www.w3.org/2001/XMLSchema#dateTime')): 
+                &lt;Graph identifier=N23d8d6f82cea4e948cd74f55afeeeb13 (&lt;class 'rdflib.graph.ConjunctiveGraph'&gt;)&gt;
+        }
+    }
+                            </code></pre>
+                        </div>
+                        Come faccio a testare un output simile? In particolare, non riesco a testare il valore corrispondente all'istanza di rdflib.graph.ConjunctiveGraph.
                     </li>
+                    <li>Come faccio a testare un risultato randomico?</li>
+                    <li>Il metodo update della classe Graph di rdflib sembra non funzionare. Riporto un esempio di esecuzione e il relativo output.
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    from support import Sparql
+    from SPARQLWrapper import XML
+    from rdflib import URIRef
+    
+    query = """
+        CONSTRUCT {
+            <https://github.com/arcangelo7/time_agnostic/br/3> ?p ?o. 
+        }
+        WHERE {
+                <https://github.com/arcangelo7/time_agnostic/br/3> ?p ?o.
+            }    
+        """
+    
+    # Il seguente metodo è stato testato, non lo riporto per ragioni di sintesi
+    graph = Sparql()._execute_query(query=query, format=XML)
+    
+    for triple in graph.triples((None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None)):
+        print(str(triple[0]), str(triple[1]), str(triple[2]))
+    print("\n")
+    
+    update_query = """
+        DELETE DATA { 
+            GRAPH &lt;https://github.com/arcangelo7/time_agnostic/br/&gt; { 
+                &lt;https://github.com/arcangelo7/time_agnostic/br/3&gt; 
+                &lt;http://prismstandard.org/namespaces/basic/2.0/publicationDate> 
+                "2002"^^&lt;http://www.w3.org/2001/XMLSchema#gYear&gt; .} 
+        }; INSERT DATA { 
+            GRAPH &lt;https://github.com/arcangelo7/time_agnostic/br/&gt; { 
+                &lt;https://github.com/arcangelo7/time_agnostic/br/3&gt; 
+                &lt;http://prismstandard.org/namespaces/basic/2.0/publicationDate&gt;
+                "2001"^^&lt;http://www.w3.org/2001/XMLSchema#gYear&gt;
+        .} } 
+    """
+    
+    graph.update(update_query)
+    for triple in graph.triples((None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None)):
+        print(str(triple[0]), str(triple[1]), str(triple[2]))
+    
+    # https://github.com/arcangelo7/time_agnostic/br/116 http://prismstandard.org/namespaces/basic/2.0/publicationDate 2004-01-01
+    
+    # https://github.com/arcangelo7/time_agnostic/br/116 http://prismstandard.org/namespaces/basic/2.0/publicationDate 2004-01-01
+    # https://github.com/arcangelo7/time_agnostic/br/3 http://prismstandard.org/namespaces/basic/2.0/publicationDate 
+    # 2005
+                            </code></pre>
+                        </div>
+                        Come si vede, la nuova data è stata aggiunta, ma la precedente non è stata rimossa. Mi sta sfuggendo qualcosa? Ottengo lo stesso output anche utilizzando la funzione processUpdate del modulo rdflib.plugins.sparql.processor. Preciso infine che lanciando la medesima query di update tramite interfaccia grafica di Blazegraph ottengo il risultato previsto.
+                    </li>
+                    <li>Per quanto riguarda il problema dei grafi di provenance e del dataset divisi su più file o più triplestore, ho voluto risolvere la questione secondo la filosofia "massima semplicità per l'utente, massima complessità per lo sviluppatore", ovvero tramite un file di configurazione dove vengono specificati tutti gli url e i percorsi. L'utente non deve indicare cosa contengano i vari triplestore o url e non deve aprire manualmente connessioni o file, deve solo compilare il file di configurazione ed effettuare la query, tutte le varie casistiche vengono gestite in maniera automatica. Vorrei sapere cosa ne pensi di questo approccio e se ti sembra ragionevole o ingenuo. Per un elenco dei casi gestiti ti rimando al punto n.n.</li>
+                    <li>Può un grafo contenere triple duplicate? Risposta provvisoria: ni. Da quello che ho capito uno store di triple RDF è un set di triple, quindi per definizione triple identiche non possono apparire due volte. Tuttavia, molti store RDF sono cosiddetti "quad stores", ovvero set di grafi rdf anche noti come "datasets" e in quel caso le triple possono anche apparire più volte. Questo è qualche volta chiamato "contesto", a seconda dello store. Mi piacerebbe sviscerare ulteriormente la questione e ascoltare la tua risposta in merito.</li>
+                    <li>Posso riutilizzare metodi di oc-ocdm per svolgere compiti identici? Ad esempio, se ho bisogno di aprire un file json e parsarlo dentro un rdf.Graph, posso utilizzare il metodo load della classe Reader di oc-ocdm che fa precisamente la stessa cosa?</li>
                 </ol>
             </div>
         </section>

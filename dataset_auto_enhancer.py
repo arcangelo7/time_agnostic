@@ -1,17 +1,12 @@
-import re, rdflib, json, urllib, itertools, os
+import re, json, urllib, os
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
 from rdflib import URIRef, Graph
-from rdflib.serializer import Serializer
-from rdflib.plugins.sparql.results.jsonresults import JSONResultSerializer
 from rdflib.plugins.sparql import prepareQuery
 from oc_ocdm.support.query_utils import get_update_query
-from datetime import datetime
 from oc_ocdm.graph.graph_entity import GraphEntity
 from oc_ocdm.graph import GraphSet
-from oc_ocdm.prov import ProvSet
-from oc_ocdm.reader import Reader
 from oc_ocdm.support import create_date
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 import numpy as np
