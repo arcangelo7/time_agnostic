@@ -1,10 +1,10 @@
 import re, json, urllib, os
+
+from oc_ocdm import support
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
 from rdflib import URIRef, Graph
-from rdflib.plugins.sparql import prepareQuery
-from oc_ocdm.support.query_utils import get_update_query
 from oc_ocdm.graph.graph_entity import GraphEntity
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.support import create_date
@@ -17,61 +17,70 @@ class DatasetAutoEnhancer(object):
         self.resp_agent = resp_agent
         self.info_dir = info_dir
 
-    def _get_rich_entity_from_res(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, switcher:dict, entity:str) -> GraphEntity:
-        query = f"""
+    def _get_rich_entity_from_res(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, mapping:dict, entity:str, other:bool) -> GraphEntity:
+        for type_entity, dictionary in mapping.items():
+            if entity == dictionary["short_name"]:
+                entity_type = type_entity
+
+        query_subj = f"""
             CONSTRUCT {{
                 <{res}> ?p ?o.
-                ?s ?other_p <{res}>.
             }}
             WHERE {{
                 <{res}> ?p ?o.
-                ?s ?other_p <{res}>.
             }}
         """
-        sparql.setQuery(query)
+        sparql.setQuery(query_subj)
         sparql.setReturnFormat(RDFXML)
-        data = sparql.query().convert()
-        graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
-        entity = switcher[entity]["add"](self.resp_agent, res=res, preexisting_graph=graph)
-        # ids = entity.get_identifiers()
-        # ids_entities = set()
-        # for identifier in ids:
-        #     id_query = f"""
-        #         CONSTRUCT {{<{identifier.res}> ?p ?o}}
-        #         WHERE {{<{identifier.res}> ?p ?o}}
-        #     """
-        #     sparql.setQuery(id_query)
-        #     sparql.setReturnFormat(RDFXML)
-        #     id_data = sparql.query().convert()
-        #     id_graph = Graph().parse(data=id_data.serialize(format='xml'), format='xml')
-        #     id_entity = graphset.add_id(resp_agent=self.resp_agent, res=identifier.res, preexisting_graph=id_graph)
-        #     ids_entities.add(id_entity)
+        graph_subj = sparql.queryAndConvert()
+        add_method = mapping[entity_type]["add"]
+        entity = getattr(graphset, add_method)(self.resp_agent, res=res, preexisting_graph=graph_subj)
+
+        if other:
+            query_other_as_obj = f"""
+                SELECT ?s ?type
+                WHERE {{
+                    ?s ?p <{res}>;
+                        a ?type.
+                }}        
+            """
+            sparql.setQuery(query_other_as_obj)
+            sparql.setReturnFormat(JSON)
+            data_obj = sparql.queryAndConvert()
+            for data in data_obj["results"]["bindings"]:
+                if data["type"]["value"] in mapping:
+                    res_other_as_obj = URIRef(data["s"]["value"])
+                    query_other_as_obj_preexisting_graph = f"""
+                        CONSTRUCT {{
+                            <{res_other_as_obj}> ?p ?o.
+                        }}
+                        WHERE {{
+                            <{res_other_as_obj}> ?p ?o.
+                        }}
+                    """
+                    sparql.setQuery(query_other_as_obj_preexisting_graph)
+                    sparql.setReturnFormat(RDFXML)
+                    other_as_obj_preexisting_graph = sparql.queryAndConvert()
+                    other_as_obj_add_method = mapping[data["type"]["value"]]["add"]
+                    getattr(graphset, other_as_obj_add_method)(resp_agent=self.resp_agent, res=res_other_as_obj, preexisting_graph=other_as_obj_preexisting_graph)
         return entity
     
     def merge_by_id(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
         enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         sparql = SPARQLWrapper(ts_url)
-        switcher = {
-            "br": {
-                "class": "fabio:Expression",
-                "add": enhanced_graphset.add_br
-                },
-            "ra": {
-                "class": "foaf:Agent",
-                "add": enhanced_graphset.add_ra
-                }
-        }
+        mapping = Support.import_json("./KGEditor/static/config/config.json")
+        ids_found = dict()
         for entity in entities_set:
-            ids_found = dict()
+            for type, dictionary in mapping.items():
+                if entity == dictionary["short_name"]:
+                    entity_type = type
             queryString = f"""
                 PREFIX datacite: <http://purl.org/spar/datacite/>
-                PREFIX fabio: <http://purl.org/spar/fabio/>
-                PREFIX foaf: <http://xmlns.com/foaf/0.1/>
                 PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
                 SELECT ?s ?literalValue
                 WHERE
                 {{
-                    ?s a {switcher[entity]["class"]};
+                    ?s a <{entity_type}>;
                         datacite:hasIdentifier/literal:hasLiteralValue ?literalValue.
                 }}
             """
@@ -81,17 +90,11 @@ class DatasetAutoEnhancer(object):
             pbar = tqdm(total=len(results["results"]["bindings"]))
             for result in results["results"]["bindings"]:
                 if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
-                    preexisting_entity = self._get_rich_entity_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(ids_found[result["literalValue"]["value"]]), switcher=switcher, entity=entity)
-                    duplicated_entity = self._get_rich_entity_from_res(sparql=sparql, graphset=enhanced_graphset, res=URIRef(result["s"]["value"]), switcher=switcher, entity=entity)
-                    # try:
-                    # print(f'[DatasetAutoEnhancer: INFO] Merging {result["s"]["value"]} with {ids_found[result["literalValue"]["value"]]}')
+                    preexisting_entity_res = URIRef(ids_found[result["literalValue"]["value"]])
+                    duplicated_entity_res = URIRef(result["s"]["value"])
+                    preexisting_entity = self._get_rich_entity_from_res(sparql, enhanced_graphset, preexisting_entity_res, mapping, entity, False)
+                    duplicated_entity = self._get_rich_entity_from_res(sparql, enhanced_graphset, duplicated_entity_res, mapping, entity, True)
                     preexisting_entity.merge(duplicated_entity)
-                    # for preexisting_id, duplicated_id in itertools.product(preexisting_ids, duplicated_ids):
-                    #     if preexisting_id != duplicated_id:
-                    #         print(f'[DatasetAutoEnhancer: INFO] Merging {preexisting_id.res} with {duplicated_id.res}')
-                    #         preexisting_id.merge(duplicated_id)
-                    # except TypeError:
-                    #     pass
                 else:
                     ids_found[result["literalValue"]["value"]] = result["s"]["value"]
                 pbar.update(1)

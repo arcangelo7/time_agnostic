@@ -1,5 +1,6 @@
 {
     "http://purl.org/spar/datacite/Identifier": {
+        "short_name": "id",
         "add": "add_id",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
             "create": "_create_type",
@@ -28,6 +29,7 @@
         }	
     },
     "http://purl.org/spar/pro/RoleInTime": {
+        "short_name": "ar",
         "add": "add_ar",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
             "create": "_create_type",
@@ -51,6 +53,7 @@
         }
     },
     "http://purl.org/spar/biro/BibliographicReference": {
+        "short_name": "be",
         "add": "add_be",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
             "create": "_create_type",
@@ -66,6 +69,7 @@
         }
     },
     "http://purl.org/spar/fabio/Expression": {
+        "short_name": "br",
         "add": "add_br",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
             "create": {
@@ -135,6 +139,7 @@
         }
     },
     "http://purl.org/spar/cito/Citation": {
+        "short_name": "ci",
         "add": "add_ci",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
             "create": {
@@ -168,6 +173,7 @@
         }
     },
     "http://purl.org/spar/fabio/Manifestation": {
+        "short_name": "re",
         "add": "add_re",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
             "create": {
@@ -195,6 +201,7 @@
         }
     },
     "http://xmlns.com/foaf/0.1/Agent": {
+        "short_name": "ra",
         "add": "add_ra",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
             "create": "_create_type",
