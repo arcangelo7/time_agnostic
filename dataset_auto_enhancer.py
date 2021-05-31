@@ -1,6 +1,7 @@
-import re, json, urllib, os
+from typing import Dict
 
-from oc_ocdm import support
+import re, json, urllib, os, psutil, gc
+from oc_ocdm.graph.entities.bibliographic_entity import BibliographicEntity
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
@@ -17,11 +18,7 @@ class DatasetAutoEnhancer(object):
         self.resp_agent = resp_agent
         self.info_dir = info_dir
 
-    def _get_rich_entity_from_res(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, mapping:dict, entity:str, other:bool) -> GraphEntity:
-        for type_entity, dictionary in mapping.items():
-            if entity == dictionary["short_name"]:
-                entity_type = type_entity
-
+    def _get_entity_and_enrich_graphset(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, mapping:dict, entity_type:str, other:bool) -> GraphEntity:
         query_subj = f"""
             CONSTRUCT {{
                 <{res}> ?p ?o.
@@ -34,7 +31,23 @@ class DatasetAutoEnhancer(object):
         sparql.setReturnFormat(RDFXML)
         graph_subj = sparql.queryAndConvert()
         add_method = mapping[entity_type]["add"]
-        entity = getattr(graphset, add_method)(self.resp_agent, res=res, preexisting_graph=graph_subj)
+        entity:BibliographicEntity = getattr(graphset, add_method)(self.resp_agent, res=res, preexisting_graph=graph_subj)
+
+        ids = entity.get_identifiers()
+        for identifier in ids:
+            id_query = f"""
+                SELECT ?schema ?literal
+                WHERE {{<{identifier.res}> <{GraphEntity.iri_uses_identifier_scheme}> ?schema;
+                                            <{GraphEntity.iri_has_literal_value}> ?literal.}}
+            """
+            sparql.setQuery(id_query)
+            sparql.setReturnFormat(JSON)
+            results = sparql.queryAndConvert()
+            for result in results["results"]["bindings"]:
+                schema = result["schema"]["value"]
+                literal = result["literal"]["value"]
+                create_method = mapping[str(GraphEntity.iri_identifier)][str(GraphEntity.iri_has_literal_value)]["create"][schema]
+                getattr(identifier, create_method)(literal)
 
         if other:
             query_other_as_obj = f"""
@@ -65,23 +78,26 @@ class DatasetAutoEnhancer(object):
                     getattr(graphset, other_as_obj_add_method)(resp_agent=self.resp_agent, res=res_other_as_obj, preexisting_graph=other_as_obj_preexisting_graph)
         return entity
     
-    def merge_by_id(self, entities_set:set, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
+    def merge_by_id(
+                self, 
+                type_and_identifier_scheme:Dict[str, str], 
+                ts_url:str='http://localhost:9999/bigdata/sparql', 
+                config_path:str = "./config.json", 
+                available_ram:float=8.0
+            ) -> GraphSet:
+        process = psutil.Process(os.getpid())
         enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         sparql = SPARQLWrapper(ts_url)
-        mapping = Support.import_json("./KGEditor/static/config/config.json")
+        mapping = Support.import_json(config_path)
         ids_found = dict()
-        for entity in entities_set:
-            for type, dictionary in mapping.items():
-                if entity == dictionary["short_name"]:
-                    entity_type = type
+        for entity_type, schema in type_and_identifier_scheme.items():
             queryString = f"""
-                PREFIX datacite: <http://purl.org/spar/datacite/>
-                PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
                 SELECT ?s ?literalValue
                 WHERE
                 {{
                     ?s a <{entity_type}>;
-                        datacite:hasIdentifier/literal:hasLiteralValue ?literalValue.
+                        <{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> ?literalValue;
+                        <{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_uses_identifier_scheme}> <{schema}>.
                 }}
             """
             sparql.setQuery(queryString)
@@ -89,15 +105,21 @@ class DatasetAutoEnhancer(object):
             results = sparql.query().convert()
             pbar = tqdm(total=len(results["results"]["bindings"]))
             for result in results["results"]["bindings"]:
-                if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
-                    preexisting_entity_res = URIRef(ids_found[result["literalValue"]["value"]])
-                    duplicated_entity_res = URIRef(result["s"]["value"])
-                    preexisting_entity = self._get_rich_entity_from_res(sparql, enhanced_graphset, preexisting_entity_res, mapping, entity, False)
-                    duplicated_entity = self._get_rich_entity_from_res(sparql, enhanced_graphset, duplicated_entity_res, mapping, entity, True)
-                    preexisting_entity.merge(duplicated_entity)
+                memory_used = process.memory_info().rss  / (1024.0 ** 3) # Unit measure: GB
+                if memory_used <= available_ram:
+                    if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
+                        preexisting_entity_res = URIRef(ids_found[result["literalValue"]["value"]])
+                        duplicated_entity_res = URIRef(result["s"]["value"])
+                        preexisting_entity = self._get_entity_and_enrich_graphset(sparql, enhanced_graphset, preexisting_entity_res, mapping, entity_type, False)
+                        duplicated_entity = self._get_entity_and_enrich_graphset(sparql, enhanced_graphset, duplicated_entity_res, mapping, entity_type, True)
+                        preexisting_entity.merge(duplicated_entity)
+                    else:
+                        ids_found[result["literalValue"]["value"]] = result["s"]["value"]
+                    pbar.update(1)       
                 else:
-                    ids_found[result["literalValue"]["value"]] = result["s"]["value"]
-                pbar.update(1)
+                    print("[DatasetAutoEnhancer: INFO] Memory is running out. The merges are being returned.")
+                    pbar.close()
+                    return enhanced_graphset
             pbar.close()
         return enhanced_graphset
         

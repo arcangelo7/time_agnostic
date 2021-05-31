@@ -56,157 +56,454 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (25/05/2021)</h2>
+                    <h2>Prossimo incontro (03/06/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
-                    Tutte le novità sono relative al Time Agnostic Browser
-                        <ol>
-                            <li>Tre nuovi moduli: <strong>agnostic_query.py</strong>, <strong>sparql.py</strong> e <strong>support.py</strong>: il primo contiene la classe <strong>Agnostic_query</strong>, che rappresenta una query agnostica, il secondo contiene la classe <strong>Sparql</strong>, che gestisce le query, il terzo contiene la classe <strong>File_manager</strong>, per la gestione dei file. Nei punti successivi ogni classe verrà descritta separatamente:</li>
-                            <li><strong>Agnostic_query</strong>: si istanzia passando come parametro una query SPARQL. Al momento dispone di un metodo pensato per l'utente e due metodi privati. Il metodo utilizzabile dall'utente è <strong>get_entity_history</strong>, che dato l'uri di una risorsa ne ricostruisce tutta la storia, restituendo in output un dizionario secondo il seguente modello:
-                                <div class="card bg-primary shadow-inset border-light">
-                                    <pre><code class="prettyprint">
+                    <ol>
+                        <li>Con grande soddisfazione riporto che il metodo <strong>merge_by_id</strong> è finalmente funzionante. Rispetto a prima, aggiunge al graphset le entità che hanno other come oggetto e arricchisce gli identificatori con le informazioni sullo schema e sul valore letterale, in modo da consentire il funzionamento del metodo remove_duplicated_identifiers sviluppato da Simone. Inoltre, utilizza la reflection per definire dinamicamente i metodi di aggiunta al graphset, tramite lo stesso file di configurazione realizzato per il KGEditor.</li>
+                        <li>Per venire incontro alle esigenze di Cristian, ho modificato la funzione merge_by_id in modo che permettesse di specificare non solo il tipo di entità da unire, ma anche l'IRI dello schema dell'identificatore in base al quale effettuare l'unione. In questo modo, adesso è possibile unire le risorse di tipo foaf:Agent che hanno come id un ISSN ma non un ORCID, ovvero gli editori ma non gli autori.</li>
+                        <li>Il metodo merge_by_id riceve infine un nuovo argomento, ovvero un numero a virgola mobile indicante i GB di RAM che si vogliono dedicare al processo. Quando la RAM occupata dal processo raggiunge il valore indicato, il grafo con i merge costruito fino a quel momento viene ritornato. Dopodiché, una funzione a parte si occupa di caricare le modifiche e la provenance sul triplestore, in modo da salvare il lavoro fatto. Tuttavia, non è stato ancora trovato un modo per liberare la RAM e rilanciare la funzione in automatico.</li>
+                        <li>Novità relative al Time Agnostic Browser:
+                            <ol>
+                                <li>È stato risolto il problema relativo all'update non funzionante, quindi il metodo <strong>get_history</strong> e i relativi metodi _get_entity_current_state e _get_old_graphs restituiscono adesso l'output atteso. Per ulteriori dettagli su quale fosse il bug e come è stato risolto si veda il punto n.n nella sezione Cosa non ho capito.</li>
+                                <li>È stato implementato il metodo <strong>get_state_at_time</strong>, che dato un URI e un tempo restituisce lo stato della risorsa a quel tempo e dei collegamenti agli stati precedenti e successivi. Nello specifico, viene restituito un dizionario secondo il seguente modello:
+                                    <div class="card bg-primary shadow-inset border-light">
+                                        <pre><code class="prettyprint">
     {
-        "URI_entità": {
-            "istante_creazione_snapshot_1": grafo_al_tempo_1,
-            "istante_creazione_snapshot_2": grafo_al_tempo_2,
-            "istante_creazione_snapshot_n": grafo_al_tempo_n
+        "t": Grafo al tempo t
+        "before": {
+            "t-1": Grafo al tempo t-1,
+            "t-n": Grafo al tempo t-n
+        }, 
+        "after": {
+            "t+1": Grafo al tempo t+1,
+            "t+n": Grafo al tempo t+n
         }
     }
-                                    </code></pre>
-                                </div>
-                                <p>Cosa si intende per grafo? Per grafo si intendono tutte le triple che hanno l'entità come soggetto più le informazioni di provenance presenti al tempo t (non tutte quelle esistenti, solo quelle esistenti in quel dato istante).</p>
-                                <p>Il metodo get_entity_history utilizza in sequenza due metodi privati, il cui principale scopo è quello di rendere il codice modulare e testabile:</p>
-                                <ol>
-                                    <li><strong>_get_entity_current_state</strong> dato l'uri di una risorsa restituisce in output un dizionario secondo lo schema già visto, ma popolando solo l'istante al tempo t, ovvero quello presente.</li>
-                                    <li><strong>_get_old_graphs</strong> preso in input l'output di _get_entity_current_state popola i grafi relativi agli snapshot passati della risorsa. </li>
-                                </ol>
-                            </li>
-                            <li>La classe <strong>Sparql</strong> si istanzia passando come parametro il percorso di un file di configurazione, la cui posizione predefinita è "./config.json". Il file di configurazione è un JSON il cui modello è il seguente:
-                                <div class="card bg-primary shadow-inset border-light">
-                                    <pre><code class="prettyprint">
+                                        </code></pre>
+                                    </div>
+                                </li>
+                                <li>I metodi su menzionati non fanno più parte della classe Agnostic_query, bensì della classe <strong>AgnosticEntity</strong>, dato che si tratta di metodi per ottenere proprietà riguardanti una specifica entità in maniera agnostica sul tempo e non per effettuare query in maniera agnostica sul tempo. La classe AgnosticEntity si istanzia passando come argomenti l'URI dell'entità e, in maniera opzionale, un booleano per indicare se si vuole ottenere anche la storia delle entità correlate, ovvero di quelle che hanno l'URI dell'entità come oggetto e non come soggetto. Il parametro è impostato di default a False, è stato cioè preferito un comportamento lazy.</li>
+                                <li>È stata implementata la funzione <strong>get_entities_histories</strong>, che dato un set di URI restituisce la storia di tutte le relative entità. È anche possibile specificare tramite un booleano se si è interessati anche alla storia delle entità correlate. Questa funzione fa parte del modulo agnostic_entity ma non della classe AgnosticEntity: serve infatti a manipolare un gruppo di istanze di quella classe.</li>
+                                <li>Le query sulla provenance e sui dati sono adesso operazioni separate. Questa distinzione si riflette su tutta l'architettura della libreria.
+                                    <ol>
+                                        <li>Il modello del file di configurazione è cambiato. Si riporta uno schema di quello nuovo:
+                                            <div class="card bg-primary shadow-inset border-light">
+                                                <pre><code class="prettyprint">
     {
-        "triplestore_url": [
-            "url_1",
-            "url_2",
-            "url_n"
-        ],
-        "file_path": [
-            "path_1",
-            "path_2",
-            "path_n"			
-        ]
+        "dataset": {
+            "triplestore_urls": ["url_1", "url_2", "url_n"],
+            "file_paths": ["path_1", "path_2", "path_n"]
+        },
+        "provenance": {
+            "triplestore_urls": ["url_1", "url_2", "url_n"],
+            "file_paths": ["path_1", "path_2", "path_n"]
+        }
+    }
+                                                </code></pre>
+                                            </div>
+                                        </li>
+                                        <li>All'interno della classe AgnosticEntity, il metodo <strong>_query_provenance</strong> ottiene informazioni sulla provenance, il metodo <strong>_query_dataset</strong> quelle sui dati. Il modo in cui vengono ottenuti i dati in modo da poterli salvare in grafi denominati è particolarmente interessante e viene approfondito al punto n.n della sezione Cosa non ho capito.</li>
+                                        <li>La classe <strong>Sparql</strong> è stata completamente riscritta, sia per tenere conto due due diversi tipi di query, sia perché la prima bozza era poco robusta. Sono stati affrontati e risolti due problemi fondamentali:
+                                            <ol>
+                                                <li>La differenza tra l'output di un SELECT e di un CONSTRUCT. Il CONSTRUCT ritorna sempre un ConjunctiveGraph, mentre il SELECT ritorna sempre un set di tuple. Ora le due modalità di query sono distinte in due metodi diversi, <strong>run_construct_query</strong> e <strong>run_select_query</strong>, che a loro volta chiamano i metodi <strong>_get_graph_from_files</strong> e <strong>_get_graph_from_triplestores</strong> per il CONSTRUCT, <strong>_get_tuples_from_files</strong> e <strong>_get_tuples_from_triplestores</strong> per il SELECT. Perché non utilizzare un metodo di query unico?
+                                                    <ol>
+                                                        <li>Perché esiste uno specifico SELECT da cui si vuole ritornare un grafo e non un set di tuple, ovvero quello che ho chiamato SELECT hack e che serve per ottenere grafi denominati, come illustrato al punto n.n della sezione Cosa non ho capito. Per evitare di rendere l'hack un parametro della funzione e complicarne quindi l'utilizzo per l'utente, si è preferito occultare l'hack e separare le due funzioni. Quando io sviluppatore voglio ottenere un ConjunctiveGraph da un SELECT utilizzo run_construct_query anziché run_select_query.</li>
+                                                        <li>Inoltre, dato che l'utente effettua sempre dei SELECT e mai dei CONSTRUCT, separare le due logiche serve a snellire il processo che interessa realmente all'utente.</li>
+                                                    </ol>
+                                                </li>
+                                                <li>Il problema dei LIMIT, che non funzionano nel momento in cui una query viene eseguita su tante fonti diverse e i risultati uniti. È stato introdotto il metodo <strong>_cut_by_limit</strong>, che utilizza il metodo prepareQuery del modulo rdflib.plugins.sparql.processor per estrarre l'algebra della query e individuare il limite, dopodiché taglia l'output in base al limite ottenuto. Funziona anche per limiti innestati.</li>
+                                            </ol>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>Tutti i metodi menzionati sono stati testati con esito positivo.</li>
+                                <div class="alert alert-secondary shadow-soft my-4 mb-lg-5" role="alert">
+                                    <span class="alert-inner--icon icon-lg"><i class="fas fa-seedling"></i></span>
+                                    <p>Tutte le classi e i metodi esposti all'utente sono stati documentati utilizzando il linguaggio di markup reStructuredText. Inoltre, è stato utilizzato Sphinx per generare automaticamente la documentazione in formato HTML.</p>
+                                    <hr>
+                                    <p>Il risultato può essere visionato al seguente indirizzo: <a href="https://arcangelo7.github.io/time-agnostic-browser/" target="_blank" alt="Link to the time_agnostic_browser library documentation">https://arcangelo7.github.io/time-agnostic-browser/</a>.</p>                                      
+                                </div>
+                            </ol>
+                        </li>
+                    </ol>
+                <h3>Cosa non ho capito</h3>
+                <ol>
+                    <li>Ho capito perché i metodi i metodi di update di rdflib non sortissero effetto quando l'update coinvolgeva un DELETE. La ragione è che i delete in questione non erano generici, ma specifici per dei grafi denominati. Prendiamo ad esempio la seguente query:
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    DELETE DATA { 
+        GRAPH &lt;https://github.com/arcangelo7/time_agnostic/br/&gt; { 
+            &lt;https://github.com/arcangelo7/time_agnostic/br/3&gt; 
+            &lt;http://prismstandard.org/namespaces/basic/2.0/publicationDate&gt; 
+            "2002"^^&lt;http://www.w3.org/2001/XMLSchema#gYear&gt;.
+        } 
     }
                             </code></pre>
                         </div>
-                        <p>Il metodo <strong> execute_query</strong>, data una query, restituisce il risultato della query. Al momento vengono supportati i SELECT (a uso dell'utente) e i CONSTRUCT (a uso della libreria). L'output del SELECT è sempre un set di tuple, dove l'ordine degli elementi della tupla corrisponde all'ordine delle variabili richieste dall'utente. L'output del CONSTRUCT, invece, è sempre un rdflib.graph.ConjunctiveGraph. Nota bene: l'utente e la libreria non dicono al metodo dove effettuare la query, ma predispongono il file di configurazione e invocano il metodo passando la query. È infatti il metodo stesso a occuparsi di gestire i vari casi in maniera automatica.</p>
-                        <ol>
-                            <li id="i2505chf31">Ecco un elenco dei casi gestiti e di come sono stati gestiti:
-                                <ol>
-                                    <li>L'utente/la libreria effettua un SELECT su più triplestore e più file: la query viene effettuata su tutti i triplestore e tutti i file, i risultati uniti e ritornati come set di tuple, dove l'ordine degli elementi nelle tuple corrisponde all'ordine delle variabili indicate dall'utente.
-                                        <ol>
-                                            <li>Perché un set di tuple e non una lista di tuple? Per eliminare le tuple duplicate.</li>
-                                        </ol>
-                                    </li>
-                                    <li>L'utente/la libreria indica un LIMIT: ottenuti i risultati, il set viene tagliato secondo il limite impostato dall'utente.</li>
-                                    <li>La libreria (mai l'utente) effettua un CONSTRUCT su più triplestore e più file: la query viene effettuata su tutti i triplestore e tutti i file, i risultati uniti e ritornati come rdflib.graph.ConjunctiveGraph.</li>
-                                    <li>La libreria (mai l'utente) indica un LIMIT sul CONSTRUCT: ottenuti i risultati, l'rdflib.graph.ConjunctiveGraph viene tagliato secondo il limite impostato.</li>        
-                                </ol>
-                            </li>
-                            <li>A seconda del contenuto del file di configurazione, vengono invocati i metodi privati <strong>_query_endpoints</strong>, che effettua la ricerca su tutti gli endpoint indicati, e <strong>_query_files</strong>, che effettua la ricerca su tutti i file indicati.</li>
-                        </ol>
-                        <li>La classe <strong>File_manager</strong> contiene i metodi:
-                            <ol>
-                                <li><strong>import_json</strong>, che dato il percorso di un file json restituisce un dizionario con il contenuto del file.</li>
-                                <li><strong>zip_data</strong>, che dato un percorso di un file restituisce il corrispondente file zippato. </li>
-                                <li><strong>minify_json</strong>, che dato un percorso di un file json restituisce il medesimo file compresso. </li>
-                            </ol>
-                        </li>
+                        <p>Questa query non cancella una generica tripla &lt;https://github.com/arcangelo7/time_agnostic/br/3&gt; prism:publicationDate "2002", ma cancella quella tripla all'interno del grafo di nome &lt;https://github.com/arcangelo7/time_agnostic/br/&gt;. Le query di update generate automaticamente da oc_ocdm specificano sempre il grafo a cui si riferiscono.</p>
+                        <p>C'è però un problema: SPARQL 1.1 è bello e caro, ma non offre alcun modo per produrre quad RDF in grafi denominati e la clausola CONSTRUCT è limitata alla produzione di triple RDF. Quindi, poiché l'informazione sul contesto non era presente nel ConjunctiveGraph creato con un CONSTRUCT tramite SparqlWrapper, il DELETE DATA non sortiva effetto.</p>
+                        <p>Il problema potrebbe essere risolto in futuro introducendo la seguente sintassi:</p>
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    CONSTRUCT {
+        GRAPH ?g { ?s ?p ?o }
+    }
+                                </code></pre>
+                            </div>
+                        <p>Non pensi che potrebbe essere una valida proposta per SPARQL 1.2?</p>
                     </li>
-                </ol>
-            <h3>Cosa non ho capito</h3>
-            <ol>
-                <li>Tra i vari metodi implementati, _query_endpoints si occupa di eseguire una query dato uno o più triplestore. Come faccio a testare questo metodo in maniera riproducibile da altri? L'esito della query è infatti dipendente dai triplestore. Devo comprendere dei triplestore di test nella cartella di test?</li>
-                <li>Il metodo get_entity_current_state ritorna un dizionario nella forma:
-                    <div class="card bg-primary shadow-inset border-light">
-                        <pre><code class="prettyprint">
-    {
-        "URI_entità": {
-            "istante_creazione": grafo
-        }
-    }
-                        </code></pre>
-                    </div>
-                    Ad esempio:
-                    <div class="card bg-primary shadow-inset border-light">
-                        <pre><code class="prettyprint">
-    {
-        'https://github.com/arcangelo7/time_agnostic/id/1': {
-            rdflib.term.Literal('2021-05-14T17:07:03+00:00', datatype=rdflib.term.URIRef('http://www.w3.org/2001/XMLSchema#dateTime')): 
-                None, 
-            rdflib.term.Literal('2021-05-21T19:08:56+00:00', datatype=rdflib.term.URIRef('http://www.w3.org/2001/XMLSchema#dateTime')): 
-                &lt;Graph identifier=N23d8d6f82cea4e948cd74f55afeeeb13 (&lt;class 'rdflib.graph.ConjunctiveGraph'&gt;)&gt;
-        }
-    }
-                        </code></pre>
-                    </div>
-                    Come faccio a testare un output simile? In particolare, non riesco a testare il valore corrispondente all'istanza di rdflib.graph.ConjunctiveGraph.
-                </li>
-                <li>Come faccio a testare un risultato randomico?</li>
-                <li>Il metodo update della classe Graph di rdflib sembra non funzionare. Riporto un esempio di esecuzione e il relativo output.
-                    <div class="card bg-primary shadow-inset border-light">
-                        <pre><code class="prettyprint">
-    from sparql import Sparql
-    from SPARQLWrapper import XML
-    from rdflib import URIRef
-    
+                    <li>In attesa di SPARQL 1.2, vedo due soluzioni al problema del punto 1: o cancello i riferimenti al grafo denominato dalle query di update (poco lungimirante) o invece di un CONSTRUCT effettuo un SELECT che ritorna una quadrupla il cui quarto elemento è il contesto, dopodiché genero il ConjunctiveGraph passando la quadrupla al metodo add che, in caso di quadruple, interpreta il quarto elemento come contesto, in questo modo:
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
     query = """
-        CONSTRUCT {
-            &lt;https://github.com/arcangelo7/time_agnostic/br/3> ?p ?o. 
-        }
+    SELECT ?s ?p ?o ?c
         WHERE {
-            &lt;https://github.com/arcangelo7/time_agnostic/br/3&gt; ?p ?o.
-        }    
-        """
-    
-    # Il seguente metodo è stato testato, non lo riporto per ragioni di sintesi
-    graph = Sparql().execute_query(query=query)
-    
-    for triple in graph.triples((None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None)):
-        print(str(triple[0]), str(triple[1]), str(triple[2]))
-    print("\n")
-    
-    update_query = """
-        DELETE DATA { 
-            GRAPH &lt;https://github.com/arcangelo7/time_agnostic/br/&gt; { 
-                &lt;https://github.com/arcangelo7/time_agnostic/br/3&gt; 
-                &lt;http://prismstandard.org/namespaces/basic/2.0/publicationDate&gt; 
-                "2002"^^&lt;http://www.w3.org/2001/XMLSchema#gYear&gt; .} 
-        }; INSERT DATA { 
-            GRAPH &lt;https://github.com/arcangelo7/time_agnostic/br/&gt; { 
-                &lt;https://github.com/arcangelo7/time_agnostic/br/3&gt; 
-                &lt;http://prismstandard.org/namespaces/basic/2.0/publicationDate&gt;
-                "2001"^^&lt;http://www.w3.org/2001/XMLSchema#gYear&gt;
-        .} } 
+            GRAPH ?c {?s ?p ?o}
+            VALUES ?s {&lt;res&gt;}
+    }
     """
     
-    graph.update(update_query)
-    for triple in graph.triples((None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None)):
-        print(str(triple[0]), str(triple[1]), str(triple[2]))
+    # [...]
+        
+    cg = ConjunctiveGraph()
+    for quad in results.quads():
+        cg.add(quad)
+                            </code></pre>
+                        </div>
+                        <p>Quest'ultima soluzione mi sembra più lungimirante, perché preserva l'informazione sul contesto e risolve il problema in maniera backwards e forwards-compatible. Che ne pensi?</p>
+                    </li>
+                    <li>Quando viene fatto un merge tra A e B, lo snapshot associato ad A (pro:specializationOf ) viene fatto derivare dallo snapshot di B (pro:wasDerivedFrom) precedente al merge. Per capirci, se A viene unita a B, C e D, lo snapshot relativo al merge di A deriverà gli snapshot precedenti di B, C e D. Ti mostro in foto quello a cui mi riferisco:
+                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                            <img src="./assets/img/wasDerivedFrom.png" alt="line-through">
+                        </div>
+                        <p>Analizzando il codice della classe ProvSet di oc-ocdm mi sono reso conto che questo comportamento non è un bug, è una feature, perché c'è un'intera funzione dedicata esclusivamente a causarlo, ovvero <a href="https://github.com/opencitations/oc_ocdm/blob/5090df3969c53f4619f851bbf203eb65e35a51ae/oc_ocdm/prov/prov_set.py#L126" target="_blank" alt="Link to the _get_snapshots_from_merge_list method">_get_snapshots_from_merge_list</a>, che viene invocata all'interno del metodo generate_provenance. Ti chiedo quindi se è previsto che questo accada e perché.</p>
+                    </li>
+                    <li>Come faccio a forzare Python a liberare la RAM senza interrompere un processo? Da quello che ho capito, Python fa questo lavoro da solo tramite il Garbage Collector, che dovrebbe eliminare quegli oggetti con zero riferimenti. Dato che in Python tutto è un oggetto, ciò significa qualunque tipo di variabile. Ho letto che è possibile forzare l'intervento del Garbage Collector. In teoria, le seguenti righe di codice dovrebbero liberare molta RAM.
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    import gc
+
+    del graphset
+    del provset
+    gc.collect()
+                            </code></pre>
+                        </div>
+                        <p>Tuttavia, questo non avviene. Come mai? Possibile che la RAM non venga liberata fino a quando non finisce il processo?</p>
+                    </li>
+                    <li>È possibile che un secondo snapshot non abbia query di update?</li>
+                    <li>La funzione processUpdate del modulo rdflib.plugins.sparql.processor solleva un'eccezione di tipo RecursionError com messaggio "maximum recursion depth exceeded" nel caso in cui la query di update sia troppo lunga. È un problema emerso in questo issue del 2015 e mai risolto: <a href="https://github.com/RDFLib/rdflib/issues/481" target="_blank" alt="Link to the issue">https://github.com/RDFLib/rdflib/issues/481/</a>. Inoltre, aumentare il limite di profondità della ricorsione tramite sys.setrecursionlimit da 1000 a 2000 fa crashare l'applicativo. Tutti i valori precedenti sollevano l'eccezione RecursionError. Suggerimenti? Opinioni? Riporto del codice per riprodurre l'errore:
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    from rdflib import ConjunctiveGraph
+    from rdflib.plugins.sparql.processor import processUpdate
     
-    # https://github.com/arcangelo7/time_agnostic/br/3 http://prismstandard.org/namespaces/basic/2.0/publicationDate 2002-01-01
+    
+    cg = ConjunctiveGraph()
+    
+    update_query = """
+    INSERT DATA { GRAPH &lt;https://github.com/arcangelo7/time_agnostic/br/> { 
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/pro/isDocumentContextFor> &lt;https://github.com/arcangelo7/time_agnostic/ar/2995> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15717> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12885> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12855> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12894> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12833> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12875> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12900> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/dc/terms/title> 
+        "Citation histories of scientific publications. The data sources"^^&lt;http://www.w3.org/2001/XMLSchema#string> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12892> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12872> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15713> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12859> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12883> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15665> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12853> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15725> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12870> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12886> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12824> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15723> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15660> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15702> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12823> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12864> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12908> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12917> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15748> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15686> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12916> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15680> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15757> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15678> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12844> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15746> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12862> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12921> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15739> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12888> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15659> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15685> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12832> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15704> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15735> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12831> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12882> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12902> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15756> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12877> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12871> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15692> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15699> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12881> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12889> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12825> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12914> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type> &lt;http://purl.org/spar/fabio/Expression> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12912> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12841> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12913> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12838> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15722> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15721> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12865> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15733> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15726> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12849> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15697> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12884> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15698> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12904> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15701> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#partOf> &lt;https://github.com/arcangelo7/time_agnostic/br/15657> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12878> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12876> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15681> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15716> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12856> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15740> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12879> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15658> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15719> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12848> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12822> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15693> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15664> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12899> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12905> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15663> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12897> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12827> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12826> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15661> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15676> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15747> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15755> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15668> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15684> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15696> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15734> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12919> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15683> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12866> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15669> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15728> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12911> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15743> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12898> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15750> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12907> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12893> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15712> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12869> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15674> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#embodiment> &lt;https://github.com/arcangelo7/time_agnostic/re/2015> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12837> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15707> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15662> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15666> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15752> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12920> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15718> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15738> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15753> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12821> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12846> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15689> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12918> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15729> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12903> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12895> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12836> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12851> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15709> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15742> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12861> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12915> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15673> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15679> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15671> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15758> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15751> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15670> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12867> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15691> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12839> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12896> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15675> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12890> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15714> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12842> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://prismstandard.org/namespaces/basic/2.0/publicationDate> 
+        "1985-01-01"^^&lt;http://www.w3.org/2001/XMLSchema#gYear> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15754> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15727> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15688> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15737> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15690> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12834> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15677> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12860> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12828> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15672> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15667> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15695> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15705> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15687> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12857> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12887> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15682> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12847> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12854> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15706> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type> &lt;http://purl.org/spar/fabio/JournalArticle> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15715> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/datacite/hasIdentifier> &lt;https://github.com/arcangelo7/time_agnostic/id/13890> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15736> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12863> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15731> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15703> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12910> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12909> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15749> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12840> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15710> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12829> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15711> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15730> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12891> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15744> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12873> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15700> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12852> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12906> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15732> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12858> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15720> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15724> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15708> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12901> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12880> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12843> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12835> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12830> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12874> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15745> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15694> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12845> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12868> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/vocab/frbr/core#part> &lt;https://github.com/arcangelo7/time_agnostic/be/12850> .
+    &lt;https://github.com/arcangelo7/time_agnostic/br/15655> &lt;http://purl.org/spar/cito/cites> &lt;https://github.com/arcangelo7/time_agnostic/br/15741> .} }
+    """
+    
+    processUpdate(cg, update_query)
+                            </code></pre>
+                        </div>
+                    </li>
+                    <li>La porzione di libreria finora sviluppata risolve il problema di ricreare un'entità agnostica sul tempo, ovvero un'entità che contiene informazioni sul suo stato presente e su quelli passati. Ben altro problema è quello di una <strong>query agnostica sul tempo</strong>, che non solo ritorna il risultato in base allo stato corrente del triplestore, ma anche il risultato che ritornerebbe negli stati passati. Dopo una lunga riflessione, sono giunto alla conclusione provvisoria che l'unico modo per raggiungere questo risultato sia ricreare gli stati passati del triplestore ed effettuare la query agnostica sul tempo su ciascuno stato. Per ottenere questo scopo, ho realizzato il seguente algoritmo, che vado prima a spiegare a parole e di cui mostro successivamente il codice:
+                        <ol>
+                            <li>Ottengo i valori temporali di tutti gli snapshots contenenti una query di update, ovvero quante volte il ConjunctiveGraph è cambiato.</li>
+                            <li>Per ogni valore temporale, ottengo gli URI di tutte le entità che sono cambiate in quel tempo, quindi creo un set contenente questi URI e lo associo allo snapshot in un dizionario.</li>
+                            <li>Per ogni tempo, per ogni entità cambiata a quel tempo ricostruisco il grafo di quell'entità in quel tempo, quindi sommo tutti i grafi ottenuti: il risultato è il delta tra lo stato del triplestore in quel tempo e quello immediatamente futuro. Infine, associo questo delta al tempo corrispondente in un nuovo dizionario, che ritorno in output.</li>
+                        </ol>
+                        Vantaggi:
+                        <ul>
+                            <li>Impatto sulla RAM e sulla CPU molto basso.</li>
+                            <li>Una volta ottenute le informazioni, eseguire query agnostiche sul tempo diventa un problema triviale.</li>
+                        </ul>
+                        Svantaggio:
+                        <ul>
+                            <li>A seconda delle dimensioni del dataset e del numero di snapshot, l'operazione può richiedere molto tempo. L'idea è quella di salvare il risultato su file in modo da doverla eseguire una volta sola.</li>
+                        </ul>
+                        <p>L'algoritmo si chiama "calzino" perché invece di ottenere gli snapshot dalle entità ottiene le entità dagli snapshot, come un calzino che viene rivoltato. Inoltre, l'espressione "rivoltare come un calzino" significa "esaminare minuziosamente per conoscere a fondo", per cui la metafora mi sembrava calzante (scusa il gioco di parole).</p>
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    from time_agnostic_browser.sparql import Sparql
+    from time_agnostic_browser.prov_entity import ProvEntity
+    from time_agnostic_browser.agnostic_entity import AgnosticEntity
     
     
-    # https://github.com/arcangelo7/time_agnostic/br/3 http://prismstandard.org/namespaces/basic/2.0/publicationDate 2001
-    # https://github.com/arcangelo7/time_agnostic/br/3 http://prismstandard.org/namespaces/basic/2.0/publicationDate 2002-01-01
-                        </code></pre>
-                    </div>
-                    <p>Come si vede, la nuova data è stata aggiunta, ma la precedente non è stata rimossa. Mi sta sfuggendo qualcosa? Ottengo lo stesso output anche utilizzando la funzione processUpdate del modulo rdflib.plugins.sparql.processor. Preciso infine che lanciando la medesima query di update tramite interfaccia grafica di Blazegraph ottengo il risultato previsto.</p>
-                    <p>Sto tralasciando per un momento il fatto che una data riportata in formato gYear nel triplestore venga parsata da rdflib in un altro formato e che da 2002 diventi 2002-01-01, bug che conosci molto bene e che è descritto in <a href="https://github.com/RDFLib/rdflib/issues/806" target="_blank">https://github.com/RDFLib/rdflib/issues/806</a>. Ad ogni modo, questo bug non coinvolge il fallimento dell'update, che tramite interfaccia Blazegraph funziona e che, per quanto riguarda il DELETE, fallisce in molteplici altri casi che non riguardano date.</p>
-                </li>
-                <li>Per quanto riguarda il problema dei grafi di provenance e del dataset divisi su più file o più triplestore, ho voluto risolvere la questione secondo la filosofia "massima semplicità per l'utente, massima complessità per lo sviluppatore", ovvero tramite un file di configurazione dove vengono specificati tutti gli url e i percorsi. L'utente non deve indicare cosa contengano i vari triplestore o url e non deve aprire manualmente connessioni o file, deve solo compilare il file di configurazione ed effettuare la query, tutte le varie casistiche vengono gestite in maniera automatica. Vorrei sapere cosa ne pensi di questo approccio e se ti sembra ragionevole o ingenuo. Per un elenco dei casi gestiti ti rimando al punto <a href="#i2505chf31">3.1</a>.</li>
-                <li>Può un grafo contenere triple duplicate? Risposta provvisoria: ni. Da quello che ho capito uno store di triple RDF è un set di triple, quindi per definizione triple identiche non possono apparire due volte. Tuttavia, molti store RDF sono cosiddetti "quad stores", ovvero set di grafi rdf anche noti come "datasets" e in quel caso le triple possono anche apparire più volte. Questo è qualche volta chiamato "contesto", a seconda dello store. Mi piacerebbe sviscerare ulteriormente la questione e ascoltare la tua risposta in merito.</li>
-                <li>Posso riutilizzare metodi di oc-ocdm per svolgere compiti identici? Ad esempio, se ho bisogno di aprire un file json e parsarlo dentro un rdf.Graph, posso utilizzare il metodo load della classe Reader di oc-ocdm che fa precisamente la stessa cosa?</li>
-            </ol>
+    def run_the_sock(self):
+        dict_of_snapshots = dict()
+        query_times = f"""
+            SELECT DISTINCT ?time
+            WHERE {{
+                ?snapshot &lt;{ProvEntity.iri_generated_at_time}> ?time;
+                    &lt;{ProvEntity.iri_has_update_query}> ?updateQuery.
+            }}
+        """
+        times = Sparql().run_select_query(query_times)
+        for time in times:
+            query_entities_at_time = f"""
+                SELECT DISTINCT ?s
+                WHERE {{
+                    ?snapshot &lt;{ProvEntity.iri_generated_at_time}> "{time[0]}"^^&lt;http://www.w3.org/2001/XMLSchema#dateTime&gt;;
+                        &lt;{ProvEntity.iri_specialization_of}> ?s.
+                }}
+            """
+            entities_at_time = Sparql().run_select_query(query_entities_at_time)
+            for entity_at_time in entities_at_time:
+                dict_of_snapshots.setdefault(time[0], set())
+                dict_of_snapshots[time[0]].add(entity_at_time[0])
+        
+        sock = dict()
+        for snapshot, set_of_entities in dict_of_snapshots.items():
+            graph_at_time = ConjunctiveGraph()
+            for entity in set_of_entities:
+                agnostic_entity = AgnosticEntity(res=entity, related_entities_history=False)
+                state_at_time = agnostic_entity.get_state_at_time(time=snapshot, get_hooks=False)
+                for time, state in state_at_time.items():
+                    graph_at_time += state
+            sock[snapshot] = graph_at_time
+
+        return sock
+                            </code></pre>
+                        </div>
+                        <p>Cosa ne pensi? Ti vengono in mente soluzioni alternative che permettano di eseguire query agnostiche sul tempo al volo?</p>
+                    </li>
+                </ol>
+                <h3>Proposta di modifica a oc-ocdm:</h3>
+                <p>oc-ocdm salva il tempo di generazione degli snapshot in formato %Y-%m-%dT%H:%M:%S, ovvero senza fuso orario. Se il software venisse usato in tutto il mondo la mancanza del fuso orario sarebbe un problema, perché l'ordine di generazione degli snapshot è cruciale e la time-zone è un'informazione essenziale per determinare l'ordine. Per questo motivo, la mia libreria assume che il tempo sia in formato %Y-%m-%dT%H:%M:%S%z. Pensi anche tu che questo debba essere un requisito? Se sì, propongo di modificare il formato del tempo degli snapshot prodotti da oc-ocdm per includere anche il fuso orario.</p>
+                <div class="card bg-primary shadow-inset border-light">
+                    <pre><code class="prettyprint">
+    # Codice attuale
+    def generate_provenance(self, c_time: float = None) -> None:
+        time_string: str = '%Y-%m-%dT%H:%M:%S'
+        if c_time is None:
+            cur_time: str = datetime.now().strftime(time_string)
+        else:
+            cur_time: str = datetime.fromtimestamp(c_time).strftime(time_string)
+    
+    # Codice modificato
+    def generate_provenance(self, c_time: float = None) -> None:
+        time_string: str = '%Y-%m-%dT%H:%M:%S%z' # <- La modifica è qui
+        if c_time is None:
+            cur_time: str = datetime.now().strftime(time_string)
+        else:
+            cur_time: str = datetime.fromtimestamp(c_time).strftime(time_string)
+                    </code></pre>
+                </div>
             </div>
         </section>
 
@@ -2344,12 +2641,23 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </div>
                         </div>
                     <div class="card card-sm card-body bg-primary border-light mb-0">
-                        <a href="#panel-11" data-target="#panel-11" class="accordion-panel-header" data-toggle="collapse" role="button"
-                            aria-expanded="false" aria-controls="panel-11">
-                            <span class="h6 mb-0 font-weight-bold">01/06/2021</span>
+                        <a href="#panel-12" data-target="#panel-12" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-12">
+                            <span class="h6 mb-0 font-weight-bold">03/06/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
-                        <div class="collapse" id="panel-11">
+                        <div class="collapse" id="panel-12">
+                            <div class="pt-3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-13" data-target="#panel-13" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-13">
+                            <span class="h6 mb-0 font-weight-bold">09/06/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-13">
                             <div class="pt-3">
                             </div>
                         </div>
