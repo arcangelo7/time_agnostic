@@ -126,21 +126,14 @@ class DatasetAutoEnhancer(object):
     def add_coci_data(self, journal_issn:str, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
         graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         queryString = f"""
-            PREFIX dcterm: <http://purl.org/dc/terms/>
-            PREFIX : <https://github.com/arcangelo7/time_agnostic/>
-            PREFIX fabio: <http://purl.org/spar/fabio/>
-            PREFIX frbr: <http://purl.org/vocab/frbr/core#>
-            PREFIX datacite: <http://purl.org/spar/datacite/>
-            PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
-            PREFIX cito: <http://purl.org/spar/cito/>
             SELECT ?res ?citingDOI (GROUP_CONCAT(?citedDOI; SEPARATOR=", ") AS ?citedDOIs)
             WHERE {{
-                ?res a fabio:JournalArticle;
-                    datacite:hasIdentifier ?doiEntity;
-                    frbr:partOf+/datacite:hasIdentifier/literal:hasLiteralValue "{journal_issn}".
-                ?doiEntity literal:hasLiteralValue ?citingDOI.
+                ?res a <{GraphEntity.iri_expression}>;
+                    <{GraphEntity.iri_has_identifier}> ?doiEntity;
+                    <{GraphEntity.iri_part_of}>+/<{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> "{journal_issn}".
+                ?doiEntity <{GraphEntity.iri_has_literal_value}> ?citingDOI.
                 OPTIONAL {{
-                    ?res cito:cites/datacite:hasIdentifier/literal:hasLiteralValue ?citedDOI.
+                    ?res <{GraphEntity.iri_cites}>/<{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> ?citedDOI.
                 }}
             }}
             GROUP BY ?res ?citingDOI
@@ -154,7 +147,7 @@ class DatasetAutoEnhancer(object):
             results_dict[result["citingDOI"]["value"]] = {
                 "res": result["res"]["value"],
                 "citedDOIs": result["citedDOIs"]["value"].split(", ")
-                }
+            }
         logs = dict()
         pbar = tqdm(total=len(results_dict))
         for citing_doi in results_dict:
@@ -162,18 +155,15 @@ class DatasetAutoEnhancer(object):
             for reference in references:
                 if reference["cited"] not in results_dict[citing_doi]["citedDOIs"]:
                     citing_entity_query = f"""
-                        PREFIX datacite: <http://purl.org/spar/datacite/>
-                        PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
                         CONSTRUCT {{?s ?p ?o}}
                         WHERE {{
-                            ?s datacite:hasIdentifier/literal:hasLiteralValue "{citing_doi}".
+                            ?s <{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> "{citing_doi}".
                             ?s ?p ?o.
                         }}
                     """
                     sparql.setQuery(citing_entity_query)
                     sparql.setReturnFormat(RDFXML)
-                    results = sparql.query().convert()
-                    preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
+                    preexisting_graph = sparql.query().convert()
                     citing_entity = graphset.add_br(self.resp_agent, res=URIRef(results_dict[citing_doi]["res"]), preexisting_graph=preexisting_graph)
                     # Identifier
                     reference_id = graphset.add_id(self.resp_agent)
@@ -194,24 +184,20 @@ class DatasetAutoEnhancer(object):
                         reference_ci.create_author_self_citation()
                 else:
                     reference_ci_query = f"""
-                        PREFIX datacite: <http://purl.org/spar/datacite/>
-                        PREFIX cito: <http://purl.org/spar/cito/>
-                        PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
                         CONSTRUCT {{?s ?p ?o}}
                         WHERE {{
-                            ?s cito:hasCitingEntity/datacite:hasIdentifier/literal:hasLiteralValue "{reference["citing"]}".
-                            ?s cito:hasCitedEntity/datacite:hasIdentifier/literal:hasLiteralValue "{reference["cited"]}".
+                            ?s <{GraphEntity.iri_has_citing_entity}>/<{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> "{reference["citing"]}".
+                            ?s <{GraphEntity.iri_has_cited_entity}>/<{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> "{reference["cited"]}".
                             ?s ?p ?o.
                         }}
                     """
                     sparql.setQuery(reference_ci_query)
                     sparql.setReturnFormat(RDFXML)
-                    results = sparql.query().convert()
+                    preexisting_graph = sparql.query().convert()
                     subjects = set()
                     # If the data already exists, do not add it again
-                    if (None, URIRef("http://purl.org/spar/cito/hasCitationTimeSpan"), None) not in results:
-                        preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
-                        for subject in results.subjects():
+                    if (None, URIRef("http://purl.org/spar/cito/hasCitationTimeSpan"), None) not in preexisting_graph:
+                        for subject in preexisting_graph.subjects():
                             subjects.add(subject)
                     # There could be duplicates if not already merged
                     for subject in subjects:
