@@ -51,7 +51,7 @@ class DatasetAutoEnhancer(object):
 
         if other:
             query_other_as_obj = f"""
-                SELECT ?s ?type
+                SELECT DISTINCT ?s ?type
                 WHERE {{
                     ?s ?p <{res}>;
                         a ?type.
@@ -92,7 +92,7 @@ class DatasetAutoEnhancer(object):
         ids_found = dict()
         for entity_type, schema in type_and_identifier_scheme.items():
             queryString = f"""
-                SELECT ?s ?literalValue
+                SELECT DISTINCT ?s ?literalValue
                 WHERE
                 {{
                     ?s a <{entity_type}>;
@@ -126,7 +126,7 @@ class DatasetAutoEnhancer(object):
     def add_coci_data(self, journal_issn:str, ts_url:str='http://localhost:9999/bigdata/sparql') -> GraphSet:
         graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
         queryString = f"""
-            SELECT ?res ?citingDOI (GROUP_CONCAT(?citedDOI; SEPARATOR=", ") AS ?citedDOIs)
+            SELECT DISTINCT ?res ?citingDOI (GROUP_CONCAT(?citedDOI; SEPARATOR=", ") AS ?citedDOIs)
             WHERE {{
                 ?res a <{GraphEntity.iri_expression}>;
                     <{GraphEntity.iri_has_identifier}> ?doiEntity;
@@ -211,20 +211,19 @@ class DatasetAutoEnhancer(object):
         pbar.close()
         if len(logs) > 0:
             print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/coci.json")
+            if not os.path.exists("./logs/"):
+                os.makedirs("./logs/")
             Support().dump_json(logs, "./logs/coci.json")
         return graphset
     
     def add_crossref_reference_data(self, ts_url:str = 'http://localhost:9999/bigdata/sparql') -> GraphSet:
         enhanced_graphset = GraphSet(base_iri=self.base_iri, info_dir=self.info_dir, wanted_label=False)
-        queryString = """
-            PREFIX cito: <http://purl.org/spar/cito/>
-            PREFIX datacite: <http://purl.org/spar/datacite/>
-            PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
-            SELECT ?citedEntity ?citedEntityDOI
-            WHERE {
-                ?citation cito:hasCitedEntity ?citedEntity.
-                ?citedEntity datacite:hasIdentifier/literal:hasLiteralValue ?citedEntityDOI.
-            }
+        queryString = f"""
+            SELECT DISTINCT ?citedEntity ?citedEntityDOI
+            WHERE {{
+                ?citation <{GraphEntity.iri_has_cited_entity}> ?citedEntity.
+                ?citedEntity <{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> ?citedEntityDOI.
+            }}
         """
         sparql = SPARQLWrapper(ts_url)
         sparql.setQuery(queryString)
@@ -258,12 +257,12 @@ class DatasetAutoEnhancer(object):
                 """
                 sparql.setQuery(preexisting_graph_query)
                 sparql.setReturnFormat(RDFXML)
-                preexisting_graph_data = sparql.query().convert()
-                preexisting_graph = Graph().parse(data=preexisting_graph_data.serialize(format='xml'), format='xml')
+                preexisting_graph = sparql.query().convert()
                 reference_br = enhanced_graphset.add_br(self.resp_agent, res=reference_br_uri, preexisting_graph=preexisting_graph)
                 try:
                     DatasetBuilder._manage_br_type(reference_br, item)
                 except KeyError as e:
+                    # Useful to check for new types in the future
                     print(e)
                 if len(item["title"]) > 0:
                     reference_br.has_title(item["title"][0])
@@ -275,9 +274,9 @@ class DatasetAutoEnhancer(object):
                     DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, self.resp_agent, digital_format=True)     
                 if "published-print" in item:
                     DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, self.resp_agent, digital_format=False)     
-                pub_date = item["issued"]["date-parts"][0][0]
+                pub_date = item["issued"]["date-parts"][0]
                 if pub_date is not None:
-                    iso_date_string = create_date([pub_date])
+                    iso_date_string = create_date(pub_date)
                     reference_br.has_pub_date(iso_date_string)
                 if "author" in item:
                     DatasetBuilder._manage_author_ra_ar(enhanced_graphset, item, reference_br, self.resp_agent)
@@ -459,27 +458,23 @@ class DatasetAutoEnhancer(object):
                                 else:
                                     continue
                                 citing_entity_query = f"""
-                                    PREFIX datacite: <http://purl.org/spar/datacite/>
-                                    PREFIX literal: <http://www.essepuntato.it/2010/06/literalreification/>
-                                    PREFIX cito: <http://purl.org/spar/cito/>
                                     CONSTRUCT {{?s ?p ?o}}
                                     WHERE {{
-                                        ?s datacite:hasIdentifier/literal:hasLiteralValue "{item["DOI"]}".
-                                        FILTER NOT EXISTS {{?s cito:cites/datacite:hasIdentifier/literal:hasLiteralValue "{new_doi}"}}
+                                        ?s <{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> "{item["DOI"]}".
+                                        FILTER NOT EXISTS {{?s <{GraphEntity.iri_cites}>/<{GraphEntity.iri_has_identifier}>/<{GraphEntity.iri_has_literal_value}> "{new_doi}"}}
                                         ?s ?p ?o.
                                     }}
                                 """
                                 sparql.setQuery(citing_entity_query)
                                 sparql.setReturnFormat(RDFXML)
-                                results = sparql.query().convert()
-                                preexisting_graph = Graph().parse(data=results.serialize(format='xml'), format='xml')
+                                preexisting_graph = sparql.query().convert()
                                 subjects = dict()
-                                if (None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None) in results:
-                                    for s, p, o in results.triples((None, None, None)):
+                                if (None, URIRef("http://prismstandard.org/namespaces/basic/2.0/publicationDate"), None) in preexisting_graph:
+                                    for s, p, o in preexisting_graph.triples((None, None, None)):
                                         if p == URIRef('http://prismstandard.org/namespaces/basic/2.0/publicationDate'):
                                             subjects[s] = o
                                 else:
-                                    for s in results.subjects():
+                                    for s in preexisting_graph.subjects():
                                         subjects[s] = ""
                                 # There could be duplicates if not already merged
                                 for subject in subjects:

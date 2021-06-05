@@ -216,8 +216,8 @@ class DatasetBuilder(object):
                 if "published-print" in item:
                     DatasetBuilder._manage_resource_embodiment(journal_graphset, item, item_br, self.resp_agent, digital_format=False)     
                 if "issued" in item:
-                    pub_date = item["issued"]["date-parts"][0][0]
-                    iso_date_string = create_date([pub_date])
+                    pub_date = item["issued"]["date-parts"][0]
+                    iso_date_string = create_date(pub_date)
                     item_br.has_pub_date(iso_date_string)
             # ResponsibleAgent / AgentRole
             if "author" in item:

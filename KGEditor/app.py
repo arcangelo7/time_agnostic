@@ -1,15 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, request, jsonify, session
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.prov import ProvSet
 from oc_ocdm.graph.graph_entity import GraphEntity
 from oc_ocdm import Storer
-from oc_ocdm.graph.entities.bibliographic.bibliographic_resource import BibliographicResource
-from SPARQLWrapper import SPARQLWrapper, POST, DIGEST, JSON, RDFXML
-from SPARQLWrapper.SPARQLExceptions import QueryBadFormed
-from rdflib import Graph, URIRef
-import json, urllib, os
+from oc_ocdm.support import create_date
+from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
+from rdflib import URIRef
+import json
 from inspect import signature
-from itertools import zip_longest
 
 
 app = Flask(__name__)
@@ -38,25 +36,28 @@ def get_entity_from_res(
     """
     sparql.setQuery(query)
     sparql.setReturnFormat(RDFXML)
-    data = sparql.query().convert()
-    graph = Graph().parse(data=data.serialize(format='xml'), format='xml')
+    graph = sparql.query().convert()
     entity = getattr(graphset, config[res_type]["add"])(resp_agent=resp_agent, res=res, preexisting_graph=graph)
     return entity
 
 def save_create_query(subj:str, predicate:str, obj:str, resp_agent:str,  
-        base_iri:str=base_iri, endpoint:str=endpoint, graphset:GraphSet=graphset, config:dict=config
+        base_iri:str=base_iri, config:dict=config
     ) -> None:
     s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
     s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type, resp_agent=resp_agent)
     method_name = config[s_entity_type][predicate]["create"]
     if (isinstance(method_name, dict)):
-        if predicate == "http://purl.org/spar/pro/withRole" or obj in ["http://purl.org/spar/fabio/DigitalManifestation", "http://purl.org/spar/fabio/PrintObject"]:
-            method_name = method_name[obj]
-        elif predicate == "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue":
+        if predicate == "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue":
             identifier_scheme = s_entity.get_scheme()
             method_name = method_name[str(identifier_scheme)]
         else:
             method_name = method_name[obj]
+    if predicate == "http://prismstandard.org/namespaces/basic/2.0/publicationDate":
+        obj_list = obj.split("-")
+        integer_map = map(int, obj_list)
+        integer_list = list(integer_map)
+        iso_date_string = create_date(integer_list)
+        obj = iso_date_string
     sig = signature(getattr(s_entity, method_name))
     params_number = len(sig.parameters)
     if params_number > 0 and base_iri in obj:
@@ -67,7 +68,7 @@ def save_create_query(subj:str, predicate:str, obj:str, resp_agent:str,
             "method_name": method_name,
             "o_entity": o_entity
         }
-    if params_number > 0 and "http" in obj: # e.g. for types
+    elif params_number > 0 and "http" in obj: # e.g. for types
         update_query[subj+predicate+obj] = {
             "s_entity": s_entity,
             "method_name": method_name,
@@ -86,16 +87,9 @@ def save_create_query(subj:str, predicate:str, obj:str, resp_agent:str,
             "o_entity": obj
         }
 
-def save_update_query(
-        subj:str, predicate:str, obj:str, resp_agent:str,
-        base_iri:str=base_iri, endpoint:str=endpoint, graphset:GraphSet=graphset, config:dict=config
-    ) -> None:
-    save_delete_query(subj, predicate, obj)
-    save_create_query(subj, predicate, obj)
-
 def save_delete_query(
         subj:str, predicate:str, obj:str, resp_agent:str,
-        base_iri:str=base_iri, endpoint:str=endpoint, graphset:GraphSet=graphset, config:dict=config
+        base_iri:str=base_iri, config:dict=config
     ) -> None:
     s_entity_type = get_entity_type(base_iri=base_iri, res=subj)
     s_entity = get_entity_from_res(res=URIRef(subj), res_type=s_entity_type, resp_agent=resp_agent)
@@ -227,6 +221,7 @@ def undo():
 def done():
     global update_query
     global graphset
+    print(update_query)
     for _, v in update_query.items():
         if v["o_entity"] != "":
             getattr(v["s_entity"], v["method_name"])(v["o_entity"])

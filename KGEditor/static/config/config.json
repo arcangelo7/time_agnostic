@@ -1,0 +1,223 @@
+{
+    "http://purl.org/spar/datacite/Identifier": {
+        "short_name": "id",
+        "add": "add_id",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "_create_type",
+            "delete": "remove_type"            
+        },
+        "http://purl.org/spar/datacite/usesIdentifierScheme": {
+            "create": "",
+            "delete": "remove_identifier_with_scheme"
+        },
+        "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue": {
+            "create": {
+                "http://purl.org/spar/datacite/oci": "create_oci",
+                "http://purl.org/spar/datacite/orcid": "create_orcid",
+                "http://purl.org/spar/datacite/doi": "create_doi",
+                "http://purl.org/spar/datacite/pmid": "create_pmid",
+                "http://purl.org/spar/datacite/pmcid": "create_pmcid",
+                "http://purl.org/spar/datacite/issn": "create_issn",
+                "http://purl.org/spar/datacite/isbn": "create_isbn",
+                "http://purl.org/spar/datacite/url": "create_url",
+                "http://purl.org/spar/datacite/wikidata": "create_wikidata",
+                "http://purl.org/spar/datacite/wikipedia": "create_wikipedia",
+                "http://purl.org/spar/datacite/crossref": "create_crossref",
+                "http://purl.org/spar/datacite/viaf": "create_viaf"
+            },
+            "delete": "remove_identifier_with_scheme"
+        }	
+    },
+    "http://purl.org/spar/pro/RoleInTime": {
+        "short_name": "ar",
+        "add": "add_ar",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "_create_type",
+            "delete": "remove_type"
+        },
+        "https://w3id.org/oc/ontology/hasNext": {
+            "create": "has_next",
+            "delete": "remove_next"
+        },
+        "http://purl.org/spar/pro/isHeldBy": {
+            "create": "is_held_by",
+            "delete": "remove_is_held_by"
+        },
+        "http://purl.org/spar/pro/withRole": {
+            "create": {
+                    "http://purl.org/spar/pro/publisher": "create_publisher",
+                    "http://purl.org/spar/pro/author": "create_author",
+                    "http://purl.org/spar/pro/editor": "create_editor"
+            },
+            "delete": "remove_role_type"
+        }
+    },
+    "http://purl.org/spar/biro/BibliographicReference": {
+        "short_name": "be",
+        "add": "add_be",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "_create_type",
+            "delete": "remove_type"
+        },
+        "http://purl.org/spar/c4o/hasContent": {
+            "create": "has_content",
+            "delete": "remove_content"
+        },
+        "http://purl.org/spar/biro/references": {
+            "create": "references_br",
+            "delete": "remove_referenced_br"
+        }
+    },
+    "http://purl.org/spar/fabio/Expression": {
+        "short_name": "br",
+        "add": "add_br",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": {
+                "http://purl.org/spar/fabio/Expression": "create_other",
+                "http://purl.org/spar/fabio/ArchivalDocument": "create_archival_document",  
+                "http://purl.org/spar/fabio/Book": "create_book",  
+                "http://purl.org/spar/fabio/BookChapter": "create_book_chapter",  
+                "http://purl.org/spar/doco/Part": "create_book_part",  
+                "http://purl.org/spar/fabio/ExpressionCollection": "create_book_section",  
+                "http://purl.org/spar/fabio/BookSeries": "create_book_series",  
+                "http://purl.org/spar/fabio/BookSet": "create_book_set",  
+                "http://purl.org/spar/fabio/DataFile": "create_dataset",
+                "http://purl.org/spar/fabio/Thesis": "create_dissertation",
+                "http://purl.org/spar/fabio/JournalArticle": "create_journal_article",
+                "http://purl.org/spar/fabio/JournalIssue": "create_issue",
+                "http://purl.org/spar/fabio/JournalVolume": "create_volume",               
+                "http://purl.org/spar/fabio/Journal": "create_journal",
+                "http://purl.org/spar/fabio/ProceedingsPaper": "create_proceedings_article",
+                "http://purl.org/spar/fabio/AcademicProceedings": "create_proceedings",
+                "http://purl.org/spar/fabio/ReferenceBook": "create_reference_book",
+                "http://purl.org/spar/fabio/ReferenceEntry": "create_reference_entry",
+                "http://purl.org/spar/fabio/Series": "create_report_series",
+                "http://purl.org/spar/fabio/ReportDocument": "create_report",
+                "http://purl.org/spar/fabio/SpecificationDocument": "create_standard"
+            },
+            "delete": "remove_type"
+        },
+        "http://purl.org/spar/datacite/hasIdentifier": {
+            "create": "has_identifier",
+            "delete": "remove_identifier"
+        },
+        "http://purl.org/dc/terms/title": {
+            "create": "has_title",
+            "delete": "remove_title"
+        },
+        "http://purl.org/spar/fabio/hasSubtitle": {
+            "create": "has_subtitle",
+            "delete": "remove_subtitle"
+        },
+        "http://purl.org/vocab/frbr/core#partOf": {
+            "create": "is_part_of",
+            "delete": "remove_is_part_of"
+        },
+        "http://purl.org/spar/cito/cites": {
+            "create": "has_citation",
+            "delete": "remove_citation"
+        },
+        "http://prismstandard.org/namespaces/basic/2.0/publicationDate": {
+            "create": "has_pub_date",
+            "delete": "remove_pub_date"
+        },
+        "http://purl.org/vocab/frbr/core#embodiment": {
+            "create": "has_format",
+            "delete": "remove_format"
+        },
+        "http://purl.org/spar/fabio/hasSequenceIdentifier": {
+            "create": "has_number",
+            "delete": "remove_number"
+        },
+        "http://purl.org/vocab/frbr/core#part": {
+            "create": "contains_in_reference_list",
+            "delete": "remove_contained_in_reference_list"
+        },
+        "http://purl.org/spar/pro/isDocumentContextFor": {
+            "create": "has_contributor",
+            "delete": "remove_contributor"
+        }
+    },
+    "http://purl.org/spar/cito/Citation": {
+        "short_name": "ci",
+        "add": "add_ci",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": {
+                "http://purl.org/spar/cito/Citation": "_create_type",
+                "http://purl.org/spar/cito/SelfCitation": "create_self_citation",
+                "http://purl.org/spar/cito/AffiliationSelfCitation": "create_affiliation_self_citation",
+                "http://purl.org/spar/cito/AuthorNetworkSelfCitation": "create_author_network_self_citation",
+                "http://purl.org/spar/cito/AuthorSelfCitation": "create_author_self_citation",
+                "http://purl.org/spar/cito/FunderSelfCitation": "create_funder_self_citation",
+                "http://purl.org/spar/cito/JournalSelfCitation": "create_journal_self_citation",
+                "http://purl.org/spar/cito/JournalCartelCitation": "create_journal_cartel_citation",
+                "http://purl.org/spar/cito/DistantCitation": "create_distant_citation"
+            },
+            "delete": "remove_type"
+        },
+        "http://purl.org/spar/cito/hasCitingEntity": {
+            "create": "has_citing_entity",
+            "delete": "remove_citing_entity"
+        },
+        "http://purl.org/spar/cito/hasCitedEntity": {
+            "create": "has_cited_entity",
+            "delete": "remove_cited_entity"
+        },
+        "http://purl.org/spar/cito/hasCitationCreationDate": {
+            "create": "has_citation_creation_date",
+            "delete": "remove_citation_creation_date"
+        },
+        "http://purl.org/spar/cito/hasCitationTimeSpan": {
+            "create": "has_citation_time_span",
+            "delete": "remove_citation_time_span"
+        }
+    },
+    "http://purl.org/spar/fabio/Manifestation": {
+        "short_name": "re",
+        "add": "add_re",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": {
+                "http://purl.org/spar/fabio/Manifestation": "_create_type",
+                "http://purl.org/spar/fabio/DigitalManifestation": "create_digital_embodiment",
+                "http://purl.org/spar/fabio/PrintObject": "create_print_embodiment"
+            },
+            "delete": "remove_type"
+        },
+        "http://purl.org/dc/terms/format": {
+            "create": "has_media_type",
+            "delete": "remove_media_type"
+        },
+        "http://prismstandard.org/namespaces/basic/2.0/startingPage": {
+            "create": "has_starting_page",
+            "delete": "remove_starting_page"
+        },
+        "http://prismstandard.org/namespaces/basic/2.0/endingPage": {
+            "create": "has_ending_page",
+            "delete": "remove_ending_page"
+        },
+        "http://purl.org/vocab/frbr/core#exemplar": {
+            "create": "has_url",
+            "delete": "remove_url"
+        }
+    },
+    "http://xmlns.com/foaf/0.1/Agent": {
+        "short_name": "ra",
+        "add": "add_ra",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+            "create": "_create_type",
+            "delete": "remove_type"
+        },
+        "http://xmlns.com/foaf/0.1/name": {
+            "create": "has_name",
+            "delete": "remove_name"
+        },
+        "http://xmlns.com/foaf/0.1/givenName": {
+            "create": "has_given_name",
+            "delete": "remove_given_name"
+        },
+        "http://xmlns.com/foaf/0.1/familyName": {
+            "create": "has_family_name",
+            "delete": "remove_family_name"
+        }
+    }
+}
