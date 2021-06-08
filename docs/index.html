@@ -139,6 +139,7 @@
                             <li><a href="https://github.com/opencitations/metadata/issues/10" target="_blank">https://github.com/opencitations/metadata/issues/10</a></li>
                         </ol>
                     </li>
+                    <li>Ho creato la seguente pull request a oc-ocdm: <a href="https://github.com/opencitations/oc_ocdm/pull/16" target="_blank">https://github.com/opencitations/oc_ocdm/pull/16</a>.</li>
                     <li>Ho verificato che Sphinx sia compatibile con Read the Docs e lo è oltremodo. Basta configurare lo specifico progetto nella dashboard su readthedocs.org, passando come parametro il percorso del file conf.py, dopodiché la documentazione viene automaticamente ricostruita a ogni modifica.</li>
                 </ol>
                 <h3>Cosa non ho capito</h3>
@@ -2987,6 +2988,219 @@ for index, author_agent_role in enumerate(author_agent_roles):
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-13">
+                            <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <p>Miglioramenti e backtracking sul codice del tirocinio, ovvero bug che ho scoperto mentre cercavo la causa dei due bug discussi ai punti <a href="#i0906cnhc1">1 e 2 della sezione <em>Cosa non ho capito</em></a>, ma che non c'entravano niente coi bug di partenza.</p>
+                                <ol>
+                                    <li>Si è reso necessario modificare il funzionamento del <strong>Knowledge Graph Editor</strong> per renderlo compatibile con la versione 6.0.1 di oc-ocdm, che tra le varie novità introduce un safety check sui metodi add_*.</li>
+                                    <li>Quando l'editor modifica o crea una data, utilizza adesso il formato ISO 8601 per funzionare con il metodo has_pub_date di oc-ocdm.</li>
+                                    <li>Risolto un bug in generate_graph e add_coci_data per cui il metodo <strong>create_date</strong> di oc-ocdm riceveva in input sempre e solo l'anno, scartando eventuali mesi e giorni.</li>
+                                    <li>Il metodo <strong>add_coci_data</strong>, che aggiunge al dataset le citazioni presenti in COCI ma non in Crossref free, cerca adesso i lavori tramite il tipo fabio:Expression o non più fabio:JournalArticle, dato che la gestione dei tipi è divenuta più sofisticata per considerare anche tutte le altre tipologie di lavori accademici.</li>
+                                    <li>I namespaces richiamati in tutti i metodi della classe <strong>DatasetAutoEnhancer</strong> sono adesso delle variabili e vengono richiamati dalle proprietà della classe GraphEntity di oc-ocdm.</li>
+                                    <li>È stato rimosso da tutti i metodi un passaggio superfluo per cui il grafo ritornato da SPARQLWrapper settando il formato a RDFXML veniva ulteriormente trasformato in un grafo.</li>
+                                </ol>
+                                <p>Novità relative al Time Agnostic Browser</p>
+                                <ol>
+                                    <li>Il metodo <strong>get_state_at_time</strong> è stato completamente riscritto ed è ora molto più potente. Ecco un elenco delle novità:
+                                        <ol>
+                                            <li>Restituisce solo il conjunctive graph della risorsa al tempo specificato, senza computare i grafi intermedi. Questa magia è frutto di un'ipotesi che vorrei discutere con te e che illustro al <a href="#i0906cnhc3">punto 3 della sezione <em>Cosa non ho capito</em>.</a></li>
+                                            <li>Il tempo specificato dall'utente non deve corrispondere precisamente a uno snapshot, può essere qualsiasi tempo. Se mi si chiede in che stato siano i miei baffi alle 13:19 del 06/06/2021, la risposta è che sono rasati anche se non li ho rasati esattamente in quell'istante: allo stesso modo, se un utente chiede lo stato di una risorsa a un certo tempo, viene restituito il grafo corrispondente all'ultima modifica prima di quel tempo.</li>
+                                            <li>Il tempo specificato dall'utente può essere in qualunque formato standardizzato. La funzione parser del modulo <strong>dateutile</strong> si occupa di ricondurre tutti i formati a delle istanze della classe datetime.datetime.</li>
+                                            <li>Se il parametro get_hooks è False (valore di default) viene ritornato il conjunctive graph della risorsa al tempo specificato. Se è True, viene ritornata una tupla, in cui il primo elemento è il conjunctive graph, mentre il secondo è un dizionario nella forma uri_snapshot:tempo_snapshot, ad esempio:</li>
+                                            <div class="card bg-primary shadow-inset border-light">
+                                                <pre><code class="prettyprint">
+    (
+        &lt;Graph identifier=N2fe380ea28e147249344a79f49647ddf (&lt;class 'rdflib.graph.ConjunctiveGraph'&gt;)&gt;,
+        {
+            'https://github.com/arcangelo7/time_agnostic/ar/1/prov/se/2': '2021-06-05T18:06:34.000Z',
+            'https://github.com/arcangelo7/time_agnostic/ar/1/prov/se/3': '2021-06-05T18:06:41.000Z',
+            'https://github.com/arcangelo7/time_agnostic/ar/1/prov/se/5': '2021-06-05T18:07:00.000Z'
+        }
+    )
+                                                </code></pre>
+                                            </div>
+                                            <p>Gli snapshot nel dizionario sono tutti e soli quelli diversi dallo snapshot di cui è stato ritornato il conjunctive graph. In questo modo, all'utente basta rilanciare la funzione cambiando il tempo per ottenere un nuovo stato.</p>
+                                        </ol>
+                                    </li>
+                                    <li>
+                                        <p>È stato introdotto il metodo <strong>_manage_update_queries</strong>, che aggira il bug di rdflib discusso al punto in <a href="#d0306cnhc6">03/06/2021, <em>Cosa non ho capito</em>, punto 6</a>, ovvero l'errore nella ricorsione in caso di query di update troppo lunghe. La soluzione adottata, come da te suggerito, è stata tagliare la query troppo lunga in query più brevi, soluzione che si è rilevata più complessa del previsto, dato che è proprio la funzione che si occupa di parsare la stringa della query a sollevare l'eccezione RecursionError. Ho quindi parsato autonomamente la query, gestendo anche il caso di query che contengano più query al loro interno, ciascuna delle quali viene ulteriormente suddivisa nel caso sia troppo lunga. Riporto il codice utilizzato:</p>
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    @classmethod
+    def _manage_update_queries(cls, graph: ConjunctiveGraph, update_query: str) -> None:
+        update_query = update_query.replace("INSERT", "%temp%").replace("DELETE", "INSERT").replace("%temp%", "DELETE")
+        triples_end_pattern = r">\s*\."
+        operations_pattern = r"((?:DELETE|INSERT)\s(?:DATA)\s?{\s?(?:GRAPH)\s?<[\w\W]+?>\s{)"
+        matches = re.split(triples_end_pattern, update_query)
+        # 90 is the maximum number of triples after which recursion error occurs
+        if len(matches) > 90:
+            split_by_operations = re.split(operations_pattern, update_query, re.IGNORECASE)
+            operations = split_by_operations[1::2]
+            for operation in operations:
+                triples = split_by_operations[split_by_operations.index(operation) + 1]
+                operation_and_query = operation + triples
+                matches = re.split(triples_end_pattern, operation_and_query)
+                if len(matches) > 90:
+                    matches_left = len(matches)
+                    # Remove operation and trailing "} }"
+                    matches = [match.replace(operation, "") for match in matches][:-1]
+                    while matches_left > 0:
+                        cut_update_query = operation + "> .".join(matches[0:90]) + "> .} }"
+                        processUpdate(graph, cut_update_query)
+                        matches_left -= 90
+                        matches = matches[90:]
+                else:
+                    processUpdate(graph, operation_and_query)                
+        else:
+            processUpdate(graph, update_query)
+                                            </code></pre>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        run_the_sock si chiama adesso <strong>_rebuild_past_graphs</strong>, un nome più esplicito. Rispetto a prima, utilizza il predicato pro:wasDerivedFrom per ottenere gli snapshot successivi al primo, dato che, come discusso, la query di update non è sempre presente. È stato inoltre risolto un bug per cui venivano ricreate tutte le entità, comprese quelle presenti, ma non quelle relative agli snapshot di creazione. Il comportamento desiderato è esattamente l'opposto: devono essere ricreati tutti e soli i grafi del passato, ovvero i grafi di entità che nel presente sono diverse rispetto al passato, per occupare meno risorse possibili sia sul disco che sulla RAM. Per la stessa ragione, sono state rimosse da questi grafi le informazioni sulla provenance, che possono essere recuperate dai grafi del presente in qualunque momento.
+                                    </li>
+                                    <li>Risolto un bug nel metodo <strong>_get_tuples_from_triplestores</strong> per cui gli elementi nella tupla non rispettavano l'ordine delle variabili nella query, ma l'ordine era casuale.</li>
+                                    <li>Tutti i test sono stati aggiornati e superati.</li>
+                                    <li>La documentazione è stata aggiornata.</li>
+                                    <li>Ho aperto i seguenti issue:
+                                        <ol>
+                                            <li><a href="https://github.com/RDFLib/rdflib/issues/1336" target="_blank">https://github.com/RDFLib/rdflib/issues/1336</a></li>
+                                            <li><a href="https://github.com/opencitations/oc_ocdm/issues/15" target="_blank">https://github.com/opencitations/oc_ocdm/issues/15</a></li>
+                                            <li><a href="https://github.com/opencitations/metadata/issues/9" target="_blank">https://github.com/opencitations/metadata/issues/9</a></li>
+                                            <li><a href="https://github.com/opencitations/metadata/issues/10" target="_blank">https://github.com/opencitations/metadata/issues/10</a></li>
+                                        </ol>
+                                    </li>
+                                    <li>Ho creato la seguente pull request a oc-ocdm: <a href="https://github.com/opencitations/oc_ocdm/pull/16" target="_blank">https://github.com/opencitations/oc_ocdm/pull/16</a>.</li>
+                                    <li>Ho verificato che Sphinx sia compatibile con Read the Docs e lo è oltremodo. Basta configurare lo specifico progetto nella dashboard su readthedocs.org, passando come parametro il percorso del file conf.py, dopodiché la documentazione viene automaticamente ricostruita a ogni modifica.</li>
+                                </ol>
+                                <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li id="i0906cnhc1">
+                                        <p>C'è un problema nelle query di update per quanto riguarda la cancellazione e l'aggiunta di <strong>date</strong>. Probabilmente è in rdflib e quindi in SPARQLWrapper, ma oc-ocdm non lo gestisce come fa in altri casi. Le date in formato gYearMonth o in formato gYear vengono recuperate dal triplestore e parsate aggiungendo il mese e il giorno mancanti, per cui 2000 diventa 2000-01-01 e 2000-01 diventa parimenti 2000-01-01. Ho scritto del codice utile a riprodurre il problema.</p>
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    from oc_ocdm.graph import GraphSet
+    from oc_ocdm.prov import ProvSet
+    from oc_ocdm.reader import Reader
+    from oc_ocdm.storer import Storer
+    from oc_ocdm.support import create_date
+    
+    
+    my_graphset = GraphSet("http://dataset_base_iri/", info_dir="./data/info_dir/graph/")
+    my_br = my_graphset.add_br("http://responsible_agent_uri/")
+    date_string = create_date([2020, 5])
+    my_br.has_pub_date(date_string)
+    my_provset = ProvSet(my_graphset, "http://dataset_base_iri/", info_dir="./data/info_dir/prov/")
+    my_provset.generate_provenance()
+    my_graph_storer = Storer(my_graphset)
+    my_prov_storer = Storer(my_provset)
+    my_graph_storer.upload_all("http://localhost:9999/blazegraph/sparql")
+    my_prov_storer.upload_all("http://localhost:9999/blazegraph/sparql")
+    
+    another_graphset = GraphSet("http://dataset_base_iri/", info_dir="./data/info_dir/graph/")
+    previous_br = Reader.import_entity_from_triplestore(
+        g_set=another_graphset, 
+        ts_url="http://localhost:9999/blazegraph/sparql", 
+        res=URIRef("http://dataset_base_iri/br/1"), 
+        resp_agent="someone")
+    same_date_string = create_date([2020, 5])
+    previous_br.has_pub_date(same_date_string)
+    another_provset = ProvSet(another_graphset, "http://dataset_base_iri/", info_dir="./data/info_dir/prov/")
+    another_provset.generate_provenance()
+    another_graph_storer = Storer(another_graphset)
+    another_prov_storer = Storer(another_provset)
+    another_graph_storer.upload_all("http://localhost:9999/blazegraph/sparql")
+    another_prov_storer.upload_all("http://localhost:9999/blazegraph/sparql")
+                                            </code></pre>
+                                        </div>
+                                        <p>Quello che succede è che, nonostante la data non sia stata modificata, viene generato un nuovo snapshot con una query di update rivelatoria:</p>
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    DELETE DATA { 
+        GRAPH &lt;http://dataset_base_iri/br/&gt; { 
+            &lt;http://dataset_base_iri/br/1&gt; 
+            &lt;http://prismstandard.org/namespaces/basic/2.0/publicationDate&gt; 
+            "2020-05-01"^^&lt;http://www.w3.org/2001/XMLSchema#gYearMonth&gt; .
+        } 
+    }; 
+    INSERT DATA { 
+        GRAPH &lt;http://dataset_base_iri/br/&gt; { 
+            &lt;http://dataset_base_iri/br/1&gt;
+            &lt;http://prismstandard.org/namespaces/basic/2.0/publicationDate&gt; 
+            "2020-05"^^&lt;http://www.w3.org/2001/XMLSchema#gYearMonth&gt; .
+        } 
+    }
+                                            </code></pre>
+                                        </div>
+                                        <p>Questo bug rompe il time agnostic browser che sto creando, perché DELETE DATA funziona solo se il match è perfetto e, dato che il formato di inserimento e di cancellazione cambiano, il DELETE DATA non funziona mai per le date.</p>
+                                    </li>
+                                    <li>
+                                        <p>C'è un problema nelle query di update per quanto riguarda la cancellazione e l'aggiunta di <strong>stringhe</strong>, come ad esempio un DOI. Quando la stringa viene cancellata, nella query di update viene riportato il tipo, quando viene aggiunta no. Questo è un problema perché, nel momento in cui vado a invertire la query per recuperare un grafo del passato, l'INSERT DATA diventa DELETE DATA e, senza l'indicazione del tipo, non trova la tripla e non cancella nulla. Riporto prima un esempio di query di update problematica e poi del codice per riprodurre il problema:</p>
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    DELETE DATA { 
+        GRAPH &lt;http://dataset_base_iri/id/&gt; { 
+            &lt;http://dataset_base_iri/id/1&gt; 
+            &lt;http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue&gt; 
+            "10.1007/978-3-319-90698-0_26"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; .
+        } 
+    }; 
+    INSERT DATA { 
+        GRAPH &lt;http://dataset_base_iri/id/&gt; { 
+            &lt;http://dataset_base_iri/id/1&gt; 
+            &lt;http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue&gt; 
+            "10.1016/j.jplph.2012.09.012" .
+        } 
+    }
+                                            </code></pre>
+                                        </div>
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">
+    from oc_ocdm.graph import GraphSet
+    from oc_ocdm.prov import ProvSet
+    from oc_ocdm.reader import Reader
+    from oc_ocdm.storer import Storer
+    
+    
+    my_graphset = GraphSet("http://dataset_base_iri/", info_dir="./data/info_dir/graph/")
+    my_id = my_graphset.add_id("http://responsible_agent_uri/")
+    my_id.create_doi("10.1007/978-3-319-90698-0_26")
+    my_provset = ProvSet(my_graphset, "http://dataset_base_iri/", info_dir="./data/info_dir/prov/")
+    my_provset.generate_provenance()
+    my_graph_storer = Storer(my_graphset)
+    my_prov_storer = Storer(my_provset)
+    my_graph_storer.upload_all("http://localhost:9999/blazegraph/sparql")
+    my_prov_storer.upload_all("http://localhost:9999/blazegraph/sparql")
+    
+    another_graphset = GraphSet("http://dataset_base_iri/", info_dir="./data/info_dir/graph/")
+    previous_id = Reader.import_entity_from_triplestore(
+        g_set=another_graphset, 
+        ts_url="http://localhost:9999/blazegraph/sparql", 
+        res=URIRef("http://dataset_base_iri/id/1"), 
+        resp_agent="someone")
+    previous_id.remove_identifier_with_scheme()
+    previous_id.create_doi("10.1016/j.jplph.2012.09.012")
+    another_provset = ProvSet(another_graphset, "http://dataset_base_iri/", info_dir="./data/info_dir/prov/")
+    another_provset.generate_provenance()
+    another_graph_storer = Storer(another_graphset)
+    another_prov_storer = Storer(another_provset)
+    another_graph_storer.upload_all("http://localhost:9999/blazegraph/sparql")
+    another_prov_storer.upload_all("http://localhost:9999/blazegraph/sparql")
+                                            </code></pre>
+                                        </div>
+                                    </li>
+                                    <li id="i0906cnhc3">Durante lo scorso incontro mi hai chiesto di modificare get_state_at_time in modo che restituisca solo il grafo al tempo t, senza calcolare quelli precedenti e successivi. Dopo aver studiato il problema mi sono reso conto che non è possibile ottenere il grafo al tempo t senza calcolare quelli successivi. Infatti, per ottenere il grafo al tempo t-2 ho bisogno del grafo al tempo t-1 e così via. Tuttavia, ho elaborato un'ipotesi che per il momento non sono riuscito a confutare, ovvero che sia possibile ottenere il grafo al tempo t-n sommando nel giusto ordine le stringhe delle query di update inverse da t a t-n+1. Dato che le varie operazioni vengono eseguite in maniera sequenziale, il grafo finale è finora risultato sempre corretto. Hai ragione di credere che non sia così?</li>
+                                </ol>                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-14" data-target="#panel-14" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-14">
+                            <span class="h6 mb-0 font-weight-bold">16/06/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-14">
                             <div class="pt-3">
                             </div>
                         </div>
