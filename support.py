@@ -1,4 +1,6 @@
-import os, zipfile, json, time, requests, requests_cache, rdflib
+import os, zipfile, json, time, requests, requests_cache
+from rdflib.term import _toPythonMapping
+from rdflib import XSD
 from requests import Session
 from zipfile import ZipFile
 from requests.adapters import HTTPAdapter
@@ -7,10 +9,7 @@ from oc_ocdm.storer import Storer
 from oc_ocdm.reader import Reader
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.prov import ProvSet
-from rdflib import Graph
-from rdflib.query import ResultParser, ResultSerializer
-from rdflib.plugin import register, Serializer, Parser
-from rdflib.plugins.sparql.results.csvresults import CSVResultSerializer, CSVResultParser
+
 
 class Support(object):
     def _requests_retry_session(
@@ -67,6 +66,13 @@ class Support(object):
         func()
         end = time.time()
         print(end - start)
+
+    @staticmethod
+    def _hack_dates() -> None:
+        if XSD.gYear in _toPythonMapping:
+            _toPythonMapping.pop(XSD.gYear)
+        if XSD.gYearMonth in _toPythonMapping:
+            _toPythonMapping.pop(XSD.gYearMonth)
 
     @staticmethod
     def import_json(path:str) -> dict:

@@ -5,7 +5,8 @@ from oc_ocdm.graph.graph_entity import GraphEntity
 from oc_ocdm import Storer
 from oc_ocdm.support import create_date
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
-from rdflib import URIRef
+from rdflib import URIRef, XSD
+from rdflib.term import _toPythonMapping
 import json
 from inspect import signature
 
@@ -20,6 +21,12 @@ graphset = GraphSet(base_iri=base_iri, info_dir=info_dir_graph, wanted_label=Fal
 with open('KGEditor/static/config/config.json', 'r') as f:
     config = json.load(f)
 update_query = dict()
+
+def _hack_dates() -> None:
+    if XSD.gYear in _toPythonMapping:
+        _toPythonMapping.pop(XSD.gYear)
+    if XSD.gYearMonth in _toPythonMapping:
+        _toPythonMapping.pop(XSD.gYearMonth)
 
 def get_entity_type(base_iri:str, res:str) -> str:
     type_of_entity = res.replace(base_iri, "").split("/")[0]
@@ -122,6 +129,8 @@ def decode_html(string:str) -> str:
     }
     decoded_string = "".join([map[char] if char in map else char for char in string])
     return decoded_string
+
+_hack_dates()
 
 @app.route("/")
 def home():
