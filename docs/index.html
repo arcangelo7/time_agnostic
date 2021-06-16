@@ -60,7 +60,7 @@
                 </div>
                 <h3>Cosa ho fatto</h3>
                 <ol>
-                    <li>Tutti i metodi <strong>add_*</strong> utilizzati nel codice del tirocinio adesso specificano la fonte, ovvero Crossref. </li> 
+                    <li>Tutti i metodi <strong>add_*</strong> di oc-ocdm utilizzati specificano adesso la fonte, ovvero Crossref. </li> 
                     <li>La funzione <strong>_hack_dates</strong> è stata introdotta ovunque ci sia un parsing ad opera di rdflib. </li>
                     <li>Risolto un bug in <strong>_get_tuples_from_triplestores</strong> per cui il metodo crashava se la query conteneva un OPTIONAL. Ora il metodo ritorna tuple sempre della stessa lunghezza. In caso di valori opzionali mancanti, il valore inserito nella tupla è None. </li>
                     <li>Risolti dei bug in <strong>_manage_update_queries</strong> per cui la funzione crashava in presenza di più INSERT DATA o più DELETE DATA in una stessa query di update.</li>
@@ -3082,6 +3082,88 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-14">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>Tutti i metodi <strong>add_*</strong> di oc-ocdm utilizzati specificano adesso la fonte, ovvero Crossref. </li> 
+                                    <li>La funzione <strong>_hack_dates</strong> è stata introdotta ovunque ci sia un parsing ad opera di rdflib. </li>
+                                    <li>Risolto un bug in <strong>_get_tuples_from_triplestores</strong> per cui il metodo crashava se la query conteneva un OPTIONAL. Ora il metodo ritorna tuple sempre della stessa lunghezza. In caso di valori opzionali mancanti, il valore inserito nella tupla è None. </li>
+                                    <li>Risolti dei bug in <strong>_manage_update_queries</strong> per cui la funzione crashava in presenza di più INSERT DATA o più DELETE DATA in una stessa query di update.</li>
+                                    <li>Novità relative a <strong>get_state_at_time</strong>:
+                                        <ol>
+                                            <li>Il metodo ritorna sempre una tupla di tre elementi: il primo è il conjunctive graph della risorsa a quel tempo, il secondo sono i metadati sullo snapshot di cui è stato ritornato lo stato. Se il parametro get_hooks è True, il terzo elemento della tupla sono i metadati sugli altri snapshot, altrimenti un dizionario vuoto. Logica vuole che il terzo dizionario sia vuoto anche nel caso in cui esista un solo snapshot.</li>
+                                            <li>I metadati sugli snapshot comprendono il tempo di generazione, l'agente responsabile e la fonte primaria.</li>
+                                            <li>Ecco un esempio di possibile output:
+                                                <div class="card bg-primary shadow-inset border-light">
+                                                    <pre><code class="prettyprint">
+    (
+        &lt;Graph identifier=N75add58bd55b4d9f88082787e3e2c888 (&lt;class 'rdflib.graph.ConjunctiveGraph'&gt;)&gt;,
+        {
+            'https://github.com/arcangelo7/time_agnostic/id/1/prov/se/2': {
+                'http://www.w3.org/ns/prov#generatedAtTime': '2021-06-04T09:36:53.000Z',
+                'http://www.w3.org/ns/prov#hadPrimarySource': 'https://www.crossref.org/',
+                'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696'
+            }
+        },
+        {
+            'https://github.com/arcangelo7/time_agnostic/id/1/prov/se/1': {
+                'http://www.w3.org/ns/prov#generatedAtTime': '2021-05-29T16:20:22.000Z',
+                'http://www.w3.org/ns/prov#hadPrimarySource': 'https://www.crossref.org/',
+                'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696'
+            },
+            'https://github.com/arcangelo7/time_agnostic/id/1/prov/se/3': {
+                'http://www.w3.org/ns/prov#generatedAtTime': '2021-06-04T11:15:32.000Z',
+                'http://www.w3.org/ns/prov#hadPrimarySource': 'https://www.crossref.org/',
+                'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696'
+            }
+        }
+    )
+                                                    </span></code></pre>
+                                                </div>
+                                            </li>
+                                            <li>Risolto un bug per cui non veniva ritornato lo snapshot di creazione, in quanto privo di query di update.</li>
+                                        </ol>
+                                    </li>
+                                    <li>Il principale problema affrontato questa settimana ha riguardato la possibilità di effettuare <strong>query agnostiche sul tempo</strong>. Il problema è stato risolto, ma la soluzione trovata è un'arma di distruzione di hardware, come viene discusso al <a href="#i1706cnhc5">punto 5 della sezione <em>Cosa non ho capito</em></a>. Il codice completo può essere visionato <a href="https://github.com/arcangelo7/time-agnostic-browser/blob/main/time_agnostic_browser/agnostic_query.py" target="_blank">su GitHub</a>, mentre in questo paragrafo viene illustrato in dettaglio il procedimento adottato:
+                                        <ol>
+                                            <li>La classe <strong>AgnosticQuery</strong> si istanzia passando come argomenti la posizione dei grafi del passato, la destinazione in cui salvarli nel caso non esistano, e la stringa di query. Se i grafi del passato non esistono, vengono automaticamente ricreati.
+                                                <ol>
+                                                    <li>È possibile passare come posizione e come destinazione dei grafi sia un percorso che un URL. Se viene passato un percorso i grafi vengono recuperati / salvati su un file JSON; se viene passato un URL i grafi vengono recuperati / salvati su un triplestore.</li>
+                                                </ol>
+                                            </li>
+                                            <li>Il metodo <strong>_rebuild_past_graphs</strong> viene lanciato automaticamente nel caso in cui l'utente non abbia specificato la posizione dei grafi del passato. La ricostruzione avviene in due passaggi: prima vengono ricostruiti i delta, poi i dataset interi a partire dai delta.
+                                                <ol>
+                                                    <li>Il metodo per ricostruire i delta, <strong>_rebuild_deltas</strong>, è il medesimo già discusso in <a href="#d0306cnhc7">03/06/2021, <em>Cosa non ho capito</em>, punto 7</a>.</li>
+                                                    <li>Il metodo per ricostruire i dataset del passato completi, <strong>_complete_past_graphs</strong>, è la vera arma di distruzione di hardware, perché richiede di recuperare l'intero dataset presente. A partire da esso, ricostruisce quelli passati nel giusto ordine, cancellando i preexisting graph delle entità di cui sono stati trovati dei delta e sostituendoli con i delta stessi.</li>
+                                                </ol>
+                                            </li>
+                                            <li>Il metodo <strong>_save_past_graphs</strong>, infine, salva i grafi del passato o su file o su triplestore.
+                                                <ol>
+                                                    <li>I conjunctive graph del passato vengono denominati tramite un URI che ha la forma "https://time_agnostic_browser/[snapshot_generation_time]". Inoltre a ciascuno di questi URI viene associata la data di generazione tramite predicato dcterms:date. Dopodiché, tutti i conjunctive graph del passato così denominati vengono uniti in un unico conjunctive graph.</li>
+                                                    <li>Infine, se la destinazione è un triplestore, il metodo genera la stringa di update ed effettua la query, mentre se la destinazione è un file, serializza il conjunctive graph in formato json-ld e lo salva.</li>
+                                                </ol>
+                                            </li>
+                                            <li>Nessuno dei precedenti metodi è esposto all'utente. L'unico metodo esposto all'utente di questa classe è <strong>run_agnostic_query</strong>, che lancia una query su ogni stato della conoscenza presente e passata. L'output è un dizionario, in cui le chiavi sono gli snapshot esistenti, mentre i valori sono set di tuple contenenti i risultati di quella query a quel tempo.
+                                                <ol>
+                                                    <li>Se la posizione dei grafi del passati è un URI, la query viene effettuata su un triplestore. Prima vengono recuperati tutti i grafi i cui URI hanno una proprietà dcterms:date. Dopodiché, la query viene effettuata cu ciascuno di essi, modificando la query dell'utente e aggiungendo "FROM [URI_del_grafo_passato]" prima del WHERE.</li>
+                                                    <li>Se la posizione dei grafi del passati è un percorso, la query viene effettuata su un file. Il contenuto del file viene parsato in un conjunctive graph, vengono recuperati i contesti esistenti e su ciascuno viene effettuata la query dell'utente, senza modificarla.</li>
+                                                </ol>
+                                            </li>
+                                        </ol>
+                                    </li>
+                                    <li>Ho iniziato a disegnare l'interfaccia del Time Agnostic Browser.</li>
+                                </ol>
+                                <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>Ho scoperto che il problema discusso in <a href="#d0906cnhc2">09/06/2021, <em>Cosa non ho capito</em>, punto 2</a> è causato da Blazegraph, perché non si verifica lavorando su file. Come faccio a configurare Blazegraph in modo che non aggiunga dei datatype che prima non c'erano?</li>
+                                    <li>Qual è il modo migliore per lanciare Blazegraph da Python?</li>
+                                    <li>Se voglio indicare Crossref come fonte primaria di uno snapshot, come lo indico? Immagino che l'URL "https://www.crossref.org/" non sia appropriato.</li>
+                                    <li>Ha senso specificare la fonte primaria dello snapshot in caso di merge tra due entità?</li>
+                                    <li id="i1706cnhc5">
+                                        <p>Parliamo adesso della madre di tutti i problemi, ovvero le query agnostiche sul tempo. Dopo essere giunto alla conclusione che per effettuare una query agnostica sul tempo il presente non basti, ho esplorato la possibilità di effettuarla ricostruendo tutti i delta del passato.</p>
+                                        <p>L'idea era quella di ottenere i dataset per ogni snapshot al volo, a partire dai delta e dallo stato presente del dataset, utilizzando un meccanismo simile a quello di <strong>Git</strong>, ma con l'asse temporale invertito: Ogni volta che si fa un commit, Git scatta una foto di come appaiono tutti i file in quel momento e memorizza un riferimento a quell'istantanea. Se i file non sono cambiati, Git <strong>non</strong> memorizza nuovamente il file, ma solo un link al precedente file identico che ha già memorizzato. Invertendo l'asse temporale, se un'entità passata è diversa da quella nello snapshot immediatamente successivo, l'entità passata viene ricostruita e salvata; se non è diversa, viene recuperato lo stato immediatamente successivo della risorsa, senza creare copie.</p>
+                                        <p>Purtroppo, ad oggi non sono riuscito a replicare questo meccanismo e il codice che ho scritto ricrea i dataset per intero, quindi è impraticabile per dataset con milioni o miliardi di triple. Come faccio a replicare questo meccanismo?</p>
+                                    </li>
+                                </ol>                
                             </div>
                         </div>
                     </div>
