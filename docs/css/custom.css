@@ -32,3 +32,8 @@ li ol > li {
 li ol > li:before {
     content: counters(item, ".") " ";
 }
+
+.collapse .card pre {
+    max-width: 65rem;
+    overflow-x: auto;
+}

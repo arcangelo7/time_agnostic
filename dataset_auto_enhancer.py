@@ -278,8 +278,12 @@ class DatasetAutoEnhancer(object):
                     DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, False, self.resp_agent, self.source)     
                 pub_date = item["issued"]["date-parts"][0]
                 if pub_date is not None:
-                    iso_date_string = create_date(pub_date)
-                    reference_br.has_pub_date(iso_date_string)
+                    try:
+                        iso_date_string = create_date(pub_date)
+                        reference_br.has_pub_date(iso_date_string)
+                    except TypeError:
+                        # Sometimes, instead of None, on Crossref you find "None]" because of a database-mapping error
+                        pass
                 if "author" in item:
                     DatasetBuilder._manage_author_ra_ar(enhanced_graphset, item, reference_br, self.resp_agent, self.source)
             pbar.update(1)

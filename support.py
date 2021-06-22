@@ -1,14 +1,15 @@
 import os, zipfile, json, time, requests, requests_cache
 from rdflib.term import _toPythonMapping
-from rdflib import XSD
+from rdflib import XSD, ConjunctiveGraph, URIRef, Literal
 from requests import Session
 from zipfile import ZipFile
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from urllib3 import Retry
 from oc_ocdm.storer import Storer
 from oc_ocdm.reader import Reader
 from oc_ocdm.graph import GraphSet
-from oc_ocdm.prov import ProvSet
+from oc_ocdm.prov import ProvSet, ProvEntity
+from SPARQLWrapper import SPARQLWrapper, JSON
 
 
 class Support(object):
@@ -90,7 +91,7 @@ class Support(object):
         storer.upload_all(ts_url)
     
     @staticmethod
-    def upload_and_store_dataset(data:GraphSet, path:str, ts_url:str="http://localhost:9999/blazegraph/sparql", base_iri:str="https://github.com/arcangelo7/time_agnostic/") -> None:
+    def upload_and_store_dataset(data:GraphSet, path:str, ts_url:str="http://localhost:9999/blazegraph/sparql") -> None:
         storer = Storer(data)
         storer.store_graphs_in_file(file_path=path, context_path=None)
         storer.upload_all(ts_url)
@@ -114,6 +115,48 @@ class Support(object):
         provset = ProvSet(prov_subj_graph_set=graphset, base_iri=base_iri, info_dir=info_dir, wanted_label=False)
         provset.generate_provenance()
         return provset
+    
+    @classmethod
+    def download_prov_from_ts(cls, ts_url:str="http://localhost:9999/blazegraph/sparql") -> ConjunctiveGraph:
+        query = f"""
+        SELECT DISTINCT ?s ?p ?o ?g
+        WHERE {{
+            GRAPH ?g {{?s ?p ?o}}
+            ?s a <{ProvEntity.iri_entity}>
+        }}
+        """
+        sparql = SPARQLWrapper(ts_url)
+        sparql.setReturnFormat(JSON)
+        sparql.setQuery(query)
+        results = sparql.queryAndConvert()
+        cg = ConjunctiveGraph()
+        for quad in results["results"]["bindings"]:
+            quad_to_add = list()
+            for var in results["head"]["vars"]:
+                if quad[var]["type"] == "uri":
+                    quad_to_add.append(URIRef(quad[var]["value"]))
+                elif quad[var]["type"] == "literal":
+                    quad_to_add.append(Literal(quad[var]["value"]))
+            cg.add(tuple(quad_to_add))
+        return cg
+    
+    @classmethod
+    def download_and_store_prov(cls, path:str, ts_url:str="http://localhost:9999/blazegraph/sparql"):
+        cg = cls.download_prov_from_ts(ts_url)
+        cg.serialize(destination=path, format="json-ld", encoding="utf8")
+    
+    # @classmethod
+    # def delete_prov_from_ts(cls, ts_url:str="http://localhost:9999/blazegraph/sparql"):
+    #     query = f"""
+    #     DELETE DATA ?s ?p ?o ?g
+    #     WHERE {{
+    #         GRAPH ?g {{?s ?p ?o}}
+    #         ?s a <{ProvEntity.iri_entity}>
+    #     }}
+    #     """
+
+
+
 
     
 

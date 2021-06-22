@@ -56,88 +56,268 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (17/06/2021)</h2>
+                    <h2>Prossimo incontro (25/06/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                 <ol>
-                    <li>Tutti i metodi <strong>add_*</strong> di oc-ocdm utilizzati specificano adesso la fonte, ovvero Crossref. </li> 
-                    <li>La funzione <strong>_hack_dates</strong> è stata introdotta ovunque ci sia un parsing ad opera di rdflib. </li>
-                    <li>Risolto un bug in <strong>_get_tuples_from_triplestores</strong> per cui il metodo crashava se la query conteneva un OPTIONAL. Ora il metodo ritorna tuple sempre della stessa lunghezza. In caso di valori opzionali mancanti, il valore inserito nella tupla è None. </li>
-                    <li>Risolti dei bug in <strong>_manage_update_queries</strong> per cui la funzione crashava in presenza di più INSERT DATA o più DELETE DATA in una stessa query di update.</li>
-                    <li>Novità relative a <strong>get_state_at_time</strong>:
-                        <ol>
-                            <li>Il metodo ritorna sempre una tupla di tre elementi: il primo è il conjunctive graph della risorsa a quel tempo, il secondo sono i metadati sullo snapshot di cui è stato ritornato lo stato. Se il parametro get_hooks è True, il terzo elemento della tupla sono i metadati sugli altri snapshot, altrimenti un dizionario vuoto. Logica vuole che il terzo dizionario sia vuoto anche nel caso in cui esista un solo snapshot.</li>
-                            <li>I metadati sugli snapshot comprendono il tempo di generazione, l'agente responsabile e la fonte primaria.</li>
-                            <li>Ecco un esempio di possibile output:
-                                <div class="card bg-primary shadow-inset border-light">
-                                    <pre><code class="prettyprint">
-    (
-        &lt;Graph identifier=N75add58bd55b4d9f88082787e3e2c888 (&lt;class 'rdflib.graph.ConjunctiveGraph'&gt;)&gt;,
-        {
-            'https://github.com/arcangelo7/time_agnostic/id/1/prov/se/2': {
-                'http://www.w3.org/ns/prov#generatedAtTime': '2021-06-04T09:36:53.000Z',
-                'http://www.w3.org/ns/prov#hadPrimarySource': 'https://www.crossref.org/',
-                'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696'
-            }
-        },
-        {
-            'https://github.com/arcangelo7/time_agnostic/id/1/prov/se/1': {
-                'http://www.w3.org/ns/prov#generatedAtTime': '2021-05-29T16:20:22.000Z',
-                'http://www.w3.org/ns/prov#hadPrimarySource': 'https://www.crossref.org/',
-                'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696'
-            },
-            'https://github.com/arcangelo7/time_agnostic/id/1/prov/se/3': {
-                'http://www.w3.org/ns/prov#generatedAtTime': '2021-06-04T11:15:32.000Z',
-                'http://www.w3.org/ns/prov#hadPrimarySource': 'https://www.crossref.org/',
-                'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696'
-            }
-        }
-    )
-                                    </span></code></pre>
-                                </div>
-                            </li>
-                            <li>Risolto un bug per cui non veniva ritornato lo snapshot di creazione, in quanto privo di query di update.</li>
-                        </ol>
+                    <li>Il problema delle query agnostiche sul tempo è stato risolto ed è adesso possibile effettuare un considerevole numero di query a una velocità impensabile fino alla settimana scorsa. Per dare un'idea, effettuare una query agnostica su un triplestore con oltre 2 milioni di triple, 27 snapshot con in media 20,000 entità modificate a snapshot richiedeva circa 24 ore. Ora occorrono pochi istanti.</li>
+                    <li>Sono state testate con successo le seguenti query agnostiche sul tempo, ordinate dalla più semplice alla più complessa:
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
+    PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;
+    SELECT DISTINCT ?o
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?o;
+            rdf:type pro:RoleInTime.
+    }   
+                            </code></pre>
+                        </div>
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
+    PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;
+    SELECT ?o
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?o.
+        OPTIONAL {&lt;https://github.com/arcangelo7/time_agnostic/ar/4&gt; rdf:type pro:RoleInTime.}
+    }
+                            </code></pre>
+                        </div>
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
+    PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
+    PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;
+    SELECT DISTINCT ?o ?id ?value
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?o.
+        OPTIONAL {&lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; rdf:type pro:RoleInTime.}
+        ?o datacite:hasIdentifier ?id.
+        ?id literal:hasLiteralValue ?value.
+    }
+                            </code></pre>
+                        </div>
                     </li>
-                    <li>Il principale problema affrontato questa settimana ha riguardato la possibilità di effettuare <strong>query agnostiche sul tempo</strong>. Il problema è stato risolto, ma la soluzione trovata è un'arma di distruzione di hardware, come viene discusso al <a href="#i1706cnhc5">punto 5 della sezione <em>Cosa non ho capito</em></a>. Il codice completo può essere visionato <a href="https://github.com/arcangelo7/time-agnostic-browser/blob/main/time_agnostic_browser/agnostic_query.py" target="_blank">su GitHub</a>, mentre in questo paragrafo viene illustrato in dettaglio il procedimento adottato:
+                    <li>L'algoritmo adottato per effettuare query agnostiche sul tempo in maniera veloce verrà adesso illustrato nel dettaglio e accompagnato dal relativo codice. È inoltre possibile visionare il codice su <a href="https://github.com/arcangelo7/time-agnostic-browser/blob/main/time_agnostic_browser/agnostic_query.py" target="_blank" alt="Link to the AgnosticQuery class' code">GitHub</a>.
                         <ol>
-                            <li>La classe <strong>AgnosticQuery</strong> si istanzia passando come argomenti la posizione dei grafi del passato, la destinazione in cui salvarli nel caso non esistano, e la stringa di query. Se i grafi del passato non esistono, vengono automaticamente ricreati.
-                                <ol>
-                                    <li>È possibile passare come posizione e come destinazione dei grafi sia un percorso che un URL. Se viene passato un percorso i grafi vengono recuperati / salvati su un file JSON; se viene passato un URL i grafi vengono recuperati / salvati su un triplestore.</li>
-                                </ol>
-                            </li>
-                            <li>Il metodo <strong>_rebuild_past_graphs</strong> viene lanciato automaticamente nel caso in cui l'utente non abbia specificato la posizione dei grafi del passato. La ricostruzione avviene in due passaggi: prima vengono ricostruiti i delta, poi i dataset interi a partire dai delta.
-                                <ol>
-                                    <li>Il metodo per ricostruire i delta, <strong>_rebuild_deltas</strong>, è il medesimo già discusso in <a href="#d0306cnhc7">03/06/2021, <em>Cosa non ho capito</em>, punto 7</a>.</li>
-                                    <li>Il metodo per ricostruire i dataset del passato completi, <strong>_complete_past_graphs</strong>, è la vera arma di distruzione di hardware, perché richiede di recuperare l'intero dataset presente. A partire da esso, ricostruisce quelli passati nel giusto ordine, cancellando i preexisting graph delle entità di cui sono stati trovati dei delta e sostituendoli con i delta stessi.</li>
-                                </ol>
-                            </li>
-                            <li>Il metodo <strong>_save_past_graphs</strong>, infine, salva i grafi del passato o su file o su triplestore.
-                                <ol>
-                                    <li>I conjunctive graph del passato vengono denominati tramite un URI che ha la forma "https://time_agnostic_browser/[snapshot_generation_time]". Inoltre a ciascuno di questi URI viene associata la data di generazione tramite predicato dcterms:date. Dopodiché, tutti i conjunctive graph del passato così denominati vengono uniti in un unico conjunctive graph.</li>
-                                    <li>Infine, se la destinazione è un triplestore, il metodo genera la stringa di update ed effettua la query, mentre se la destinazione è un file, serializza il conjunctive graph in formato json-ld e lo salva.</li>
-                                </ol>
-                            </li>
-                            <li>Nessuno dei precedenti metodi è esposto all'utente. L'unico metodo esposto all'utente di questa classe è <strong>run_agnostic_query</strong>, che lancia una query su ogni stato della conoscenza presente e passata. L'output è un dizionario, in cui le chiavi sono gli snapshot esistenti, mentre i valori sono set di tuple contenenti i risultati di quella query a quel tempo.
-                                <ol>
-                                    <li>Se la posizione dei grafi del passati è un URI, la query viene effettuata su un triplestore. Prima vengono recuperati tutti i grafi i cui URI hanno una proprietà dcterms:date. Dopodiché, la query viene effettuata cu ciascuno di essi, modificando la query dell'utente e aggiungendo "FROM [URI_del_grafo_passato]" prima del WHERE.</li>
-                                    <li>Se la posizione dei grafi del passati è un percorso, la query viene effettuata su un file. Il contenuto del file viene parsato in un conjunctive graph, vengono recuperati i contesti esistenti e su ciascuno viene effettuata la query dell'utente, senza modificarla.</li>
-                                </ol>
-                            </li>
-                        </ol>
-                    </li>
-                    <li>Ho iniziato a disegnare l'interfaccia del Time Agnostic Browser.</li>
+                            <li>La classe <strong>AgnosticQuery</strong> viene istanziata passando come argomento una query.</li>
+                            <li>Al momento dell'inizializzazione, la query viene processata. Vengono anzitutto <strong>estrapolate</strong> le <strong>triple</strong>, sfruttando il metodo <strong>prepareQuery</strong> del processor di rdflib. Dal risultato, è possibile ricavare l'algebra della query. Per ottenere le triple dall'algebra occorre <strong>navigarne l'albero</strong> in maniera <strong>ricorsiva</strong> fino a trovare i valori delle chiavi "triples". In questo modo è possibile gestire qualunque struttura dell'albero, la cui variabilità è notevole a seconda della query.</li>
+                            <li>Il metodo <strong>_process_query</strong> si occupa infine di sollevare un'eccezione ValueError nel caso in cui la query dell'utente non sia valutabile, argomento che viene approfondito in n.n.</li>
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    def _process_query(self) -> List[Tuple]:
+        algebra:CompValue = prepareQuery(self.query).algebra
+        if algebra.name != "SelectQuery":
+            raise ValueError("Only SELECT queries are allowed.")
+        triples = list()
+        # The algebra can be extremely variable in case of one or more OPTIONAL in the query: 
+        # it is necessary to navigate the dictionary recursively in search of the values of the "triples" keys.
+        self._tree_traverse(algebra, "triples", triples)
+        triples_with_hook = [triple for triple in triples if isinstance(triple[0], URIRef) or isinstance(triple[2], URIRef)]
+        if not triples_with_hook:
+            raise ValueError("Could not perform a generic time agnostic query. Please, specify at least one subject entity within the query.")
+        triples_with_subject = [triple for triple in triples_with_hook if isinstance(triple[0], URIRef)]
+        if not triples_with_subject:
+            raise ValueError("Specify at least one subject.")
+        triples_with_path = [triple for triple in triples_with_hook if isinstance(triple[1], Path)]
+        if triples_with_path:
+            raise ValueError("Cannot evaluate time agnostic queries containing paths.")
+        return triples
+
+    def _tree_traverse(self, tree:dict, key:str, values:List[Tuple]) -> None:
+        for k, v in tree.items():
+            if k == key:
+                values.extend(v)
+            elif isinstance(v, dict):
+                found = self._tree_traverse(v, key, values)
+                if found is not None:  
+                    values.extend(found)
+                                </code></pre>
+                            </div>
+                        </li>
+                        <li>A partire dalle triple, viene ricostruita la storia delle entità rilevanti, tramite il metodo <strong>_rebuild_relevant_graphs</strong>, in due passaggi: prima vengono ricostruiti i grafi del passato delle entità esplicite nella query, poi vengono ricostruiti anche i grafi delle entità ricavate esplicitando le variabili nella query.</li>
+                        <li>Il metodo <strong>_rebuild_relevant_entity</strong> si occupa appunto di ricostruire la storia di un'entità, verificando che sia effettivamente un'entità, che non sia già stata ricostruita e infine che l'entità sia mai esistita nel dataset.</li>
+                        <li>Infine, <strong>_align_snapshots</strong> allinea gli snapshots di tutte le entità ricostruite. Prima unisce i grafi delle entità basandosi sugli snapshots, dopodiché copia le entità che non sono cambiate se si verificano le seguenti condizioni:
+                            <ol>
+                                <li>l'entità è presente in tn-1 ma non in tn;</li>
+                                <li>l'entità è assente in tn perché non è cambiata e non perché è stata cancellata.</li>
+                            </ol>
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    def _rebuild_relevant_graphs(self) -> None:
+        # First, the graphs of the hooks are reconstructed
+        for triple in self.triples:
+            self._rebuild_relevant_entity(triple[0])
+            self._rebuild_relevant_entity(triple[2])
+        self._align_snapshots()
+        # Then, the graphs of the entities obtained from the hooks are reconstructed
+        self._solve_variables()
+    
+    def _rebuild_relevant_entity(self, entity:Union[URIRef, Literal]):
+        if isinstance(entity, URIRef) and entity not in self.reconstructed_entities:
+            agnostic_entity = AgnosticEntity(entity, False)
+            entity_history = agnostic_entity.get_history()
+            if entity_history[entity]:
+                self.relevant_entities_graphs.update(entity_history) 
+            self.reconstructed_entities.add(entity)
+    
+    def _align_snapshots(self) -> None:
+        # Merge entities based on snapshots
+        for _, snapshots in self.relevant_entities_graphs.items():
+            for snapshot, graph in snapshots.items():
+                if snapshot in self.relevant_graphs:
+                    for quad in graph.quads():
+                        self.relevant_graphs[snapshot].add(quad)
+                else:
+                    self.relevant_graphs[snapshot] = deepcopy(graph)
+        # If an entity hasn't changed, copy it
+        ordered_data: List[Tuple[str, ConjunctiveGraph]] = sorted(
+            self.relevant_graphs.items(),
+            key=lambda x: parser.parse(x[0]),
+            reverse=False # That is, from past to present, assuming that the past influences the present and not the opposite like in Dark
+        )
+        for index, se_cg in enumerate(ordered_data):
+            se = se_cg[0]
+            cg = se_cg[1]
+            if index > 0:
+                previous_se = ordered_data[index-1][0]
+                for subject in self.relevant_graphs[previous_se].subjects():
+                    # To copy the entity two conditions must be met: 
+                    #   1) the entity is present in tn but not in tn+1; 
+                    #   2) the entity is absent in tn+1 because it has not changed 
+                    #      and not because it has been deleted.
+                    if (subject, None, None, None) not in cg:
+                        if subject in self.relevant_entities_graphs:
+                            if se not in self.relevant_entities_graphs[subject]:
+                                for quad in self.relevant_graphs[previous_se].quads((subject, None, None, None)):
+                                    self.relevant_graphs[se].add(quad)
+                            </code></pre>
+                        </div>
+                        </li>
+                        <li>Il metodo <strong>_solve_variables</strong> si occupa di ricostuire i grafi delle entità che nella query appaiono come variabili, declinati nei vari tempi.</li>
+                        <li><strong>_get_vars_to_explicit_by_time</strong>, basandosi sui grafi degli hooks e sulle triple estrapolate dalla query, genera il dizionario self.vars_to_explicit_by_time, in cui agli snapshots vengono associati dei dizionari che hanno come chiavi le variabili della query e come valore le triple in cui quelle variabili compaiono.</li>
+                        <li><strong>_explicit_solvable_variables</strong> si occupa appunto di esplicitare le variabili nelle triple del dizionario precedentemente generato e, contemporaneamente, di aggiornare la proprietà self.relevant_graphs con i grafi ricostruiti delle entità nel frattempo esplicitate.</li>
+                        <li>Infine, <strong>_update_vars_to_explicit</strong> aggiorna il dizionario self.vars_to_explicit_by_time sostituendo alle variabili gli URI scoperti, così da poter ripetere il ciclo finché non vengono scoperti tutti.
+                            <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                <pre><code class="prettyprint">
+    def _solve_variables(self) -> None:
+        runs = self._get_vars_to_explicit_by_time()
+        while runs:
+            solved_variables = self._explicit_solvable_variables()
+            if not solved_variables:
+                return 
+            self._update_vars_to_explicit(solved_variables)
+            runs -= 1
+    
+    def _get_vars_to_explicit_by_time(self) -> int:
+        number_of_vars = set()
+        for se, _ in self.relevant_graphs.items():
+            self.vars_to_explicit_by_time[se] = dict()
+            for triple in self.triples:
+                variables = [el for el in triple if isinstance(el, Variable)]
+                number_of_vars.update(variables)
+                for variable in variables:
+                    self.vars_to_explicit_by_time[se].setdefault(variable, list()) 
+                    self.vars_to_explicit_by_time[se][variable].append(triple)
+        return len(number_of_vars)
+    
+    def _explicit_solvable_variables(self) -> Dict[str, Dict[str, str]]:
+        explicit_triples:Dict[str, Dict[str, str]] = dict()
+        for se, vars in self.vars_to_explicit_by_time.items():
+            for var, triples in vars.items():
+                for triple in triples:
+                    solvable_triple = [el.n3() for el in triple]
+                    variables = [x for x in solvable_triple if x.startswith("?")]
+                    if len(variables) == 1:
+                        variable = variables[0]
+                        variable_index = solvable_triple.index(variable)
+                        query_to_identify = f"""
+                            CONSTRUCT {{{solvable_triple[0]} {solvable_triple[1]} {solvable_triple[2]}}}
+                            WHERE {{{solvable_triple[0]} {solvable_triple[1]} {solvable_triple[2]}}}
+                        """
+                        results = self.relevant_graphs[se].query(query_to_identify)
+                        for result in results:
+                            explicit_var = result[variable_index]
+                            explicit_triples.setdefault(se, dict())
+                            explicit_triples[se][var] = explicit_var
+                            self._rebuild_relevant_entity(explicit_var)
+                        self._align_snapshots()
+        return explicit_triples
+    
+    def _update_vars_to_explicit(self, solved_variables:Dict[str, Dict[str, str]]) -> None:
+        for se, vars in self.vars_to_explicit_by_time.items():
+            for var, triples in vars.items():
+                for triple in triples:
+                    for explicit_var, explicit_el in solved_variables[se].items():
+                        new_triple = tuple(explicit_el if el == explicit_var else el for el in triple)
+                        new_list_of_triples = [new_triple if x == triple else x for x in self.vars_to_explicit_by_time[se][var]]
+                        self.vars_to_explicit_by_time[se][var] = new_list_of_triples
+                            </code></pre>
+                        </div>
+                        </li>
+                        <li>Una volta che i grafi rilevanti per risolvere la query sono stati ricostruiti, effettuare la query agnostica sul tempo diventa un problema triviale: <strong>run_agnostic_query</strong> cicla su tutti gli snapshot e su tutti i grafi ricostruiti e restituisce un dizionario in cui a ciascuno snapshot sono associati i set di tuple corrispondenti al risultato di quella query in quel tempo.
+                            <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                <pre><code class="prettyprint">
+    def run_agnostic_query(self) -> Dict[str, Set[Tuple]]:
+        agnostic_result = dict()
+        for snapshot, graph in self.relevant_graphs.items():
+            results = graph.query(self.query)
+            output = set()
+            for result in results:
+                result_tuple = tuple(str(var) for var in result)
+                output.add(result_tuple)
+            agnostic_result[snapshot] = output
+        return agnostic_result
+                                </code></pre>
+                            </div>
+                        </li>
+                    </ol>
+                    <li>Tutti i nuovi metodi introdotti sono stati testati con successo.</li>
                 </ol>
                 <h3>Cosa non ho capito</h3>
                 <ol>
-                    <li>Ho scoperto che il problema discusso in <a href="#d0906cnhc2">09/06/2021, <em>Cosa non ho capito</em>, punto 2</a> è causato da Blazegraph, perché non si verifica lavorando su file. Come faccio a configurare Blazegraph in modo che non aggiunga dei datatype che prima non c'erano?</li>
-                    <li>Qual è il modo migliore per lanciare Blazegraph da Python?</li>
-                    <li>Se voglio indicare Crossref come fonte primaria di uno snapshot, come lo indico? Immagino che l'URL "https://www.crossref.org/" non sia appropriato.</li>
-                    <li>Ha senso specificare la fonte primaria dello snapshot in caso di merge tra due entità?</li>
-                    <li id="i1706cnhc5">
-                        <p>Parliamo adesso della madre di tutti i problemi, ovvero le query agnostiche sul tempo. Dopo essere giunto alla conclusione che per effettuare una query agnostica sul tempo il presente non basti, ho esplorato la possibilità di effettuarla ricostruendo tutti i delta del passato.</p>
-                        <p>L'idea era quella di ottenere i dataset per ogni snapshot al volo, a partire dai delta e dallo stato presente del dataset, utilizzando un meccanismo simile a quello di <strong>Git</strong>, ma con l'asse temporale invertito: Ogni volta che si fa un commit, Git scatta una foto di come appaiono tutti i file in quel momento e memorizza un riferimento a quell'istantanea. Se i file non sono cambiati, Git <strong>non</strong> memorizza nuovamente il file, ma solo un link al precedente file identico che ha già memorizzato. Invertendo l'asse temporale, se un'entità passata è diversa da quella nello snapshot immediatamente successivo, l'entità passata viene ricostruita e salvata; se non è diversa, viene recuperato lo stato immediatamente successivo della risorsa, senza creare copie.</p>
-                        <p>Purtroppo, ad oggi non sono riuscito a replicare questo meccanismo e il codice che ho scritto ricrea i dataset per intero, quindi è impraticabile per dataset con milioni o miliardi di triple. Come faccio a replicare questo meccanismo?</p>
+                    <li>Ci sono query agnostiche che non è possibile effettuare con l'approccio adottato, ovvero le seguenti tre categorie di query:
+                        <ol>
+                            <li>Query che non specificano alcun URI come soggetto o oggetto.</li>
+                            <li>Query in cui gli URI specificati sono solo oggetti. Occorrerebbe ricostruire tutte le entità del dataset per scoprire quali entità hanno avuto quell'oggetto nel passato.</li>
+                            <li>Query in cui sono presenti dei path. Quest'ultimo caso richiede un discorso a parte e viene affrontato nel prossimo punto.</li>
+                        </ol>
+                        <p>Ritieni che la libreria debba supportare anche queste tre tipologie di query? Se no, la libreria solleva già dei ValueError. Se sì, mi piacerebbe discutere il come.</p>
+                    </li>
+                    <li>Discutiamo il come relativo alle <strong>property paths</strong>. Esistono cinque tipi di property paths: sequence path, alternative path, multiple path, inverse path e negated path (<a href="https://www.w3.org/2009/sparql/docs/property-paths/Overview.xml" target="_blank" alt="Link to the property paths documentation">https://www.w3.org/2009/sparql/docs/property-paths/Overview.xml</a>):
+                        <ol>
+                            <li>Una <strong>sequence path</strong> ha la forma elt1 / elt2, dove elt è un elemento del path. È il caso più semplice e può essere risolto riscrivendo la query aggiungendo delle variabili placeholder tra un elemento del path e l'altro. In questo modo:
+                                <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                    <pre><code class="prettyprint">
+    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix pro: &lt;http://purl.org/spar/pro/&gt;
+    SELECT DISTINCT ?value
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy/datacite:hasIdentifier/literal:hasLiteralValue ?value.
+    }
+    
+    # La precedente query può essere riscritta come:
+
+    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix pro: &lt;http://purl.org/spar/pro/&gt;
+    SELECT DISTINCT ?value
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?a.
+            ?a datacite:hasIdentifier ?b.
+            ?b literal:hasLiteralValue ?value.
+    }
+                                    </code></pre>
+                                </div>
+                            </li>
+                            <li>Una <strong>multiple path</strong> ha la forma elt* o elt+ o elt? o elt{n,m} o elt{n} o elt{n,} o elt{,n}. Questo caso è simile al precedente, con la differenza che il numero di variabili placeholder da inserire non è noto. Una soluzione potrebbe essere inserire variabili placeholder in maniera progressiva, risolverle, ricostruire le relative entità e continuare questo processo finché il CONSTRUCT ricavato dalla query dell'utente non porta a identificare un'entità concreta. Spoiler alert: potrebbe volerci molto tempo.</li>
+                            <li>Un'<strong>alternative path</strong> ha la forma elt1 | elt2. Una soluzione potrebbe essere quella di valutare tutte le possibili alternative e di ricostruire tutte le entità così ottenute.</li>
+                            <li>Un'<strong>inverse path</strong> ha la forma ^elt. L'inverse path trasforma il soggetto in oggetto e genera un caso riconducibile a quello già discusso in, per il quale non vedo soluzioni che non siano ricostruire tutti i dataset del passato.</li>
+                            <li>Una <strong>negated path</strong> ha la forma !uri o !(uri1|...|urin). Questo caso non sembra costituire alcun problema. Tutti gli oggetti collegati a un soggetto noto da URI diversi da quelli negati vengono ricostruiti.</li>
+                        </ol>
                     </li>
                 </ol>
             </div>
@@ -3170,7 +3350,7 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-15" data-target="#panel-15" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-15">
-                            <span class="h6 mb-0 font-weight-bold">23/06/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">25/06/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-15">
@@ -3178,7 +3358,17 @@ for index, author_agent_role in enumerate(author_agent_roles):
                             </div>
                         </div>
                     </div>
-
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-16" data-target="#panel-16" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-16">
+                            <span class="h6 mb-0 font-weight-bold">30/06/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-16">
+                            <div class="pt-3">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
