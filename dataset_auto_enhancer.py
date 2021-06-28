@@ -1,6 +1,6 @@
-from typing import Dict
+from typing import Dict, Tuple
 
-import re, json, urllib, os, psutil
+import re, json, urllib, os
 from oc_ocdm.graph.entities.bibliographic_entity import BibliographicEntity
 from support import Support
 from dataset_builder import DatasetBuilder
@@ -13,10 +13,9 @@ import numpy as np
 from rdflib import URIRef
 
 class DatasetAutoEnhancer(object):
-    def __init__(self, base_uri:str, resp_agent:str, source:str, info_dir:str=""):
+    def __init__(self, base_uri:str, resp_agent:str, info_dir:str=""):
         self.base_iri = base_uri
         self.resp_agent = resp_agent
-        self.source = source
         self.info_dir = info_dir
         Support._hack_dates()
 
@@ -153,7 +152,8 @@ class DatasetAutoEnhancer(object):
         logs = dict()
         pbar = tqdm(total=len(results_dict))
         for citing_doi in results_dict:
-            references = Support().handle_request(f"https://w3id.org/oc/index/coci/api/v1/references/{citing_doi}", "./cache/coci_cache", logs)
+            api_call_uri = f"https://w3id.org/oc/index/coci/api/v1/references/{citing_doi}"
+            references = Support().handle_request(api_call_uri, "./cache/coci_cache", logs)
             for reference in references:
                 if reference["cited"] not in results_dict[citing_doi]["citedDOIs"]:
                     citing_entity_query = f"""
@@ -166,16 +166,16 @@ class DatasetAutoEnhancer(object):
                     sparql.setQuery(citing_entity_query)
                     sparql.setReturnFormat(RDFXML)
                     preexisting_graph = sparql.query().convert()
-                    citing_entity = graphset.add_br(self.resp_agent, self.source, res=URIRef(results_dict[citing_doi]["res"]), preexisting_graph=preexisting_graph)
+                    citing_entity = graphset.add_br(self.resp_agent, api_call_uri, res=URIRef(results_dict[citing_doi]["res"]), preexisting_graph=preexisting_graph)
                     # Identifier
-                    reference_id = graphset.add_id(self.resp_agent, self.source)
+                    reference_id = graphset.add_id(self.resp_agent, api_call_uri)
                     reference_id.create_doi(reference["cited"])
                     # BibliographicResource
-                    reference_br = graphset.add_br(self.resp_agent, self.source)
+                    reference_br = graphset.add_br(self.resp_agent, api_call_uri)
                     reference_br.has_identifier(reference_id)
                     citing_entity.has_citation(reference_br)
                     # Citation
-                    reference_ci = graphset.add_ci(self.resp_agent, self.source)
+                    reference_ci = graphset.add_ci(self.resp_agent, api_call_uri)
                     reference_ci.has_citing_entity(citing_entity)
                     reference_ci.has_cited_entity(reference_br)
                     reference_ci.has_citation_creation_date(reference["creation"])
@@ -203,7 +203,7 @@ class DatasetAutoEnhancer(object):
                             subjects.add(subject)
                     # There could be duplicates if not already merged
                     for subject in subjects:
-                        reference_ci = graphset.add_ci(self.resp_agent, self.source, self.source, res= URIRef(subject),preexisting_graph=preexisting_graph)
+                        reference_ci = graphset.add_ci(self.resp_agent, api_call_uri, res= URIRef(subject),preexisting_graph=preexisting_graph)
                         reference_ci.has_citation_time_span(reference["timespan"])
                         if reference["journal_sc"] == "yes":
                             reference_ci.create_journal_self_citation()
@@ -234,24 +234,9 @@ class DatasetAutoEnhancer(object):
         logs = dict()
         pbar = tqdm(total=len(results["results"]["bindings"]))
         for result in results["results"]["bindings"]:
-            crossref_info = Support().handle_request(f"https://api.crossref.org/works/{result['citedEntityDOI']['value']}", "./cache/crossref_cache", logs)
+            api_call_uri = f"https://api.crossref.org/works/{result['citedEntityDOI']['value']}"
+            crossref_info = Support().handle_request(api_call_uri, "./cache/crossref_cache", logs)
             if crossref_info is not None:
-                item = crossref_info["message"]
-                # Journal BR
-                if "ISSN" in item:
-                    journal_br = enhanced_graphset.add_br(self.resp_agent, self.source)
-                    journal_br.create_journal()
-                    journal_id = enhanced_graphset.add_id(self.resp_agent, self.source)
-                    journal_id.create_issn(item["ISSN"][0])
-                    journal_br.has_identifier(journal_id)
-                    if "publisher" in item:
-                        journal_br.has_title(item["publisher"])
-                        publisher_ra = enhanced_graphset.add_ra(self.resp_agent, self.source)
-                        publisher_ra.has_name(item["publisher"])
-                        publisher_ra.has_identifier(journal_id)
-                        publisher_ar = enhanced_graphset.add_ar(self.resp_agent, self.source)
-                        publisher_ar.create_publisher()
-                        publisher_ar.is_held_by(publisher_ra)
                 reference_br_uri = URIRef(result['citedEntity']['value'])
                 preexisting_graph_query = f"""
                     CONSTRUCT {{<{reference_br_uri}> ?p ?o}}
@@ -260,7 +245,24 @@ class DatasetAutoEnhancer(object):
                 sparql.setQuery(preexisting_graph_query)
                 sparql.setReturnFormat(RDFXML)
                 preexisting_graph = sparql.query().convert()
-                reference_br = enhanced_graphset.add_br(self.resp_agent, self.source, res=reference_br_uri, preexisting_graph=preexisting_graph)
+                reference_br = enhanced_graphset.add_br(self.resp_agent, api_call_uri, res=reference_br_uri, preexisting_graph=preexisting_graph)
+                item = crossref_info["message"]
+                # Journal BR
+                if "ISSN" in item:
+                    journal_br = enhanced_graphset.add_br(self.resp_agent, api_call_uri)
+                    journal_br.create_journal()
+                    journal_id = enhanced_graphset.add_id(self.resp_agent, api_call_uri)
+                    journal_id.create_issn(item["ISSN"][0])
+                    journal_br.has_identifier(journal_id)
+                    if "publisher" in item:
+                        journal_br.has_title(item["publisher"])
+                        publisher_ra = enhanced_graphset.add_ra(self.resp_agent, api_call_uri)
+                        publisher_ra.has_name(item["publisher"])
+                        publisher_ra.has_identifier(journal_id)
+                        publisher_ar = enhanced_graphset.add_ar(self.resp_agent, api_call_uri)
+                        publisher_ar.create_publisher()
+                        publisher_ar.is_held_by(publisher_ra)
+                        reference_br.has_contributor(publisher_ar)
                 try:
                     DatasetBuilder._manage_br_type(reference_br, item)
                 except KeyError as e:
@@ -270,12 +272,12 @@ class DatasetAutoEnhancer(object):
                     reference_br.has_title(item["title"][0])
                 if len(item["subtitle"]) > 0:
                     reference_br.has_subtitle(item["subtitle"][0])  
-                DatasetBuilder._manage_volume_issue(enhanced_graphset, journal_br, reference_br, item, self.resp_agent, self.source)
+                DatasetBuilder._manage_volume_issue(enhanced_graphset, journal_br, reference_br, item, self.resp_agent, api_call_uri)
                 # ResourceEmbodiment
                 if "published-online" in item:
-                    DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, True, self.resp_agent, self.source)     
+                    DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, True, self.resp_agent, api_call_uri)     
                 if "published-print" in item:
-                    DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, False, self.resp_agent, self.source)     
+                    DatasetBuilder._manage_resource_embodiment(enhanced_graphset, item, reference_br, False, self.resp_agent, api_call_uri)     
                 pub_date = item["issued"]["date-parts"][0]
                 if pub_date is not None:
                     try:
@@ -285,7 +287,7 @@ class DatasetAutoEnhancer(object):
                         # Sometimes, instead of None, on Crossref you find "None]" because of a database-mapping error
                         pass
                 if "author" in item:
-                    DatasetBuilder._manage_author_ra_ar(enhanced_graphset, item, reference_br, self.resp_agent, self.source)
+                    DatasetBuilder._manage_author_ra_ar(enhanced_graphset, item, reference_br, self.resp_agent, api_call_uri)
             pbar.update(1)
         if len(logs) > 0:
             print("[DatasetAutoEnhancer: INFO] Errors have been found. Writing logs to ./logs/crossref.json")
@@ -427,7 +429,7 @@ class DatasetAutoEnhancer(object):
         match_other = 0.1 * e_y + 0.2 * e_v + 0.1 * e_i + 0.6 * e_b 
         return match_other
 
-    def _is_a_match(self, source_metadata:dict, target_metadata:dict) -> tuple[bool, float]:
+    def _is_a_match(self, source_metadata:dict, target_metadata:dict) -> Tuple[bool, float]:
         match_first_author = self._match_first_author(source_metadata, target_metadata)
         match_title = self._match_title(source_metadata, target_metadata)
         match_source = self._match_source(source_metadata, target_metadata)
@@ -484,16 +486,16 @@ class DatasetAutoEnhancer(object):
                                         subjects[s] = ""
                                 # There could be duplicates if not already merged
                                 for subject in subjects:
-                                    citing_entity = graphset.add_br(self.resp_agent, self.source, res=subject, preexisting_graph=preexisting_graph)
+                                    citing_entity = graphset.add_br(self.resp_agent, query_string, res=subject, preexisting_graph=preexisting_graph)
                                     # Identifier
-                                    reference_id = graphset.add_id(self.resp_agent, self.source)
+                                    reference_id = graphset.add_id(self.resp_agent, query_string)
                                     reference_id.create_doi(new_doi)
                                     # BibliographicResource
-                                    reference_br = graphset.add_br(self.resp_agent, self.source)
+                                    reference_br = graphset.add_br(self.resp_agent, query_string)
                                     reference_br.has_identifier(reference_id)
                                     citing_entity.has_citation(reference_br)
                                     # Citation
-                                    reference_ci = graphset.add_ci(self.resp_agent, self.source)
+                                    reference_ci = graphset.add_ci(self.resp_agent, query_string)
                                     reference_ci.has_citing_entity(citing_entity)
                                     reference_ci.has_cited_entity(reference_br)
                                     if subjects[subject] != "":
