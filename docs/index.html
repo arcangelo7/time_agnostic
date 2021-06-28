@@ -56,331 +56,178 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (25/06/2021)</h2>
+                    <h2>Prossimo incontro (30/06/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
-                <ol>
-                    <li>Il problema delle query agnostiche sul tempo è stato risolto ed è adesso possibile effettuare un considerevole numero di query a una velocità impensabile fino alla settimana scorsa. Per dare un'idea, effettuare una query agnostica su un triplestore con oltre 2 milioni di triple, 27 snapshot con in media 20,000 entità modificate a snapshot richiedeva circa 24 ore. Ora occorrono pochi istanti.</li>
-                    <li>Sono state testate con successo le seguenti query agnostiche sul tempo, ordinate dalla più semplice alla più complessa:
-                        <div class="card bg-primary shadow-inset border-light">
-                            <pre><code class="prettyprint">
-    PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
-    PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;
-    SELECT DISTINCT ?o
-    WHERE {
-        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?o;
-            rdf:type pro:RoleInTime.
-    }   
-                            </code></pre>
-                        </div>
-                        <div class="card bg-primary shadow-inset border-light">
-                            <pre><code class="prettyprint">
-    PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
-    PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;
-    SELECT ?o
-    WHERE {
-        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?o.
-        OPTIONAL {&lt;https://github.com/arcangelo7/time_agnostic/ar/4&gt; rdf:type pro:RoleInTime.}
-    }
-                            </code></pre>
-                        </div>
-                        <div class="card bg-primary shadow-inset border-light">
-                            <pre><code class="prettyprint">
-    PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
-    PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
-    PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
-    PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;
-    SELECT DISTINCT ?o ?id ?value
-    WHERE {
-        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?o.
-        OPTIONAL {&lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; rdf:type pro:RoleInTime.}
-        ?o datacite:hasIdentifier ?id.
-        ?id literal:hasLiteralValue ?value.
-    }
-                            </code></pre>
-                        </div>
-                    </li>
-                    <li>L'algoritmo adottato per effettuare query agnostiche sul tempo in maniera veloce verrà adesso illustrato nel dettaglio e accompagnato dal relativo codice. È inoltre possibile visionare il codice su <a href="https://github.com/arcangelo7/time-agnostic-browser/blob/main/time_agnostic_browser/agnostic_query.py" target="_blank" alt="Link to the AgnosticQuery class' code">GitHub</a>.
-                        <ol>
-                            <li>La classe <strong>AgnosticQuery</strong> viene istanziata passando come argomento una query.</li>
-                            <li>Al momento dell'inizializzazione, la query viene processata. Vengono anzitutto <strong>estrapolate</strong> le <strong>triple</strong>, sfruttando il metodo <strong>prepareQuery</strong> del processor di rdflib. Dal risultato, è possibile ricavare l'algebra della query. Per ottenere le triple dall'algebra occorre <strong>navigarne l'albero</strong> in maniera <strong>ricorsiva</strong> fino a trovare i valori delle chiavi "triples". In questo modo è possibile gestire qualunque struttura dell'albero, la cui variabilità è notevole a seconda della query.</li>
-                            <li>Il metodo <strong>_process_query</strong> si occupa infine di sollevare un'eccezione ValueError nel caso in cui la query dell'utente non sia valutabile, argomento che viene approfondito al <a href="#i25061cnhc">punto 1 della sezione <em>Cosa non ho capito</em></a>.</li>
-                            <div class="card bg-primary shadow-inset border-light">
-                                <pre><code class="prettyprint">
-    def _process_query(self) -> List[Tuple]:
-        algebra:CompValue = prepareQuery(self.query).algebra
-        if algebra.name != "SelectQuery":
-            raise ValueError("Only SELECT queries are allowed.")
-        triples = list()
-        # The algebra can be extremely variable in case of one or more OPTIONAL in the query: 
-        # it is necessary to navigate the dictionary recursively in search of the values of the "triples" keys.
-        self._tree_traverse(algebra, "triples", triples)
-        triples_with_hook = [triple for triple in triples if isinstance(triple[0], URIRef) or isinstance(triple[2], URIRef)]
-        if not triples_with_hook:
-            raise ValueError("Could not perform a generic time agnostic query. Please, specify at least one subject entity within the query.")
-        triples_with_subject = [triple for triple in triples_with_hook if isinstance(triple[0], URIRef)]
-        if not triples_with_subject:
-            raise ValueError("Specify at least one subject.")
-        triples_with_path = [triple for triple in triples_with_hook if isinstance(triple[1], Path)]
-        if triples_with_path:
-            raise ValueError("Cannot evaluate time agnostic queries containing paths.")
-        return triples
-
-    def _tree_traverse(self, tree:dict, key:str, values:List[Tuple]) -> None:
-        for k, v in tree.items():
-            if k == key:
-                values.extend(v)
-            elif isinstance(v, dict):
-                found = self._tree_traverse(v, key, values)
-                if found is not None:  
-                    values.extend(found)
-                                </code></pre>
-                            </div>
-                        </li>
-                        <li>A partire dalle triple viene ricostruita la storia delle entità rilevanti tramite il metodo <strong>_rebuild_relevant_graphs</strong>, in due passaggi: prima vengono ricostruiti i grafi del passato delle entità esplicite nella query, poi vengono ricostruiti anche i grafi delle entità ricavate esplicitando le variabili nella query.</li>
-                        <li>Il metodo <strong>_rebuild_relevant_entity</strong> si occupa appunto di ricostruire la storia di un'entità, verificando che sia effettivamente un'entità, che non sia già stata ricostruita e infine che l'entità sia mai esistita nel dataset.</li>
-                        <li>Infine, <strong>_align_snapshots</strong> allinea gli snapshots di tutte le entità ricostruite. Prima unisce i grafi delle entità basandosi sugli snapshots, dopodiché copia le entità che non sono cambiate se si verificano le seguenti condizioni:
+                    <ol>
+                        <li>È ora possibile effettuare query agnostiche sul tempo contenenti triple isolate. Una tripla è isolata quando si verificano le seguenti condizioni:
                             <ol>
-                                <li>l'entità è presente in tn-1 ma non in tn;</li>
-                                <li>l'entità è assente in tn perché non è cambiata e non perché è stata cancellata.</li>
+                                <li>La tripla contiene una variabile in luogo di soggetto.</li>
+                                <li>La variabile del soggetto non compare come oggetto in nessun'altra tripla della query.</li>
                             </ol>
-                            <div class="card bg-primary shadow-inset border-light">
-                                <pre><code class="prettyprint">
-    def _rebuild_relevant_graphs(self) -> None:
-        # First, the graphs of the hooks are reconstructed
-        for triple in self.triples:
-            self._rebuild_relevant_entity(triple[0])
-            self._rebuild_relevant_entity(triple[2])
-        self._align_snapshots()
-        # Then, the graphs of the entities obtained from the hooks are reconstructed
-        self._solve_variables()
-    
-    def _rebuild_relevant_entity(self, entity:Union[URIRef, Literal]):
-        if isinstance(entity, URIRef) and entity not in self.reconstructed_entities:
-            agnostic_entity = AgnosticEntity(entity, False)
-            entity_history = agnostic_entity.get_history()
-            if entity_history[entity]:
-                self.relevant_entities_graphs.update(entity_history) 
-            self.reconstructed_entities.add(entity)
-    
-    def _align_snapshots(self) -> None:
-        # Merge entities based on snapshots
-        for _, snapshots in self.relevant_entities_graphs.items():
-            for snapshot, graph in snapshots.items():
-                if snapshot in self.relevant_graphs:
-                    for quad in graph.quads():
-                        self.relevant_graphs[snapshot].add(quad)
-                else:
-                    self.relevant_graphs[snapshot] = deepcopy(graph)
-        # If an entity hasn't changed, copy it
-        ordered_data: List[Tuple[str, ConjunctiveGraph]] = sorted(
-            self.relevant_graphs.items(),
-            key=lambda x: parser.parse(x[0]),
-            reverse=False # That is, from past to present, assuming that the past influences the present and not the opposite like in Dark
-        )
-        for index, se_cg in enumerate(ordered_data):
-            se = se_cg[0]
-            cg = se_cg[1]
-            if index > 0:
-                previous_se = ordered_data[index-1][0]
-                for subject in self.relevant_graphs[previous_se].subjects():
-                    # To copy the entity two conditions must be met: 
-                    #   1) the entity is present in tn but not in tn+1; 
-                    #   2) the entity is absent in tn+1 because it has not changed 
-                    #      and not because it has been deleted.
-                    if (subject, None, None, None) not in cg:
-                        if subject in self.relevant_entities_graphs:
-                            if se not in self.relevant_entities_graphs[subject]:
-                                for quad in self.relevant_graphs[previous_se].quads((subject, None, None, None)):
-                                    self.relevant_graphs[se].add(quad)
-                            </code></pre>
-                        </div>
                         </li>
-                        <li>Il metodo <strong>_solve_variables</strong> si occupa di ricostuire i grafi delle entità che nella query appaiono come variabili, declinati nei vari tempi.</li>
-                        <li><strong>_get_vars_to_explicit_by_time</strong>, basandosi sui grafi degli hooks e sulle triple estrapolate dalla query, genera il dizionario self.vars_to_explicit_by_time, in cui agli snapshots vengono associati dei dizionari che hanno come chiavi le variabili della query e come valore le triple in cui quelle variabili compaiono.</li>
-                        <li><strong>_explicit_solvable_variables</strong> si occupa appunto di esplicitare le variabili nelle triple del dizionario precedentemente generato e, contemporaneamente, di aggiornare la proprietà self.relevant_graphs con i grafi ricostruiti delle entità nel frattempo esplicitate.</li>
-                        <li>Infine, <strong>_update_vars_to_explicit</strong> aggiorna il dizionario self.vars_to_explicit_by_time sostituendo alle variabili gli URI scoperti, così da poter ripetere il ciclo finché non vengono scoperti tutti.
+                        <li>Il metodo <strong>_is_isolated</strong> si occupa di verificare se una tripla è isolata o meno, con il seguente codice:
                             <div class="card bg-primary shadow-inset border-light overflow-auto">
                                 <pre><code class="prettyprint">
-    def _solve_variables(self) -> None:
-        runs = self._get_vars_to_explicit_by_time()
-        while runs:
-            solved_variables = self._explicit_solvable_variables()
-            if not solved_variables:
-                return 
-            self._update_vars_to_explicit(solved_variables)
-            runs -= 1
-    
-    def _get_vars_to_explicit_by_time(self) -> int:
-        number_of_vars = set()
-        for se, _ in self.relevant_graphs.items():
-            self.vars_to_explicit_by_time[se] = dict()
-            for triple in self.triples:
-                variables = [el for el in triple if isinstance(el, Variable)]
-                number_of_vars.update(variables)
-                for variable in variables:
-                    self.vars_to_explicit_by_time[se].setdefault(variable, list()) 
-                    self.vars_to_explicit_by_time[se][variable].append(triple)
-        return len(number_of_vars)
-    
-    def _explicit_solvable_variables(self) -> Dict[str, Dict[str, str]]:
-        explicit_triples:Dict[str, Dict[str, str]] = dict()
-        for se, vars in self.vars_to_explicit_by_time.items():
-            for var, triples in vars.items():
-                for triple in triples:
-                    solvable_triple = [el.n3() for el in triple]
-                    variables = [x for x in solvable_triple if x.startswith("?")]
-                    if len(variables) == 1:
-                        variable = variables[0]
-                        variable_index = solvable_triple.index(variable)
-                        query_to_identify = f"""
-                            CONSTRUCT {{{solvable_triple[0]} {solvable_triple[1]} {solvable_triple[2]}}}
-                            WHERE {{{solvable_triple[0]} {solvable_triple[1]} {solvable_triple[2]}}}
-                        """
-                        results = self.relevant_graphs[se].query(query_to_identify)
-                        for result in results:
-                            explicit_var = result[variable_index]
-                            explicit_triples.setdefault(se, dict())
-                            explicit_triples[se][var] = explicit_var
-                            self._rebuild_relevant_entity(explicit_var)
-                        self._align_snapshots()
-        return explicit_triples
-    
-    def _update_vars_to_explicit(self, solved_variables:Dict[str, Dict[str, str]]) -> None:
-        for se, vars in self.vars_to_explicit_by_time.items():
-            for var, triples in vars.items():
-                for triple in triples:
-                    for explicit_var, explicit_el in solved_variables[se].items():
-                        new_triple = tuple(explicit_el if el == explicit_var else el for el in triple)
-                        new_list_of_triples = [new_triple if x == triple else x for x in self.vars_to_explicit_by_time[se][var]]
-                        self.vars_to_explicit_by_time[se][var] = new_list_of_triples
-                            </code></pre>
-                        </div>
-                        </li>
-                        <li>Una volta che i grafi rilevanti per risolvere la query sono stati ricostruiti, effettuare la query agnostica sul tempo diventa un problema triviale: <strong>run_agnostic_query</strong> cicla su tutti gli snapshot e su tutti i grafi ricostruiti e restituisce un dizionario in cui a ciascuno snapshot sono associati i set di tuple corrispondenti al risultato di quella query in quel tempo.
-                            <div class="card bg-primary shadow-inset border-light overflow-auto">
-                                <pre><code class="prettyprint">
-    def run_agnostic_query(self) -> Dict[str, Set[Tuple]]:
-        agnostic_result = dict()
-        for snapshot, graph in self.relevant_graphs.items():
-            results = graph.query(self.query)
-            output = set()
-            for result in results:
-                result_tuple = tuple(str(var) for var in result)
-                output.add(result_tuple)
-            agnostic_result[snapshot] = output
-        return agnostic_result
+    def _is_isolated(self, triple:tuple) -> bool:
+        if isinstance(triple[2], Variable) and isinstance(triple[0], URIRef):
+            return False
+        variables = [el for el in triple if isinstance(el, Variable)]
+        if not variables:
+            return False
+        for variable in variables:
+            other_triples = {t for t in self.triples if t != triple}
+            for other_triple in other_triples:
+                if variable in other_triple and other_triple.index(variable) == 2:
+                    return False
+        return True
                                 </code></pre>
                             </div>
                         </li>
+                        <li>Tutte e sole le triple isolate vengono processate separatamente in due passaggi:
+                            <ol>
+                                <li>Prima vengono identificate le entità rilevanti nel presente, che potrebbero non comparire in nessuna query di update nel caso in cui non abbiano mai subito modifiche.</li>
+                                <li>Dopodiché vengono ricercate le entità rilevanti nelle query di update. Se ne occupa il metodo <strong>_find_entities_in_update_queries</strong>, con il seguente codice:
+                                    <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                        <pre><code class="prettyprint">
+    def _find_entities_in_update_queries(self, triple:tuple):
+        uris_in_triple = {el for el in triple if isinstance(el, URIRef)}
+        relevant_entities_found = set()
+        query_to_identify = f"""
+            PREFIX oco: &lt;https://w3id.org/oc/ontology/&gt;
+            PREFIX prov: &lt;http://www.w3.org/ns/prov#&gt;
+            SELECT DISTINCT ?updateQuery 
+            WHERE {{
+                ?snapshot oco:hasUpdateQuery ?updateQuery.
+        """ 
+        for uri in uris_in_triple:
+            if triple.index(uri) == 0 or triple.index(uri) == 2:
+                self._rebuild_relevant_entity(uri)
+            query_to_identify += f"FILTER CONTAINS (?updateQuery, '&lt;{uri}&gt;')"
+        query_to_identify += "}"
+        results = Sparql(query_to_identify).run_select_query()
+        pbar = tqdm(total=len(results))
+        print(f"[AgnosticQuery:INFO] Searching for relevant entities in relevant update queries.")
+        for result in results:
+            try:
+                update = parseUpdate(result[0])
+                for request in update["request"]:
+                    for quadsNotTriples in request["quads"]["quadsNotTriples"]:
+                        for triple in quadsNotTriples["triples"]:
+                            triple = [el["string"] if "string" in el else el for el in triple]
+                            relevant_entities = (set(triple).difference(uris_in_triple) 
+                                if len(uris_in_triple.intersection(triple)) == len(uris_in_triple) else None)
+                            if relevant_entities is not None:
+                                relevant_entities_found.update(relevant_entities)
+                        pbar.update(1)
+            except RecursionError:
+                # print(f"[AgnosticQuery:INFO] The following update query raised a RecursionError: {result[0]}")
+                pbar.update(1)
+        pbar.close()
+        print(f"[AgnosticQuery:INFO] Rebuilding relevant entities' history.")
+        pbar = tqdm(total=len(relevant_entities_found))
+        for relevant_entity_found in relevant_entities_found:
+            self._rebuild_relevant_entity(relevant_entity_found)
+            pbar.update(1)
+        pbar.close()
+                                        </code></pre>
+                                    </div>
+                                    <p><strong>Nota bene</strong>: le query di update vengono parsate tramite il metodo <em>parseUpdate</em> del processor di rdflib, per cui non è necessario che le triple compaiano come triple e possono presentare prefissi. Tuttavia, com'è noto, il metodo crasha in caso di query di update contenenti più di 90 triple. Per quegli sfortunati casi, è presente un try except che salta quelle query e con esse le entità al loro interno. A questo proposito, si veda il <a href="#i3006cnhc3">punto 3 della sezione <em>Cosa non ho capito</em></a>.</p>
+                                    <p>Il metodo <em>_find_entities_in_update_queries</em> verrà prossimamente migliorato rendendo la query una variabile impostabile tramite file di configurazione, che permetta di specificare i predicati "magici" di Blazegraph per effettuare ricerche testuali. Inoltre, il metodo verrà migliorato aggiungendo un parametro che permetta di specificare il tipo di entità rilevanti.</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>Ecco due query agnostiche sul tempo prima impossibili che sono state testate con successo. 
+                            <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                <pre><code class="prettyprint">
+    # Query in cui è presente una tripla con una variabile come soggetto, 
+    # variabile che non è ricavabile dal resto della query. 
+    # Solo tale tripla isolata viene esplicitata cercando tra le query di update.
+    
+    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix pro: &lt;http://purl.org/spar/pro/&gt;
+    SELECT DISTINCT ?a ?id
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ra/4&gt; datacite:hasIdentifier ?id.
+        ?id literal:hasLiteralValue ?literalValue.
+        OPTIONAL {?a pro:isHeldBy &lt;https://github.com/arcangelo7/time_agnostic/ra/15519&gt;.}
+    }
+                                </code></pre>
+                            </div>
+                            <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                <pre><code class="prettyprint">
+    # Query simile alla precedente, ma in cui la tripla isolata ha 
+    # come variabili sia il soggetto che il predicato
+        
+    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix pro: &lt;http://purl.org/spar/pro/&gt;
+    SELECT DISTINCT ?s ?p
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ra/4&gt; datacite:hasIdentifier ?id.
+        ?id literal:hasLiteralValue ?literalValue.
+        OPTIONAL {?s ?p &lt;https://github.com/arcangelo7/time_agnostic/ra/15519&gt;.}
+    }
+                                </code></pre>
+                            </div>
+                        </li>
+                        <li>Il metodo <strong>_solve_variables</strong> è stato reso <strong>più efficiente</strong>, poiché conclude il ciclo appena sono state esplicitate tutte le variabili o finché non si è raggiunto un punto morto, come in caso di entità inesistenti. Prima ciclava tante volte quante erano le variabili, ma c'erano dei casi in cui alcuni cicli erano a vuoto poiché in solo ciclo veniva esplicitata più di una variabile. Il controllo sulla presenza di variabili avviene tramite il nuovo metodo <strong>_there_are_variables</strong>, con il seguente codice:
+                            <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                <pre><code class="prettyprint">
+    def _there_are_variables(self) -> bool:
+        for _, variables in self.vars_to_explicit_by_time.items():
+            for _, triples in variables.items():
+                for triple in triples:
+                    vars = [el for el in triple if isinstance(el, Variable)]
+                    if vars:
+                        return True
+        return False
+                                </code></pre>
+                            </div>
+                        </li>
+                        <li>Risolto un bug nel codice per costruire il dataset per cui non veniva creato il collegamento tra le entità di tipo fabio:Expression e quelle di tipo pro:RoleInTime nel caso in cui l'<em>agent role</em> fosse di tipo pro:publisher. Il bug è stato individuato da Cristian.</li>
+                        <li>Il codice per costruire il dataset e la provenance specifica ora la fonte delle entità tramite un preciso riferimento all'URL dell'API da cui sono state ricavate le informazioni.</li>
+                        <li>Gli oggetti della classe Sparql si istanziano adesso passando la query come argomento. In questo modo si evita molto codice ripetuto, dato che la query viene processata nell'inizializzazione e non in ogni singolo metodo.</li>
+                        <li>Tutti i nuovi metodi introdotti e quelli modificati sono stati testati con esito positivo.</li>
                     </ol>
-                    <li>Tutti i nuovi metodi introdotti sono stati testati con successo.</li>
-                </ol>
                 <h3>Cosa non ho capito</h3>
                 <ol>
-                    <li id="i25061cnhc">Ci sono query agnostiche che non è possibile effettuare con l'approccio adottato, ovvero le seguenti tre categorie di query:
-                        <ol>
-                            <li>Query che non specificano alcun URI come soggetto o oggetto.</li>
-                            <li id="i25061_2cnhc">Query in cui gli URI specificati sono solo oggetti. Occorrerebbe ricostruire tutte le entità del dataset per scoprire quali entità hanno avuto quell'oggetto nel passato.</li>
-                            <li>Query in cui sono presenti dei path. Quest'ultimo caso richiede un discorso a parte e viene affrontato nel prossimo punto.</li>
-                        </ol>
-                        <p>Ritieni che la libreria debba supportare anche queste tre tipologie di query? Se no, la libreria solleva già dei ValueError. Se sì, mi piacerebbe discutere il come.</p>
-                    </li>
-                    <li>Discutiamo il come relativo alle <strong>property paths</strong>. Esistono cinque tipi di property paths: sequence path, alternative path, multiple path, inverse path e negated path (<a href="https://www.w3.org/2009/sparql/docs/property-paths/Overview.xml" target="_blank" alt="Link to the property paths documentation">https://www.w3.org/2009/sparql/docs/property-paths/Overview.xml</a>):
-                        <ol>
-                            <li>Una <strong>sequence path</strong> ha la forma elt1 / elt2, dove elt è un elemento del path. È il caso più semplice e può essere risolto riscrivendo la query aggiungendo delle variabili placeholder tra un elemento del path e l'altro. In questo modo:
-                                <div class="card bg-primary shadow-inset border-light overflow-auto">
-                                    <pre><code class="prettyprint">
-    PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
-    PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
-    PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
-    SELECT DISTINCT ?value
-    WHERE {
-        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy/datacite:hasIdentifier/literal:hasLiteralValue ?value.
-    }
-    
-    # La precedente query può essere riscritta come:
-
-    SELECT DISTINCT ?value
-    WHERE {
-        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?a.
-            ?a datacite:hasIdentifier ?b.
-            ?b literal:hasLiteralValue ?value.
-    }
-                                    </code></pre>
-                                </div>
-                            </li>
-                            <li>Una <strong>multiple path</strong> ha la forma elt* o elt+ o elt? o elt{n,m} o elt{n} o elt{n,} o elt{,n}. Questo caso è simile al precedente, con la differenza che il numero di variabili placeholder da inserire non è noto. Una soluzione potrebbe essere inserire variabili placeholder in maniera progressiva, risolverle, ricostruire le relative entità e continuare questo processo finché il CONSTRUCT ricavato dalla query dell'utente non porta a identificare un'entità concreta. <p>Problema: cosa succede se non è possibile risolvere tutte le variabili perché la query è sbagliata? Con quale criterio si evita il loop infinito?</p></li>
-                            <li>Un'<strong>alternative path</strong> ha la forma elt1 | elt2. Una soluzione potrebbe essere quella di valutare tutte le possibili alternative e di ricostruire tutte le entità così ottenute.</li>
-                            <li>Un'<strong>inverse path</strong> ha la forma ^elt. L'inverse path trasforma il soggetto in oggetto e genera un caso riconducibile a quello già discusso al <a href="#i25061_2cnhc">punto 1.2 di questa sezione</a>, per il quale non vedo soluzioni che non siano ricostruire tutti i dataset del passato.</li>
-                            <li>Una <strong>negated path</strong> ha la forma !uri o !(uri1|...|urin). Questo caso non sembra costituire alcun problema. Tutti gli oggetti collegati a un soggetto noto da URI diversi da quelli negati vengono ricostruiti.</li>
-                        </ol>
-                    </li>
-                    <li>
-                        <p>C'è un altro problema collegato alle property path e cioè che queste possono essere combinate tra di loro. La priorità con cui vengono valutate è la seguente, dalla più alta alla più bassa: negated path, multiple path, inverse path, sequence path, alternative path (<a href="https://www.w3.org/2009/sparql/docs/property-paths/Overview.xml" target="_blank" alt="Link to the property paths documentation">https://www.w3.org/2009/sparql/docs/property-paths/Overview.xml</a>). Tuttavia, poiché lo scopo nel parsare la query non è quello di valutarla ma quello di estrapolare le entità rilevanti, non sembra necessario rispettare tale priorità, di cui già si occupano rdflib e il triplestore.</p>
-                        <p>Poniamo il seguente caso, che comprende una sequence path e una multiple path.</p>
+                    <li>Se la provenance si trova insieme ai dati nello stesso triplestore o nello stesso file, è possibile che da una query agnostica sul tempo vengano ritornati elementi legati alla provenance. Bisogna ometterli? Se non li si omette, ecco un possibile output:
                         <div class="card bg-primary shadow-inset border-light overflow-auto">
                             <pre><code class="prettyprint">
-    PREFIX fabio: &lt;http://purl.org/spar/fabio/&gt;
-    PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
-    PREFIX frbr: &lt;http://purl.org/vocab/frbr/core#&gt;
-    PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
-    PREFIX cito: &lt;http://purl.org/spar/cito/&gt;
-    
-    SELECT DISTINCT ?citingDOI ?citedDOI
+    # Data la query 
+    query = """
+    SELECT DISTINCT ?s ?p
     WHERE {
-        ?res a fabio:Expression;
-            datacite:hasIdentifier ?doiEntity;
-            frbr:partOf+/datacite:hasIdentifier/literal:hasLiteralValue "0138-9130".
-        ?doiEntity literal:hasLiteralValue ?citingDOI.
-        OPTIONAL {
-            ?res cito:cites/datacite:hasIdentifier/literal:hasLiteralValue ?citedDOI.
-        }
+        ?s ?p &lt;https://github.com/arcangelo7/time_agnostic/ra/4&gt;.
     }
+    """
     
-    # Può essere riscritta come
-    
-    SELECT DISTINCT ?citingDOI ?citedDOI
-    WHERE {
-        ?res a fabio:Expression;
-            datacite:hasIdentifier ?doiEntity;
-            frbr:partOf ?a
-            ?a datacite:hasIdentifier ?b.
-            ?b literal:hasLiteralValue "0138-9130".
-        ?doiEntity literal:hasLiteralValue ?citingDOI.
-        OPTIONAL {
-            ?res cito:cites ?c.
-                    ?c datacite:hasIdentifier ?d.
-                    ?d literal:hasLiteralValue ?citedDOI.
-        }
+    # L'output di una query agnostica è il seguente
+    output = {
+        '2021-05-07 09:59:15': {('https://github.com/arcangelo7/time_agnostic/ar/4',
+                                'http://purl.org/spar/pro/isHeldBy'),
+                                ('https://github.com/arcangelo7/time_agnostic/ra/4/prov/se/1',
+                                'http://www.w3.org/ns/prov#specializationOf')},
+        '2021-05-31 18:19:47': {('https://github.com/arcangelo7/time_agnostic/ar/4',
+                                'http://purl.org/spar/pro/isHeldBy'),
+                                ('https://github.com/arcangelo7/time_agnostic/ra/4/prov/se/1',
+                                'http://www.w3.org/ns/prov#specializationOf')},
+        '2021-06-01 18:46:41': {('https://github.com/arcangelo7/time_agnostic/ar/15519',
+                                'http://purl.org/spar/pro/isHeldBy'),
+                                ('https://github.com/arcangelo7/time_agnostic/ar/4',
+                                'http://purl.org/spar/pro/isHeldBy'),
+                                ('https://github.com/arcangelo7/time_agnostic/ra/4/prov/se/1',
+                                'http://www.w3.org/ns/prov#specializationOf'),
+                                ('https://github.com/arcangelo7/time_agnostic/ra/4/prov/se/2',
+                                'http://www.w3.org/ns/prov#specializationOf')}
     }
-    
-    # Nel caso in cui il CONSTRUCT ricavato dalla query 
-    # non porti alla risoluzione di tutte le variabili, 
-    # la query viene ulteriormente riscritta nel seguente modo:
-    
-    SELECT DISTINCT ?citingDOI ?citedDOI
-    WHERE {
-        ?res a fabio:Expression;
-            datacite:hasIdentifier ?doiEntity;
-            frbr:partOf ?a1.
-            ?a1 frbr:partOf ?a.
-            ?a datacite:hasIdentifier ?b.
-            ?b literal:hasLiteralValue "0138-9130".
-        ?doiEntity literal:hasLiteralValue ?citingDOI.
-        OPTIONAL {
-            ?res cito:cites ?c.
-                    ?c datacite:hasIdentifier ?d.
-                    ?d literal:hasLiteralValue ?citedDOI.
-        }
-    }
-    
-    # E così via finché non vengono risolte tutte le variabili
                             </code></pre>
                         </div>
-                        <p>Cosa ne pensi di questo ragionamento?</p>
                     </li>
-                    <li>Per quanto riguarda l'interfaccia del browser, vorrei discutere un aspetto di usabilità che potrebbe andare a discapito della sua genericità: se voglio mostrare all'utente dei metadati  <em>human comprehensible</em> e non delle triple devo tradurre gli URI in inglese. Questa operazione è però specifica per l'OpenCitations Data Model, non è generica. Cosa ne pensi?</li>
+                    <li>Chi lancia il triplestore? La libreria o l'utente? Se l'utente, occorre istruirlo su come ricostruire l'indice testuale del triplestore. Se la libreria, il problema è complesso, perché l'utente dovrebbe fornire nel file di configurazione non l'URL del triplestore ma la cartella in cui si trova e il tipo di triplestore, dopodiché la libreria dovrebbe cercare tutti i file compatibili all'interno di tutte le cartelle fornite a aprire le connessioni cambiando di volta in volta la porta adoperata, dopo aver verificato se la porta è già in uso.</li>
+                    <li id="i3006cnhc3">L'issue su rdflib che ho aperto riguardo problemi di ricorsione in caso di query di update con più di 90 triple ha portato a un fix: <a href="https://github.com/RDFLib/rdflib/issues/1336" alt="Link to the rdflib issue about RecursionError" target="_blank">https://github.com/RDFLib/rdflib/issues/1336</a>. Tuttavia, non è ancora stata rilasciata una nuova versione della libreria che includa il fix. In passato, la libreria ha avuto una release ogni due / tre anni e l'ultima è stata nel 2020. Una soluzione temporanea, che però mi sembra assurda dato che la soluzione vera esiste già, è applicare nel nuovo contesto il metodo da me già realizzato che spezza la query di update in più parti e ne parsa le parti. Che ne pensi?</li>
                 </ol>
             </div>
         </section>
@@ -3758,10 +3605,21 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-17" data-target="#panel-17" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-17">
+                            <span class="h6 mb-0 font-weight-bold">07/07/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-17">
+                            <div class="pt-3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-18" data-target="#panel-18" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-18">
                             <span class="h6 mb-0 font-weight-bold">dd/mm/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
-                        <div class="collapse" id="panel-16">
+                        <div class="collapse" id="panel-18">
                             <div class="pt-3">
                             </div>
                         </div>
