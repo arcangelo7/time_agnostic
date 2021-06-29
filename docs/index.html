@@ -3638,6 +3638,215 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-16">
                             <div class="pt-3">
+                                <ol>
+                                    <li>È ora possibile effettuare query agnostiche sul tempo contenenti triple isolate. Una tripla è isolata quando si verificano le seguenti condizioni:
+                                        <ol>
+                                            <li>La tripla contiene una variabile in luogo di soggetto.</li>
+                                            <li>La variabile del soggetto non compare come oggetto in nessun'altra tripla della query.</li>
+                                        </ol>
+                                    </li>
+                                    <li>Il metodo <strong>_is_isolated</strong> si occupa di verificare se una tripla è isolata o meno, con il seguente codice:
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    def _is_isolated(self, triple:tuple) -> bool:
+        if isinstance(triple[2], Variable) and isinstance(triple[0], URIRef):
+            return False
+        variables = [el for el in triple if isinstance(el, Variable)]
+        if not variables:
+            return False
+        for variable in variables:
+            other_triples = {t for t in self.triples if t != triple}
+            for other_triple in other_triples:
+                if variable in other_triple and other_triple.index(variable) == 2:
+                    return False
+        return True
+                                            </code></pre>
+                                        </div>
+                                    </li>
+                                    <li>Tutte e sole le triple isolate vengono processate separatamente in due passaggi:
+                                        <ol>
+                                            <li>Prima vengono identificate le entità rilevanti nel presente, che potrebbero non comparire in nessuna query di update nel caso in cui non abbiano mai subito modifiche.</li>
+                                            <li>Dopodiché vengono ricercate le entità rilevanti nelle query di update. Se ne occupa il metodo <strong>_find_entities_in_update_queries</strong>, con il seguente codice:
+                                                <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                                    <pre><code class="prettyprint">
+    def _find_entities_in_update_queries(self, triple:tuple):
+        uris_in_triple = {el for el in triple if isinstance(el, URIRef)}
+        relevant_entities_found = set()
+        query_to_identify = f"""
+            PREFIX oco: &lt;https://w3id.org/oc/ontology/&gt;
+            PREFIX prov: &lt;http://www.w3.org/ns/prov#&gt;
+            SELECT DISTINCT ?updateQuery 
+            WHERE {{
+                ?snapshot oco:hasUpdateQuery ?updateQuery.
+        """ 
+        for uri in uris_in_triple:
+            if triple.index(uri) == 0 or triple.index(uri) == 2:
+                self._rebuild_relevant_entity(uri)
+            query_to_identify += f"FILTER CONTAINS (?updateQuery, '&lt;{uri}&gt;')"
+        query_to_identify += "}"
+        results = Sparql(query_to_identify).run_select_query()
+        pbar = tqdm(total=len(results))
+        print(f"[AgnosticQuery:INFO] Searching for relevant entities in relevant update queries.")
+        for result in results:
+            try:
+                update = parseUpdate(result[0])
+                for request in update["request"]:
+                    for quadsNotTriples in request["quads"]["quadsNotTriples"]:
+                        for triple in quadsNotTriples["triples"]:
+                            triple = [el["string"] if "string" in el else el for el in triple]
+                            relevant_entities = (set(triple).difference(uris_in_triple) 
+                                if len(uris_in_triple.intersection(triple)) == len(uris_in_triple) else None)
+                            if relevant_entities is not None:
+                                relevant_entities_found.update(relevant_entities)
+                        pbar.update(1)
+            except RecursionError:
+                # print(f"[AgnosticQuery:INFO] The following update query raised a RecursionError: {result[0]}")
+                pbar.update(1)
+        pbar.close()
+        print(f"[AgnosticQuery:INFO] Rebuilding relevant entities' history.")
+        pbar = tqdm(total=len(relevant_entities_found))
+        for relevant_entity_found in relevant_entities_found:
+            self._rebuild_relevant_entity(relevant_entity_found)
+            pbar.update(1)
+        pbar.close()
+                                                    </code></pre>
+                                                </div>
+                                                <p><strong>Nota bene</strong>: le query di update vengono parsate tramite il metodo <em>parseUpdate</em> del processor di rdflib, per cui non è necessario che le triple compaiano come triple e possono presentare prefissi. Tuttavia, com'è noto, il metodo crasha in caso di query di update contenenti più di 90 triple. Per quegli sfortunati casi, è presente un try except che salta quelle query e con esse le entità al loro interno. A questo proposito, si veda il <a href="#i3006cnhc3">punto 3 della sezione <em>Cosa non ho capito</em></a>.</p>
+                                                <p>Il metodo <em>_find_entities_in_update_queries</em> verrà prossimamente migliorato rendendo la query una variabile impostabile tramite file di configurazione, che permetta di specificare i predicati "magici" di Blazegraph per effettuare ricerche testuali. Inoltre, il metodo verrà migliorato aggiungendo un parametro che permetta di specificare il tipo di entità rilevanti.</p>
+                                            </li>
+                                        </ol>
+                                    </li>
+                                    <li>Ecco tre query agnostiche sul tempo prima impossibili che sono state testate con successo. 
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    # Query in cui è presente una tripla con una variabile come soggetto, 
+    # variabile che non è ricavabile dal resto della query. 
+    # Solo tale tripla isolata viene esplicitata cercando tra le query di update.
+    
+    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix pro: &lt;http://purl.org/spar/pro/&gt;
+    SELECT DISTINCT ?a ?id
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ra/4&gt; datacite:hasIdentifier ?id.
+        ?id literal:hasLiteralValue ?literalValue.
+        OPTIONAL {?a pro:isHeldBy &lt;https://github.com/arcangelo7/time_agnostic/ra/15519&gt;.}
+    }
+                                            </code></pre>
+                                        </div>
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    # Query simile alla precedente, ma in cui la tripla isolata ha 
+    # come variabili sia il soggetto che il predicato
+        
+    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix pro: &lt;http://purl.org/spar/pro/&gt;
+    SELECT DISTINCT ?s ?p
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/ra/4&gt; datacite:hasIdentifier ?id.
+        ?id literal:hasLiteralValue ?literalValue.
+        OPTIONAL {?s ?p &lt;https://github.com/arcangelo7/time_agnostic/ra/15519&gt;.}
+    }
+                                            </code></pre>
+                                        </div>
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    # Query in cui una tripla isolata ha come variabili sia il soggetto che l'oggetto.
+    # Quest'ultima query funziona, ma richiede ore per essere portata a termine, 
+    # mentre le precedenti si completano nell'arco di pochi istanti o secondi a parità 
+    # di dataset. 
+
+    prefix pro: &lt;http://purl.org/spar/pro/&gt;
+    SELECT DISTINCT ?s ?o
+    WHERE {
+        ?s pro:isHeldBy ?o.
+    }        
+                                            </code></pre>
+                                        </div>
+                                    </li>
+                                    <li>Il metodo <strong>_solve_variables</strong> è stato reso <strong>più efficiente</strong>, poiché conclude il ciclo appena sono state esplicitate tutte le variabili o finché non si è raggiunto un punto morto, come in caso di entità inesistenti. Prima ciclava tante volte quante erano le variabili, ma c'erano dei casi in cui alcuni cicli erano a vuoto poiché in solo ciclo veniva esplicitata più di una variabile. Il controllo sulla presenza di variabili avviene tramite il nuovo metodo <strong>_there_are_variables</strong>, con il seguente codice:
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    def _there_are_variables(self) -> bool:
+        for _, variables in self.vars_to_explicit_by_time.items():
+            for _, triples in variables.items():
+                for triple in triples:
+                    vars = [el for el in triple if isinstance(el, Variable)]
+                    if vars:
+                        return True
+        return False
+                                            </code></pre>
+                                        </div>
+                                    </li>
+                                    <li>Risolto un bug nel codice per costruire il dataset per cui non veniva creato il collegamento tra le entità di tipo fabio:Expression e quelle di tipo pro:RoleInTime nel caso in cui l'<em>agent role</em> fosse pro:withRole pro:publisher. Il bug è stato individuato da Cristian.</li>
+                                    <li>Il codice per costruire il dataset e la provenance specifica ora la fonte delle entità tramite un preciso riferimento all'URL dell'API da cui sono state ricavate le informazioni.</li>
+                                    <li>Gli oggetti della classe Sparql si istanziano adesso passando la query come argomento. In questo modo si evita molto codice ripetuto, dato che la query viene processata nell'inizializzazione e non in ogni singolo metodo.</li>
+                                    <li>Tutti i nuovi metodi introdotti e quelli modificati sono stati testati con esito positivo.</li>
+                                </ol>
+                            <h3>Cosa non ho capito</h3>
+                            <ol>
+                                <li>Se la provenance si trova insieme ai dati nello stesso triplestore o nello stesso file, è possibile che da una query agnostica sul tempo vengano ritornati elementi legati alla provenance. Bisogna ometterli? Se non li si omette, ecco un possibile output:
+                                    <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                        <pre><code class="prettyprint">
+    # Data la query 
+    query = """
+    SELECT DISTINCT ?s ?p
+    WHERE {
+        ?s ?p &lt;https://github.com/arcangelo7/time_agnostic/ra/4&gt;.
+    }
+    """
+    
+    # L'output di una query agnostica è il seguente
+    output = {
+        '2021-05-07 09:59:15': {('https://github.com/arcangelo7/time_agnostic/ar/4',
+                                'http://purl.org/spar/pro/isHeldBy'),
+                                ('https://github.com/arcangelo7/time_agnostic/ra/4/prov/se/1',
+                                'http://www.w3.org/ns/prov#specializationOf')},
+        '2021-05-31 18:19:47': {('https://github.com/arcangelo7/time_agnostic/ar/4',
+                                'http://purl.org/spar/pro/isHeldBy'),
+                                ('https://github.com/arcangelo7/time_agnostic/ra/4/prov/se/1',
+                                'http://www.w3.org/ns/prov#specializationOf')},
+        '2021-06-01 18:46:41': {('https://github.com/arcangelo7/time_agnostic/ar/15519',
+                                'http://purl.org/spar/pro/isHeldBy'),
+                                ('https://github.com/arcangelo7/time_agnostic/ar/4',
+                                'http://purl.org/spar/pro/isHeldBy'),
+                                ('https://github.com/arcangelo7/time_agnostic/ra/4/prov/se/1',
+                                'http://www.w3.org/ns/prov#specializationOf'),
+                                ('https://github.com/arcangelo7/time_agnostic/ra/4/prov/se/2',
+                                'http://www.w3.org/ns/prov#specializationOf')}
+    }
+                                        </code></pre>
+                                    </div>
+                                </li>
+                                <li>Chi lancia il triplestore? La libreria o l'utente? Se l'utente, occorre istruirlo su come ricostruire l'indice testuale del triplestore. Se la libreria, il problema è complesso, perché l'utente dovrebbe fornire nel file di configurazione non l'URL del triplestore ma la cartella in cui si trova e il tipo di triplestore, dopodiché la libreria dovrebbe cercare tutti i file compatibili all'interno di tutte le cartelle fornite a aprire le connessioni cambiando di volta in volta la porta adoperata, dopo aver verificato se la porta è già in uso.</li>
+                                <li id="i3006cnhc3">L'issue su rdflib che ho aperto riguardo problemi di ricorsione in caso di query di update con più di 90 triple ha portato a un fix: <a href="https://github.com/RDFLib/rdflib/issues/1336" alt="Link to the rdflib issue about RecursionError" target="_blank">https://github.com/RDFLib/rdflib/issues/1336</a>. Tuttavia, non è ancora stata rilasciata una nuova versione della libreria che includa il fix. In passato, la libreria ha avuto una release ogni due / tre anni e l'ultima è stata nel 2020. Una soluzione temporanea, che però mi sembra assurda dato che la soluzione vera esiste già, è applicare nel nuovo contesto il metodo da me già realizzato che spezza la query di update in più parti e ne parsa le parti. Che ne pensi?</li>
+                                <li>Nel caso in cui la query agnostica sul tempo contenga una o più triple isolate in cui viene specificato solo il predicato il tempo di esecuzione si misura in ore se il dataset contiene milioni di triple.
+                                    La ragione è che sono numerose le query di update che possono contenere un singolo predicato e, anche specificando il tipo del soggetto e dell'oggetto, <strong>non</strong> si passa dalle ore ai secondi, ma occorrono comunque ore. 
+                                    Pensi che sia un compromesso accettabile o ritieni che occorra individuare una strategia ancora più scaltra di quella già scaltra adottata?
+            
+                                    <p>La difficoltà nel portare a termine questo genere di query è la ragione per cui non sono ancora riuscito a testare il seguente boss di fine livello:
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    # Dammi tutte le entità che nella storia hanno avuto due diversi id associati 
+    # e dimmi quando questa condizione si è verificata. 
+
+    prefix cito: &lt;http://purl.org/spar/cito/&gt;
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    select distinct ?elt_1
+    where {
+        ?elt_1 datacite:hasIdentifier ?id_1;
+                datacite:hasIdentifier ?id_2.
+        ?id_1 literal:hasLiteralValue ?literal_1.
+        ?id_2 literal:hasLiteralValue ?literal_2.
+        FILTER (?literal_1 != ?literal_2)
+    } 
+                                            </code></pre>
+                                        </div>
+                                    </p>
+                                </li>
+                            </ol>            
                             </div>
                         </div>
                     </div>
