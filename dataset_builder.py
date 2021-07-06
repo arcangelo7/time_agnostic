@@ -73,13 +73,13 @@ class DatasetBuilder(object):
     def _manage_volume_issue(cls, graphset:GraphSet, journal_br:BibliographicEntity, item_br:BibliographicEntity, item:dict, resp_agent:str, source:str):
         volume_br = None
         if "volume" in item:
-            volume_br = graphset.add_br(resp_agent, source)
+            volume_br = graphset.add_br(resp_agent=resp_agent, source=source)
             volume_br.create_volume()
             volume_br.has_number(item["volume"])
             if journal_br is not None:
                 volume_br.is_part_of(journal_br)
         if "issue" in item:
-            issue_br = graphset.add_br(resp_agent, source)
+            issue_br = graphset.add_br(resp_agent=resp_agent, source=source)
             issue_br.create_issue()
             issue_br.has_number(item["issue"])
             if volume_br is not None:
@@ -95,7 +95,7 @@ class DatasetBuilder(object):
     @classmethod
     def _manage_resource_embodiment(cls, graphset:GraphSet, item:dict, item_br:BibliographicEntity, digital_format:bool, resp_agent:str, source:str):
         if not digital_format:
-            item_re = graphset.add_re(resp_agent, source)
+            item_re = graphset.add_re(resp_agent=resp_agent, source=source)
             item_re.create_print_embodiment()
             if "page" in item:
                 starting_page = item["page"].split("-")[0] if "-" in item["page"] else item["page"]
@@ -107,14 +107,14 @@ class DatasetBuilder(object):
             URLs_found = set()
             for link in item["link"]:
                 if link["URL"] not in URLs_found and link["content-type"] != "unspecified":
-                    item_re = graphset.add_re(resp_agent, source)
+                    item_re = graphset.add_re(resp_agent=resp_agent, source=source)
                     item_re.create_digital_embodiment()
                     item_re.has_media_type(URIRef("https://w3id.org/spar/mediatype/" + link["content-type"]))
                     item_re.has_url(URIRef(link["URL"]))
                     URLs_found.add(link["URL"])
                     item_br.has_format(item_re)
         elif digital_format and not "link" in item:
-            item_re = graphset.add_re(resp_agent, source)
+            item_re = graphset.add_re(resp_agent=resp_agent, source=source)
             item_re.create_digital_embodiment()
             item_br.has_format(item_re)
     
@@ -122,9 +122,9 @@ class DatasetBuilder(object):
     def _manage_author_ra_ar(cls, graphset:GraphSet, item:dict, item_br:BibliographicResource, resp_agent:str, source:str):
         authorAgentRoles = list()
         for author in item["author"]:
-            author_ra = graphset.add_ra(resp_agent, source)
+            author_ra = graphset.add_ra(resp_agent=resp_agent, source=source)
             if "ORCID" in author:
-                author_id = graphset.add_id(resp_agent, source)
+                author_id = graphset.add_id(resp_agent=resp_agent, source=source)
                 author_id.create_orcid(author["ORCID"])
                 author_ra.has_identifier(author_id)
             if "given" in author:
@@ -134,7 +134,7 @@ class DatasetBuilder(object):
             if "given" in author and "family" in author:
                 author_ra.has_name(author["given"] + " " + author["family"])
             # AgentRole
-            author_ar = graphset.add_ar(resp_agent, source)
+            author_ar = graphset.add_ar(resp_agent=resp_agent, source=source)
             author_ar.create_author()
             author_ar.is_held_by(author_ra)
             item_br.has_contributor(author_ar)
@@ -148,21 +148,21 @@ class DatasetBuilder(object):
             for reference in item["reference"]:
                 if "DOI" in reference:
                     # Identifier
-                    reference_id = graphset.add_id(self.resp_agent, source)
+                    reference_id = graphset.add_id(resp_agent=self.resp_agent, source=source)
                     reference_id.create_doi(reference["DOI"])
                     # BibliographicResource
-                    reference_br = graphset.add_br(self.resp_agent, source)
+                    reference_br = graphset.add_br(resp_agent=self.resp_agent, source=source)
                     # reference_br.create_journal_article()
                     reference_br.has_identifier(reference_id)
                     citing_entity.has_citation(reference_br)
                     # Citation
-                    reference_ci = graphset.add_ci(self.resp_agent, source)
+                    reference_ci = graphset.add_ci(resp_agent=self.resp_agent, source=source)
                     reference_ci.has_citing_entity(citing_entity)
                     reference_ci.has_cited_entity(reference_br)
                     creation_date = citing_entity.get_pub_date()
                     reference_ci.has_citation_creation_date(creation_date)
                     #BibliographicReference
-                    reference_be = graphset.add_be(self.resp_agent, source)
+                    reference_be = graphset.add_be(resp_agent=self.resp_agent, source=source)
                     reference_be.has_content(reference["unstructured"])
                     reference_be.references_br(citing_entity)
                     citing_entity.contains_in_reference_list(reference_be)
@@ -184,9 +184,9 @@ class DatasetBuilder(object):
         journal_item = next((item for item in journal_data_items if item["type"] == "journal"), None)
         if journal_item is not None:
             source_journal = f"http://api.crossref.org/journals/{journal_item['ISSN'][0]}"
-            journal_br = journal_graphset.add_br(self.resp_agent, source_journal)
+            journal_br = journal_graphset.add_br(resp_agent=self.resp_agent, source=source_journal)
             journal_br.create_journal()
-            journal_id = journal_graphset.add_id(self.resp_agent, source_journal)
+            journal_id = journal_graphset.add_id(resp_agent=self.resp_agent, source=source_journal)
             journal_id.create_issn(journal_item["ISSN"][0])
             journal_br.has_identifier(journal_id)
             journal_br.has_title(journal_item["title"][0])
@@ -194,17 +194,18 @@ class DatasetBuilder(object):
                 for issn_type in journal_item["issn-type"]:
                     digital_format = True if issn_type["type"] == "electronic" else False
                     DatasetBuilder._manage_resource_embodiment(journal_graphset, journal_item, journal_br, digital_format, self.resp_agent, source_journal)
-        else: 
-            journal_br = None
+            publisher_ra = journal_graphset.add_ra(resp_agent=self.resp_agent, source=source_journal)
+            publisher_ra.has_name(journal_item["title"][0])
+            publisher_ra.has_identifier(journal_id)
         pbar = tqdm(total=len(journal_data_items))
         for item in journal_data_items:
             source_item = f"https://api.crossref.org/works/{item['DOI']}"
             # Identifier
-            item_id = journal_graphset.add_id(self.resp_agent, source_item)
+            item_id = journal_graphset.add_id(resp_agent=self.resp_agent, source=source_item)
             item_id.create_doi(item["DOI"])
             # BibliographicResource
             if item["type"] != "journal":
-                item_br = journal_graphset.add_br(self.resp_agent, source_item)  
+                item_br = journal_graphset.add_br(resp_agent=self.resp_agent, source=source_item)  
                 DatasetBuilder._manage_br_type(item_br, item)
                 item_br.has_identifier(item_id)
                 if "title" in item:
@@ -224,19 +225,16 @@ class DatasetBuilder(object):
             # ResponsibleAgent / AgentRole
             if "author" in item:
                 DatasetBuilder._manage_author_ra_ar(journal_graphset, item, item_br, self.resp_agent, source_item)
-            if "publisher" in item:
-                publisher_ra = journal_graphset.add_ra(self.resp_agent, source_item)
+            if "publisher" in item and journal_item is None:
+                publisher_ra = journal_graphset.add_ra(resp_agent=self.resp_agent, source=source_item)
                 publisher_ra.has_name(item["publisher"])
-                if journal_item is not None:
-                    publisher_ra.has_identifier(journal_id)
-                else:
-                    journal_id = journal_graphset.add_id(self.resp_agent, source_item)
-                    journal_id.create_issn(item["ISSN"][0])
-                    publisher_ra.has_identifier(journal_id)
-                publisher_ar = journal_graphset.add_ar(self.resp_agent, source_item)
-                publisher_ar.create_publisher()
-                publisher_ar.is_held_by(publisher_ra)
-                item_br.has_contributor(publisher_ar)
+                journal_id = journal_graphset.add_id(resp_agent=self.resp_agent, source=source_journal)
+                journal_id.create_issn(item["ISSN"][0])
+                publisher_ra.has_identifier(journal_id)
+            publisher_ar = journal_graphset.add_ar(resp_agent=self.resp_agent, source=source_item)
+            publisher_ar.create_publisher()
+            publisher_ar.is_held_by(publisher_ra)
+            item_br.has_contributor(publisher_ar)
             # Citation
             self._manage_citations(journal_graphset, item, item_br, source_item)
             pbar.update(1)

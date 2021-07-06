@@ -1,6 +1,6 @@
 from typing import Dict, Tuple
 
-import re, json, urllib, os
+import re, json, urllib, os, psutil
 from oc_ocdm.graph.entities.bibliographic_entity import BibliographicEntity
 from support import Support
 from dataset_builder import DatasetBuilder
