@@ -10,6 +10,7 @@ from oc_ocdm.graph import GraphSet
 from oc_ocdm.support import create_date
 from SPARQLWrapper import SPARQLWrapper, JSON, RDFXML
 import numpy as np
+from urllib.parse import quote
 from rdflib import URIRef
 
 class DatasetAutoEnhancer(object):
@@ -234,7 +235,7 @@ class DatasetAutoEnhancer(object):
         logs = dict()
         pbar = tqdm(total=len(results["results"]["bindings"]))
         for result in results["results"]["bindings"]:
-            api_call_uri = f"https://api.crossref.org/works/{result['citedEntityDOI']['value']}"
+            api_call_uri = f"https://api.crossref.org/works/{quote(result['citedEntityDOI']['value'])}"
             crossref_info = Support().handle_request(api_call_uri, "./cache/crossref_cache", logs)
             if crossref_info is not None:
                 reference_br_uri = URIRef(result['citedEntity']['value'])
