@@ -56,203 +56,78 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (07/07/2021)</h2>
+                    <h2>Prossimo incontro (22/07/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                     <ol>
-                        <li>
-                            <p>I metodi che restituiscono la storia di un'entità e delle entità correlate ricevono un nuovo argomento, <strong>include_prov_metadata</strong> che, se impostato a True, permette di ottenere metadati sulla provenance. Nella fattispecie, il metodo <strong>get_history</strong> ritorna ora sempre una tupla, il cui primo elemento è la risposta secca a quale sia la storia dell'entità secondo la struttura già descritta in passato, il secondo elemento è un dizionario con i metadati sulla provenance. Se include_prov_metadata è False, la tupla ha un elemento, se True ne ha due. Ecco un esempio di possibile output:</p>
-                            <div class="card bg-primary shadow-inset border-light overflow-auto">
-                                <pre><code class="prettyprint">
-    (
-        {
-            'https://github.com/arcangelo7/time_agnostic/ar/15519': {
-                '2021-06-01T18:46:41': ConjunctiveGraph, 
-                '2021-05-07T09:59:15': ConjunctiveGraph, 
-                '2021-05-31T18:19:47': ConjunctiveGraph
-            }
-        },
-        {
-            'https://github.com/arcangelo7/time_agnostic/ar/15519': {
-                'https://github.com/arcangelo7/time_agnostic/ar/15519/prov/se/3': {
-                    'http://www.w3.org/ns/prov#generatedAtTime': '2021-06-01T18:46:41', 
-                    'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696', 
-                    'http://www.w3.org/ns/prov#hadPrimarySource': None 
-                }, 
-                'https://github.com/arcangelo7/time_agnostic/ar/15519/prov/se/1': {
-                    'http://www.w3.org/ns/prov#generatedAtTime': '2021-05-07T09:59:15', 
-                    'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696', 
-                    'http://www.w3.org/ns/prov#hadPrimarySource': None
-                }, 
-                'https://github.com/arcangelo7/time_agnostic/ar/15519/prov/se/2': {
-                    'http://www.w3.org/ns/prov#generatedAtTime': '2021-05-31T18:19:47', 
-                    'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696', 
-                    'http://www.w3.org/ns/prov#hadPrimarySource': None
-                }
-            }
-        }
-    )
-                                </code></pre>
-                            </div>    
+                        <li>Ho scritto la prima versione del capitolo sulla literature review. È coerente dall'inizio alla fine, ma incompleto. Può essere scaricato cliccando sul seguente bottone:
+                            <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0.pdf" download="literature_review_1-0-0-alpha.pdf">
+                                <span class="mr-1"><span class="fas fa-download"></span></span>
+                                Download literature review 1.0.0-alpha
+                            </a>
                         </li>
-                        <li>
-                            <p>È stato risolto un bug per cui non veniva gestito il caso in cui una variabile all'interno di una query agnostica, oltre ad assumere valori diversi in diversi tempi, assumeva valori diversi nello stesso tempo. Ecco un esempio di query prima impossibile e ora testata e funzionante:</p>
-                            <div class="card bg-primary shadow-inset border-light overflow-auto">
-                                <pre><code class="prettyprint">
-    # La variabile ?br assume tanti valori quante sono le risorse bibliografiche citate
-    # da &lt;br/2&gt; in ciascun tempo. Ognuno di questi valori viene adesso considerato
-    # per individuare i rispettivi ?id e ?value. 
-    
-    PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
-    PREFIX cito: &lt;http://purl.org/spar/cito/&gt;
-    PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
-    SELECT DISTINCT ?br ?id ?value
-    WHERE {
-        &lt;https://github.com/arcangelo7/time_agnostic/br/2&gt; cito:cites ?br.
-        ?br datacite:hasIdentifier ?id.
-        ?id literal:hasLiteralValue ?value.
-    }
-                                </code></pre>
-                            </div>
-                        </li>
-                        <li>
-                            <p>vars_to_explicit_by_time, ovvero la struttura dati che memorizza il valore delle variabili in una query in tempi diversi e nello stesso tempo, è stata semplificata. Le triple non vengono più suddivise per tempo e per variabile, ma solo per tempo, dato che la seconda suddivisione si è rivelata non solo superflua, ma prona a causare ripetizioni e inefficienza.</p>
-                        </li>
-                        <li>
-                            <p>La definizione di tripla isolata è stata perfezionata: una triade si dice isolata quando per nessuno dei suoi nodi esiste una relazione transitiva con gli altri nodi del grafo. Nella fattispecie, il grafo è quello costituito dalle triple all'interno della query. È stato quindi introdotto il metodo <strong>_there_is_transitive_closure</strong>, che cerca in maniera ricorsiva un cammino tra una data variabile e un URI soggetto all'interno della query: se lo trova ritorna True, altrimenti ritorna False.</p>
-                        </li>
-                        <li>
-                            <p>È adesso possibile specificare il <strong>tipo di entità</strong> di cui interessa risolvere una query agnostica sul tempo. I tipi vengono specificati in un set e agiscono come filtri, in questo modo:</p>
-                            <div class="card bg-primary shadow-inset border-light overflow-auto">
-                                <pre><code class="prettyprint">
-    query = """
-        prefix cito: &lt;http://purl.org/spar/cito/&gt;
-        prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
-        prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
-        select distinct ?elt_1
-        where {
-            ?elt_1 datacite:hasIdentifier ?id_1;
-                datacite:hasIdentifier ?id_2.
-            ?id_1 literal:hasLiteralValue ?literal_1.
-            ?id_2 literal:hasLiteralValue ?literal_2.
-            FILTER (?literal_1 != ?literal_2)
-        } 
-    """
-    entity_types = {"http://purl.org/spar/fabio/Expression"}
-    agnostic_query = AgnosticQuery(query, entity_types)
-    agnostic_query.run_agnostic_query()
-                                </code></pre>
-                            </div>
-                        </li>
-                        <li>
-                            <p>È adesso possibile velocizzare le query agnostiche sul tempo utilizzando la funzionalità di <strong>ricerca testuale</strong> messa a disposizione da <strong>Blazegraph</strong>. Nella fattispecie, è stata introdotta la classe <strong>BlazegraphQuery</strong>, figlia di AgnosticQuery, che ne eredita tutti i metodi e le proprietà andando a sovrascrivere il metodo <strong>_get_query_to_identify</strong>, che serve appunto a generare la query per cercare le updateQuery rilevanti. L'utente informa la libreria di aver ricostruito l'indice testuale del triplestore passando un valore affermativo nel campo "<strong>blazegraph_full_text_search</strong>" del file di configurazione, che di default è settato a "no", in questo modo:</p>
-                            <div class="card bg-primary shadow-inset border-light overflow-auto">
-                                <pre><code class="prettyprint">
-    {
-        "dataset": {
-            "triplestore_urls": ["http://localhost:9999/blazegraph/sparql"],
-            "file_paths": []
-        },
-        "provenance": {
-            "triplestore_urls": ["http://localhost:9999/blazegraph/sparql"],
-            "file_paths": []
-        },
-        "blazegraph_full_text_search": "no"
-    }
-                                </code></pre>
-                            </div>
-                            <p>Poiché per l'essere umano <strong>riconoscere è più facile che ricordare</strong>, la voce del file di configurazione è esplicita e l'utente deve solo decidere se settarla a vera o a falsa. Il valore di default è "no", non "false", perché la logica booleana potrebbe non essere di immediata comprensione. Ad ogni modo, la libreria accetta un gran numero di valori, convertendoli internamente a True o False, ovvero: "true", "1", 1, "t", "y", "yes", "ok", "false", "0", 0, "n", "f", "no". Infine, i valori sono case insensitive.</p>
+                        <li>Documenti studiati e inclusi nella literature review:
                             <ol>
-                                <li>Perché introdurre una nuova classe e contemporaneamente una nuova voce nel file di configurazione per una singola funzionalità? Non sarebbe stato sufficiente modificare la classe originale? Sì, sarebbe stato sufficiente ma, immaginando di aggiungere molte nuove funzionalità in futuro, avere delle classi dedicate e delle voci nel file di configurazione renderà il codice più modulare, mantenibile e facile da espandere. Per esempio, è facile immaginare che in futuro possano essere aggiunti altri acceleratori per lo stesso triplestore e per triplestore diversi.</li>
+                                <li>Barabucci, G. (2013). Introduction to the Universal Delta Model. Proceedings of the 2013 ACM Symposium on Document Engineering (p. 47–56). Florence, Italy: Association for Computing Machinery. doi:10.1145/2494266.2494284</li>
+                                <li>Barabucci, G., Ciancarini, P., Iorio, A. D., & Vitali, F. (2016). Measuring the quality of diff algorithms: a formalization. Computer Standards & Interfaces, 46, 52-65. doi:10.1016/j.csi.2015.12.005</li>
+                                <li>Berners-Lee, T. (1999). Weaving the Web: the original design and ultimate destiny of the World Wide Web. San Francisco: Harper San Francisco</li>
+                                <li>Berners-Lee, T., & Connolly, D. (2004). Delta: an ontology for the distribution of differences between RDF graphs. Retrieved from https://www.w3.org/DesignIssues/lncs04/Diff.pdf</li>
+                                <li>Caplan, P. (2017). Understanding PREMIS: an overview of the PREMIS Data Dictionary for Preservation Metadata. Library of Congress. Retrieved from Library of Congress: https://www.loc.gov/standards/premis/understanding-premis-rev2017.pdf</li>
+                                <li>Carroll, J. J., Bizer, C., Hayes, P., & Stickler, P. (2005). Named graphs, provenance and trust. Proceedings of the 14th international conference on World Wide Web (p. 613–622). New York: Association for Computing Machinery. doi:10.1145/1060745.1060835</li>
+                                <li>Ciccarese, P., Wu, E., Kinoshita, J., Wong, G. T., Ocana, M., Ruttenberg, A., & Clark, T. (2008). The SWAN Scientific Discourse Ontology. Journal of biomedical informatics, 41(5), 739–751. doi:10.1016/j.jbi.2008.04.010</li>
+                                <li>Daquino, M., Peroni, S., Shotton, D., Colavizza, G., Ghavimi, B., Lauscher, A., . . . Zumstein, P. (2020). The OpenCitations Data Model. In J. Z. Pan, V. Tamma, C. d’Amato, K. Janowicz, B. Fu, A. Polleres, . . . L. Kagal (A cura di), International Semantic Web Conference. 12507, p. 447-463. Springer, Cham. doi:10.1007/978-3-030-62466-8_28</li>
+                                <li>DCMI Metadata Terms. (2020, 01 20). Retrieved 07 16, 2021, from Dublin Core Metadata Initiative: http://dublincore.org/specifications/dublin-core/dcmi-terms/2020-01-20/</li>
+                                <li>Ding, L., Finin, T., Peng, Y., Silva, P. P., & L., D. (2005). Tracking RDF Graph Provenance. Technical report. Retrieved from http://ebiquity.umbc.edu/get/a/publication/178.pdf</li>
+                                <li>Gil, Y., & Miles, S. (Eds.). (2013, 04 30). PROV Model Primer. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/NOTE-prov-primer-20130430/</li>
+                                <li>Lebo, T., Sahoo, S., & McGuinness, D. (Eds.). (2013, 04 30). PROV-O: The PROV Ontology. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/REC-prov-o-20130430/</li>
+                                <li>Moreau, L., & Missier, P. (Eds.). (2013, 04 30). PROV-DM: The PROV Data Model. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/REC-prov-dm-20130430/</li>
+                                <li>Moreau, L., Clifford, B., Freire, J., Futrelle, J., Gil, Y., Groth, P., . . . Bussche, J. V. (2011). The Open Provenance Model core specification (v1.1). Future Generation Computer Systems,, 27(6), 743-756. doi:10.1016/j.future.2010.07.005</li>
+                                <li>Ognyanov, D., & Kiryakov, A. (2002). Tracking Changes in RDF(S) Repositories. In G.-P. A., & B. V.R. (Ed.), Knowledge Engineering and Knowledge Management: Ontologies and the Semantic Web (pp. 373-378). Berlin, Heidelberg: Springer. doi:10.1007/3-540-45810-7_33</li>
+                                <li>Peroni, S., Shotton, D., & Vitali, F. (2016). A Document-inspired Way for Tracking Changes of RDF Data. In L. Hollink, S. Darányi, A. M. Peñuela, & E. Kontopoulos (Ed.), Detection, Representation and Management of Concept Drift in Linked Open Data. 1799, pp. 26-33. Bologna: CEUR Workshop Proceedings. Retrieved from http://ceur-ws.org/Vol-1799/Drift-a-LOD2016_paper_4.pdf</li>
+                                <li>Provenance Incubator Group Charter. (2010). Retrieved July 15, 2021, from https://www.w3.org/2005/Incubator/prov/charter</li>
+                                <li>(08 December 2010). Provenance XG Final Report. W3C. Retrieved from http://www.w3.org/2005/Incubator/prov/XGR-prov-20101214/</li>
+                                <li>Sahoo, S. S., & Sheth, A. P. (2009). Provenir Ontology: Towards a Framework for eScience Provenance Management. Retrieved from https://corescholar.libraries.wright.edu/knoesis/80</li>
                             </ol>
                         </li>
-                        <li>
-                            <p>La ricerca di entità rilevanti nelle query di update è una procedura dispendiosa e deve avvenire solo se è strettamente necessario. È stato quindi aggiunto un nuovo controllo: non solo la tripla dev'essere isolata, ma dev'essere anche nuova e non deve contenere gli stessi URI di una tripla già analizzata. Ad esempio, nella seguente query, le triple segnate con # 1 / # 2 e # 3 / #4 porterebbero allo stesso esito in caso di ricerca di quegli URI nelle query di update:</p>
-                            <div class="card bg-primary shadow-inset border-light overflow-auto">
-                                <pre><code class="prettyprint">
-    prefix cito: &lt;http://purl.org/spar/cito/&gt;
-    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
-    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
-    select distinct ?elt_1
-    where {
-        ?elt_1 datacite:hasIdentifier ?id_1;      # 1
-            datacite:hasIdentifier ?id_2.         # 2
-        ?id_1 literal:hasLiteralValue ?literal_1. # 3
-        ?id_2 literal:hasLiteralValue ?literal_2. # 4
-        FILTER (?literal_1 != ?literal_2)
-    }
-                                </code></pre>
-                            </div>
-                        </li>
-                        <li>Novità relative all'interfaccia:
+                        <li>Documenti studiati ma esclusi dalla literature review perché poco pertinenti o per ragioni di sintesi:
                             <ol>
-                                <li>
-                                    <p>Il <strong>tempo di generazione</strong> degli snapshot viene mostrato in formato <strong>leggibile</strong> e accompagnato da un'etichetta esplicita, ad esempio: <strong>Generated at time</strong>: 07 May 2021, 09:59:15.</p>
-                                </li>
-                                <li>
-                                    <p>Vengono mostrati più metadati sulla provenance, ovvero l'<strong>agente responsabile</strong> e la <strong>fonte dei dati</strong>, oltre al già presente tempo di generazione. Inoltre, l'agente responsabile e la fonte dei dati diventano dei link nel caso siano URL.</p>
-                                </li>
-                                <li>
-                                    <p>Nella vista sulla storia di un'entità, il nome dell'entità viene ripetuto in ogni card relativa a un suo snapshot, perché il contesto rimanga esplicito in ogni posizione della pagina.</p>
-                                </li>
-                                <li>
-                                    <p>È stato introdotto un <strong>file di configurazione</strong> per personalizzare l'interfaccia.</p>
-                                    <ol>
-                                        <li>È possibile indicare gli URI base all'interno di una lista. Se ne viene indicato almeno uno, solo gli elementi contenenti quell'URI base vengono mostrati dall'interfaccia come link. Se non viene indicato alcun URI, si assume che tutti gli URL siano entità e tutti vengono mostrati come link. L'URI base viene anche sfruttato per mostrare le entità in maniera leggibile, omettendo appunto l'URI base stesso. L'URI completo viene mostrato in un tooltip.</li>
-                                        <li>È possibile indicare delle <strong>regole sull'ordine delle proprietà</strong>. Le regole sono specifiche per il tipo di entità e consistono in un dizionario nella forma [nome_proprietà]: [intero], dove il valore è un numero intero indicante la posizione dell'elemento. Il tipo di entità è impostato di default a 0.  Se non viene impostata alcuna regola, prevale l'ordine alfabetico delle proprietà.</li>
-                                        <li>Ecco un esempio di file di configurazione:
-                                            <div class="card bg-primary shadow-inset border-light overflow-auto pr-5">
-                                                <pre><code class="prettyprint">
-    {
-        "base_urls": ["https://github.com/arcangelo7/time_agnostic/"],
-        "rules_on_properties_order": {
-            "http://purl.org/spar/datacite/Identifier": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0,
-                "http://purl.org/spar/datacite/usesIdentifierScheme": 1
-            },
-            "http://purl.org/spar/pro/RoleInTime": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0,
-                "http://purl.org/spar/pro/withRole": 1    
-            },
-            "http://purl.org/spar/biro/BibliographicReference": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
-            },
-            "http://purl.org/spar/fabio/Expression": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
-            },
-            "http://purl.org/spar/cito/Citation": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
-            },
-            "http://purl.org/spar/fabio/Manifestation": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
-            },
-            "http://xmlns.com/foaf/0.1/Agent": {
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
-            }
-        }
-    }
-                                                </code></pre>
-                                            </div>
-                                        </li>
-                                    </ol>
-                                </li>
-                                <li>
-                                    <p>I <strong>predicati</strong> vengono mostrati in formato <strong>leggibile</strong> automaticamente, prendendo l'ultimo elemento dopo uno "/", poi l'ultimo dopo un "#" e infine separando il camel case e aggiungendo la maiuscola al primo termine e la minuscola ai successivi. Inoltre, al passaggio del mouse viene mostrato un tooltip contenente l'URI originale. Lo stesso discorso vale anche per gli <strong>oggetti</strong>, ma solo se nel file di configurazione è stato specificato l'URI base, altrimenti gli oggetti vengono mostrati per esteso. Infine, le stringhe che dopo le varie trasformazioni risultano appartenere a una lista nota di acronimi (e.g. ORCID, DOI), vengono mostrati con tutte le lettere maiuscole, mentre i rispettivi valori letterali vengono mostrati come link.</p>
-                                </li>
-                                <li>
-                                    <p>I caratteri riportati da Crossref in formato <strong>Unicode</strong> vengono convertiti in formato stringa.</p>
-                                </li>
-                                <li>
-                                    <p>È ora possibile effettuare <strong>query agnostiche sul tempo</strong> tramite l'interfaccia.</p>
-                                </li>
+                                <li>Aggelen, A.V., Hollink, L., & Ossenbruggen, J.V. (2016). Combining Distributional Semantics and Structured Data to Study Lexical Change. Drift-a-LOD@EKAW</li>
+                                <li>Berliner, B. (1990). CVS II: Parallelizing Software Development. Prisma Inc. Retrieved from https://docs.freebsd.org/44doc/psd/28.cvs/paper.pdf</li>
+                                <li>Fokkens, A. S., ter Braake, S., Maks, E., & Ceolin, D. (2016). On the Semantics of Concept Drift: Towards Formal Definitions of Semantic Change. In S. Darányi, L. Hollink, A. Meroño Peñuela, & E. Kontopoulos (Eds.), Proceedings of Drift-a-LOD</li>
+                                <li>Ding, L., Finin, T., Joshi, A., Pan, R., Scott Cost, R., Peng, Y.,  Reddivari, P., Doshi, V., and Sachs, J. (2004). Swoogle: a search and metadata engine for the semantic web. In Proceedings of the thirteenth ACM international conference on Information and knowledge management (CIKM '04). Association for Computing Machinery, New York, NY, USA, 652–659. DOI:https://doi.org/10.1145/1031171.1031289</li>
+                                <li>Meroño-Peñuela, A., Wittek, P., & Darányi, S. (2016). Visualizing the Drift of Linked Open Data Using Self-Organizing Maps. Drift-a-LOD@EKAW</li>
+                                <li>Recchia, G., Jones, E., Nulty, P., Regan, J., & Bolla, P.D. (2016). Tracing Shifting Conceptual Vocabularies Through Time. Drift-a-LOD@EKAW</li>
+                                <li>Stavropoulos, Thanos G., Andreadis, Stelios, Kontopoulos, Efstratios, Riga, Marina, Mitzias, Panagiotis, & Kompatsiaris, Ioannis. (2017). SemaDrift: A Protégé Plugin for Measuring Semantic Drift in Ontologies. Presented at the Detection, Representation and Management of Concept Drift in Linked Open Data (Drift-a-LOD), Bologna, Italy: Zenodo. http://doi.org/10.5281/zenodo.345374</li>
+                                <li>Tichy, W. F. (1984). RCS: A System for Version Control. Department of Computer Science Technical Reports. Paper 394. https://docs.lib.purdue.edu/cstech/394</li>
                             </ol>
+                        </li>
+                        <li>Il metodo <strong>get_history</strong> restituisce sempre una tupla di due elementi. Il secondo elemento è un dizionario con metadati sulla provenance se il parametro include_prov_metadata è True, altrimenti è None. Allo stesso modo, il metodo <strong>get_state_at_time</strong> restituisce sempre una tupla di tre elementi, dove il terzo elemento è un dizionario con metadati sulla provenance se il parametro include_prov_metadata è True, altrimenti è None.</li>
+                        <li>Il metodo get_history riporta anche la <strong>dc:description</strong> dello snapshot in caso di parametro include_prov_metadata passato a True. Di conseguenza, anche l'interfaccia riporta questa informazione, particolarmente informativa in caso di merge tra entità o cancellazione. All'interno della descrizione, le entità vengono rese più leggibili nel caso in cui l'utente abbia fornito uno o più URI base nel file di configurazione. Inoltre, le entità nella descrizione vengono mostrate come link, cliccando sui quali viene ricostruita la storia dell'entità corrispondente.
+                            <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                <img src="./assets/img/se_desc.png" alt="line-through">
+                            </div>
                         </li>
                     </ol>
                 <h3>Cosa non ho capito</h3>
                     <ol>
-                        <li>
-                            <p>Per ovviare alla lentezza delle query agnostiche effettuate su grafi in locale, abbiamo discusso della possibilità di caricare i grafi del passato su un triplestore creato ad hoc. Problema: per farlo c'è bisogno del file .jar di Blazegraph. Pensi che la libreria dovrebbe scaricarlo al volo, magari sfruttando il multithreading?</p>
+                        <li>Domande relative all'articolo <em>A document-inspired way for tracking changes of RDF data</em> (<a href="https://rawgit.com/essepuntato/opencitations/master/paper/occ-driftalod2016.html" target="_blank">Peroni, et al., 2016</a>):
+                            <ol>
+                                <li>Nell'articolo si legge:
+                                    <blockquote class="blockquote ml-5 mt-3">[...] while preserving provenance information of such
+                                        addition/deletion actions in an appropriate contextual space, i.e. the provenance
+                                        graph associated to such entity (as also suggested in [16]).</blockquote>
+                                    <p>[16] sarebbe l'articolo <em>Tracking RDF Graph Provenance using RDF Molecules</em> (<a href="http://ebiquity.umbc.edu/get/a/publication/178.pdf" target="_blank">Ding, et al., 2005</a>). Ho studiato l'articolo citato e non sono riuscito a capire in che modo questo suggerisca di utilizzare il grafo associato a un'entità come contesto per registrare la provenance. L'articolo sembra piuttosto suggerire come livello appropriato una "molecola RDF", ovvero una tripla in assenza di blank nodes, il risultato di un algoritmo di decomposizione secondo un'ontologia data in caso di blank nodes.</p>
+                                </li>
+                                <li>Nel secondo capitolo dell'articolo vengono discussi due approcci per tenere traccia dei cambiamenti in dati RDF, ovvero l'approccio <em>statement-centric</em> e <em>resource-centric</em>: non ho capito se questa tassonomia sia un contributo originale dell'articolo o esista altrove. Nel caso, mi piacerebbe approfondire perché non mi è del tutto chiara. 
+                                    <ol>
+                                        <li>Tra gli approcci di tipo <em>statement-centric</em> viene menzionato il <em>massive statement reification</em>. Si riferisce a RDF reification? Ovvero all'unica sintassi standard per catturare provenance RDF (<a href="https://www.w3.org/TR/2004/REC-rdf-primer-20040210/#reification" target="_blank">https://www.w3.org/TR/2004/REC-rdf-primer-20040210/#reification</a>).</li>
+                                    </ol></li>
+                            </ol>
                         </li>
+                        <li>Potresti suggerirmi della bibliografia in materia di change tracking sui documenti testuali? In particolare, mi piacerebbe ricostruire in che modo l'approccio sulla provenance dell'OCDM si ispira a Microsoft Word e OpenOffice Writer.</li>
+                        <li>È legittimo inserire in bibliografia testi che non corrispondono ad alcuna citazione intratestuale? Ovvero documenti che sono risultati utili alla comprensione del problema, ma che per ragioni di sintesi non sono stati menzionati nel discorso.</li>
+                        <li>Oltre a EXCITE, al Linked Open Citation Database e al Venice Scholar Index, esistono altre repository o progetti che hanno adottato l'OCDM?</li>
+                        <li>Esistono casi in cui un documento RDF costruito seguendo l'OCDM contenga blank nodes?</li>
                     </ol>
             </div>
         </section>
@@ -3844,16 +3719,294 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-17">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>
+                                        <p>I metodi che restituiscono la storia di un'entità e delle entità correlate ricevono un nuovo argomento, <strong>include_prov_metadata</strong> che, se impostato a True, permette di ottenere metadati sulla provenance. Nella fattispecie, il metodo <strong>get_history</strong> ritorna ora sempre una tupla, il cui primo elemento è la risposta secca a quale sia la storia dell'entità secondo la struttura già descritta in passato, il secondo elemento è un dizionario con i metadati sulla provenance. Se include_prov_metadata è False, la tupla ha un elemento, se True ne ha due. Ecco un esempio di possibile output:</p>
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    (
+        {
+            'https://github.com/arcangelo7/time_agnostic/ar/15519': {
+                '2021-06-01T18:46:41': ConjunctiveGraph, 
+                '2021-05-07T09:59:15': ConjunctiveGraph, 
+                '2021-05-31T18:19:47': ConjunctiveGraph
+            }
+        },
+        {
+            'https://github.com/arcangelo7/time_agnostic/ar/15519': {
+                'https://github.com/arcangelo7/time_agnostic/ar/15519/prov/se/3': {
+                    'http://www.w3.org/ns/prov#generatedAtTime': '2021-06-01T18:46:41', 
+                    'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696', 
+                    'http://www.w3.org/ns/prov#hadPrimarySource': None 
+                }, 
+                'https://github.com/arcangelo7/time_agnostic/ar/15519/prov/se/1': {
+                    'http://www.w3.org/ns/prov#generatedAtTime': '2021-05-07T09:59:15', 
+                    'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696', 
+                    'http://www.w3.org/ns/prov#hadPrimarySource': None
+                }, 
+                'https://github.com/arcangelo7/time_agnostic/ar/15519/prov/se/2': {
+                    'http://www.w3.org/ns/prov#generatedAtTime': '2021-05-31T18:19:47', 
+                    'http://www.w3.org/ns/prov#wasAttributedTo': 'https://orcid.org/0000-0002-8420-0696', 
+                    'http://www.w3.org/ns/prov#hadPrimarySource': None
+                }
+            }
+        }
+    )
+                                            </code></pre>
+                                        </div>    
+                                    </li>
+                                    <li>
+                                        <p>È stato risolto un bug per cui non veniva gestito il caso in cui una variabile all'interno di una query agnostica, oltre ad assumere valori diversi in diversi tempi, assumeva valori diversi nello stesso tempo. Ecco un esempio di query prima impossibile e ora testata e funzionante:</p>
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    # La variabile ?br assume tanti valori quante sono le risorse bibliografiche citate
+    # da &lt;br/2&gt; in ciascun tempo. Ognuno di questi valori viene adesso considerato
+    # per individuare i rispettivi ?id e ?value. 
+    
+    PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    PREFIX cito: &lt;http://purl.org/spar/cito/&gt;
+    PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
+    SELECT DISTINCT ?br ?id ?value
+    WHERE {
+        &lt;https://github.com/arcangelo7/time_agnostic/br/2&gt; cito:cites ?br.
+        ?br datacite:hasIdentifier ?id.
+        ?id literal:hasLiteralValue ?value.
+    }
+                                            </code></pre>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <p>vars_to_explicit_by_time, ovvero la struttura dati che memorizza il valore delle variabili in una query in tempi diversi e nello stesso tempo, è stata semplificata. Le triple non vengono più suddivise per tempo e per variabile, ma solo per tempo, dato che la seconda suddivisione si è rivelata non solo superflua, ma prona a causare ripetizioni e inefficienza.</p>
+                                    </li>
+                                    <li>
+                                        <p>La definizione di tripla isolata è stata perfezionata: una triade si dice isolata quando per nessuno dei suoi nodi esiste una relazione transitiva con gli altri nodi del grafo. Nella fattispecie, il grafo è quello costituito dalle triple all'interno della query. È stato quindi introdotto il metodo <strong>_there_is_transitive_closure</strong>, che cerca in maniera ricorsiva un cammino tra una data variabile e un URI soggetto all'interno della query: se lo trova ritorna True, altrimenti ritorna False.</p>
+                                    </li>
+                                    <li>
+                                        <p>È adesso possibile specificare il <strong>tipo di entità</strong> di cui interessa risolvere una query agnostica sul tempo. I tipi vengono specificati in un set e agiscono come filtri, in questo modo:</p>
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    query = """
+        prefix cito: &lt;http://purl.org/spar/cito/&gt;
+        prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+        prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+        select distinct ?elt_1
+        where {
+            ?elt_1 datacite:hasIdentifier ?id_1;
+                datacite:hasIdentifier ?id_2.
+            ?id_1 literal:hasLiteralValue ?literal_1.
+            ?id_2 literal:hasLiteralValue ?literal_2.
+            FILTER (?literal_1 != ?literal_2)
+        } 
+    """
+    entity_types = {"http://purl.org/spar/fabio/Expression"}
+    agnostic_query = AgnosticQuery(query, entity_types)
+    agnostic_query.run_agnostic_query()
+                                            </code></pre>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <p>È adesso possibile velocizzare le query agnostiche sul tempo utilizzando la funzionalità di <strong>ricerca testuale</strong> messa a disposizione da <strong>Blazegraph</strong>. Nella fattispecie, è stata introdotta la classe <strong>BlazegraphQuery</strong>, figlia di AgnosticQuery, che ne eredita tutti i metodi e le proprietà andando a sovrascrivere il metodo <strong>_get_query_to_identify</strong>, che serve appunto a generare la query per cercare le updateQuery rilevanti. L'utente informa la libreria di aver ricostruito l'indice testuale del triplestore passando un valore affermativo nel campo "<strong>blazegraph_full_text_search</strong>" del file di configurazione, che di default è settato a "no", in questo modo:</p>
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    {
+        "dataset": {
+            "triplestore_urls": ["http://localhost:9999/blazegraph/sparql"],
+            "file_paths": []
+        },
+        "provenance": {
+            "triplestore_urls": ["http://localhost:9999/blazegraph/sparql"],
+            "file_paths": []
+        },
+        "blazegraph_full_text_search": "no"
+    }
+                                            </code></pre>
+                                        </div>
+                                        <p>Poiché per l'essere umano <strong>riconoscere è più facile che ricordare</strong>, la voce del file di configurazione è esplicita e l'utente deve solo decidere se settarla a vera o a falsa. Il valore di default è "no", non "false", perché la logica booleana potrebbe non essere di immediata comprensione. Ad ogni modo, la libreria accetta un gran numero di valori, convertendoli internamente a True o False, ovvero: "true", "1", 1, "t", "y", "yes", "ok", "false", "0", 0, "n", "f", "no". Infine, i valori sono case insensitive.</p>
+                                        <ol>
+                                            <li>Perché introdurre una nuova classe e contemporaneamente una nuova voce nel file di configurazione per una singola funzionalità? Non sarebbe stato sufficiente modificare la classe originale? Sì, sarebbe stato sufficiente ma, immaginando di aggiungere molte nuove funzionalità in futuro, avere delle classi dedicate e delle voci nel file di configurazione renderà il codice più modulare, mantenibile e facile da espandere. Per esempio, è facile immaginare che in futuro possano essere aggiunti altri acceleratori per lo stesso triplestore e per triplestore diversi.</li>
+                                        </ol>
+                                    </li>
+                                    <li>
+                                        <p>La ricerca di entità rilevanti nelle query di update è una procedura dispendiosa e deve avvenire solo se è strettamente necessario. È stato quindi aggiunto un nuovo controllo: non solo la tripla dev'essere isolata, ma dev'essere anche nuova e non deve contenere gli stessi URI di una tripla già analizzata. Ad esempio, nella seguente query, le triple segnate con # 1 / # 2 e # 3 / #4 porterebbero allo stesso esito in caso di ricerca di quegli URI nelle query di update:</p>
+                                        <div class="card bg-primary shadow-inset border-light overflow-auto">
+                                            <pre><code class="prettyprint">
+    prefix cito: &lt;http://purl.org/spar/cito/&gt;
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    select distinct ?elt_1
+    where {
+        ?elt_1 datacite:hasIdentifier ?id_1;      # 1
+            datacite:hasIdentifier ?id_2.         # 2
+        ?id_1 literal:hasLiteralValue ?literal_1. # 3
+        ?id_2 literal:hasLiteralValue ?literal_2. # 4
+        FILTER (?literal_1 != ?literal_2)
+    }
+                                            </code></pre>
+                                        </div>
+                                    </li>
+                                    <li>Novità relative all'interfaccia:
+                                        <ol>
+                                            <li>
+                                                <p>Il <strong>tempo di generazione</strong> degli snapshot viene mostrato in formato <strong>leggibile</strong> e accompagnato da un'etichetta esplicita, ad esempio: <strong>Generated at time</strong>: 07 May 2021, 09:59:15.</p>
+                                            </li>
+                                            <li>
+                                                <p>Vengono mostrati più metadati sulla provenance, ovvero l'<strong>agente responsabile</strong> e la <strong>fonte dei dati</strong>, oltre al già presente tempo di generazione. Inoltre, l'agente responsabile e la fonte dei dati diventano dei link nel caso siano URL.</p>
+                                            </li>
+                                            <li>
+                                                <p>Nella vista sulla storia di un'entità, il nome dell'entità viene ripetuto in ogni card relativa a un suo snapshot, perché il contesto rimanga esplicito in ogni posizione della pagina.</p>
+                                            </li>
+                                            <li>
+                                                <p>È stato introdotto un <strong>file di configurazione</strong> per personalizzare l'interfaccia.</p>
+                                                <ol>
+                                                    <li>È possibile indicare gli URI base all'interno di una lista. Se ne viene indicato almeno uno, solo gli elementi contenenti quell'URI base vengono mostrati dall'interfaccia come link. Se non viene indicato alcun URI, si assume che tutti gli URL siano entità e tutti vengono mostrati come link. L'URI base viene anche sfruttato per mostrare le entità in maniera leggibile, omettendo appunto l'URI base stesso. L'URI completo viene mostrato in un tooltip.</li>
+                                                    <li>È possibile indicare delle <strong>regole sull'ordine delle proprietà</strong>. Le regole sono specifiche per il tipo di entità e consistono in un dizionario nella forma [nome_proprietà]: [intero], dove il valore è un numero intero indicante la posizione dell'elemento. Il tipo di entità è impostato di default a 0.  Se non viene impostata alcuna regola, prevale l'ordine alfabetico delle proprietà.</li>
+                                                    <li>Ecco un esempio di file di configurazione:
+                                                        <div class="card bg-primary shadow-inset border-light overflow-auto pr-5">
+                                                            <pre><code class="prettyprint">
+    {
+        "base_urls": ["https://github.com/arcangelo7/time_agnostic/"],
+        "rules_on_properties_order": {
+            "http://purl.org/spar/datacite/Identifier": {
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0,
+                "http://purl.org/spar/datacite/usesIdentifierScheme": 1
+            },
+            "http://purl.org/spar/pro/RoleInTime": {
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0,
+                "http://purl.org/spar/pro/withRole": 1    
+            },
+            "http://purl.org/spar/biro/BibliographicReference": {
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
+            },
+            "http://purl.org/spar/fabio/Expression": {
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
+            },
+            "http://purl.org/spar/cito/Citation": {
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
+            },
+            "http://purl.org/spar/fabio/Manifestation": {
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
+            },
+            "http://xmlns.com/foaf/0.1/Agent": {
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": 0
+            }
+        }
+    }
+                                                            </code></pre>
+                                                        </div>
+                                                    </li>
+                                                </ol>
+                                            </li>
+                                            <li>
+                                                <p>I <strong>predicati</strong> vengono mostrati in formato <strong>leggibile</strong> automaticamente, prendendo l'ultimo elemento dopo uno "/", poi l'ultimo dopo un "#" e infine separando il camel case e aggiungendo la maiuscola al primo termine e la minuscola ai successivi. Inoltre, al passaggio del mouse viene mostrato un tooltip contenente l'URI originale. Lo stesso discorso vale anche per gli <strong>oggetti</strong>, ma solo se nel file di configurazione è stato specificato l'URI base, altrimenti gli oggetti vengono mostrati per esteso. Infine, le stringhe che dopo le varie trasformazioni risultano appartenere a una lista nota di acronimi (e.g. ORCID, DOI), vengono mostrati con tutte le lettere maiuscole, mentre i rispettivi valori letterali vengono mostrati come link.</p>
+                                            </li>
+                                            <li>
+                                                <p>I caratteri riportati da Crossref in formato <strong>Unicode</strong> vengono convertiti in formato stringa.</p>
+                                            </li>
+                                            <li>
+                                                <p>È ora possibile effettuare <strong>query agnostiche sul tempo</strong> tramite l'interfaccia.</p>
+                                            </li>
+                                        </ol>
+                                    </li>
+                                </ol>
+                            <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>
+                                        <p>Per ovviare alla lentezza delle query agnostiche effettuate su grafi in locale, abbiamo discusso della possibilità di caricare i grafi del passato su un triplestore creato ad hoc. Problema: per farlo c'è bisogno del file .jar di Blazegraph. Pensi che la libreria dovrebbe scaricarlo al volo, magari sfruttando il multithreading?</p>
+                                    </li>
+                                </ol>            
                             </div>
                         </div>
                     </div>
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-18" data-target="#panel-18" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-18">
-                            <span class="h6 mb-0 font-weight-bold">dd/mm/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">22/07/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-18">
+                            <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>Ho scritto la prima versione del capitolo sulla literature review. È coerente dall'inizio alla fine, ma incompleto. Può essere scaricato cliccando sul seguente bottone:
+                                        <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0.pdf" download="literature_review_1-0-0-alpha.pdf">
+                                            <span class="mr-1"><span class="fas fa-download"></span></span>
+                                            Download literature review 1.0.0-alpha
+                                        </a>
+                                    </li>
+                                    <li>Documenti studiati e inclusi nella literature review:
+                                        <ol>
+                                            <li>Barabucci, G. (2013). Introduction to the Universal Delta Model. Proceedings of the 2013 ACM Symposium on Document Engineering (p. 47–56). Florence, Italy: Association for Computing Machinery. doi:10.1145/2494266.2494284</li>
+                                            <li>Barabucci, G., Ciancarini, P., Iorio, A. D., & Vitali, F. (2016). Measuring the quality of diff algorithms: a formalization. Computer Standards & Interfaces, 46, 52-65. doi:10.1016/j.csi.2015.12.005</li>
+                                            <li>Berners-Lee, T. (1999). Weaving the Web: the original design and ultimate destiny of the World Wide Web. San Francisco: Harper San Francisco</li>
+                                            <li>Berners-Lee, T., & Connolly, D. (2004). Delta: an ontology for the distribution of differences between RDF graphs. Retrieved from https://www.w3.org/DesignIssues/lncs04/Diff.pdf</li>
+                                            <li>Caplan, P. (2017). Understanding PREMIS: an overview of the PREMIS Data Dictionary for Preservation Metadata. Library of Congress. Retrieved from Library of Congress: https://www.loc.gov/standards/premis/understanding-premis-rev2017.pdf</li>
+                                            <li>Carroll, J. J., Bizer, C., Hayes, P., & Stickler, P. (2005). Named graphs, provenance and trust. Proceedings of the 14th international conference on World Wide Web (p. 613–622). New York: Association for Computing Machinery. doi:10.1145/1060745.1060835</li>
+                                            <li>Ciccarese, P., Wu, E., Kinoshita, J., Wong, G. T., Ocana, M., Ruttenberg, A., & Clark, T. (2008). The SWAN Scientific Discourse Ontology. Journal of biomedical informatics, 41(5), 739–751. doi:10.1016/j.jbi.2008.04.010</li>
+                                            <li>Daquino, M., Peroni, S., Shotton, D., Colavizza, G., Ghavimi, B., Lauscher, A., . . . Zumstein, P. (2020). The OpenCitations Data Model. In J. Z. Pan, V. Tamma, C. d’Amato, K. Janowicz, B. Fu, A. Polleres, . . . L. Kagal (A cura di), International Semantic Web Conference. 12507, p. 447-463. Springer, Cham. doi:10.1007/978-3-030-62466-8_28</li>
+                                            <li>DCMI Metadata Terms. (2020, 01 20). Retrieved 07 16, 2021, from Dublin Core Metadata Initiative: http://dublincore.org/specifications/dublin-core/dcmi-terms/2020-01-20/</li>
+                                            <li>Ding, L., Finin, T., Peng, Y., Silva, P. P., & L., D. (2005). Tracking RDF Graph Provenance. Technical report. Retrieved from http://ebiquity.umbc.edu/get/a/publication/178.pdf</li>
+                                            <li>Gil, Y., & Miles, S. (Eds.). (2013, 04 30). PROV Model Primer. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/NOTE-prov-primer-20130430/</li>
+                                            <li>Lebo, T., Sahoo, S., & McGuinness, D. (Eds.). (2013, 04 30). PROV-O: The PROV Ontology. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/REC-prov-o-20130430/</li>
+                                            <li>Moreau, L., & Missier, P. (Eds.). (2013, 04 30). PROV-DM: The PROV Data Model. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/REC-prov-dm-20130430/</li>
+                                            <li>Moreau, L., Clifford, B., Freire, J., Futrelle, J., Gil, Y., Groth, P., . . . Bussche, J. V. (2011). The Open Provenance Model core specification (v1.1). Future Generation Computer Systems,, 27(6), 743-756. doi:10.1016/j.future.2010.07.005</li>
+                                            <li>Ognyanov, D., & Kiryakov, A. (2002). Tracking Changes in RDF(S) Repositories. In G.-P. A., & B. V.R. (Ed.), Knowledge Engineering and Knowledge Management: Ontologies and the Semantic Web (pp. 373-378). Berlin, Heidelberg: Springer. doi:10.1007/3-540-45810-7_33</li>
+                                            <li>Peroni, S., Shotton, D., & Vitali, F. (2016). A Document-inspired Way for Tracking Changes of RDF Data. In L. Hollink, S. Darányi, A. M. Peñuela, & E. Kontopoulos (Ed.), Detection, Representation and Management of Concept Drift in Linked Open Data. 1799, pp. 26-33. Bologna: CEUR Workshop Proceedings. Retrieved from http://ceur-ws.org/Vol-1799/Drift-a-LOD2016_paper_4.pdf</li>
+                                            <li>Provenance Incubator Group Charter. (2010). Retrieved July 15, 2021, from https://www.w3.org/2005/Incubator/prov/charter</li>
+                                            <li>(08 December 2010). Provenance XG Final Report. W3C. Retrieved from http://www.w3.org/2005/Incubator/prov/XGR-prov-20101214/</li>
+                                            <li>Sahoo, S. S., & Sheth, A. P. (2009). Provenir Ontology: Towards a Framework for eScience Provenance Management. Retrieved from https://corescholar.libraries.wright.edu/knoesis/80</li>
+                                        </ol>
+                                    </li>
+                                    <li>Documenti studiati ma esclusi dalla literature review perché poco pertinenti o per ragioni di sintesi:
+                                        <ol>
+                                            <li>Aggelen, A.V., Hollink, L., & Ossenbruggen, J.V. (2016). Combining Distributional Semantics and Structured Data to Study Lexical Change. Drift-a-LOD@EKAW</li>
+                                            <li>Berliner, B. (1990). CVS II: Parallelizing Software Development. Prisma Inc. Retrieved from https://docs.freebsd.org/44doc/psd/28.cvs/paper.pdf</li>
+                                            <li>Fokkens, A. S., ter Braake, S., Maks, E., & Ceolin, D. (2016). On the Semantics of Concept Drift: Towards Formal Definitions of Semantic Change. In S. Darányi, L. Hollink, A. Meroño Peñuela, & E. Kontopoulos (Eds.), Proceedings of Drift-a-LOD</li>
+                                            <li>Ding, L., Finin, T., Joshi, A., Pan, R., Scott Cost, R., Peng, Y.,  Reddivari, P., Doshi, V., and Sachs, J. (2004). Swoogle: a search and metadata engine for the semantic web. In Proceedings of the thirteenth ACM international conference on Information and knowledge management (CIKM '04). Association for Computing Machinery, New York, NY, USA, 652–659. DOI:https://doi.org/10.1145/1031171.1031289</li>
+                                            <li>Meroño-Peñuela, A., Wittek, P., & Darányi, S. (2016). Visualizing the Drift of Linked Open Data Using Self-Organizing Maps. Drift-a-LOD@EKAW</li>
+                                            <li>Recchia, G., Jones, E., Nulty, P., Regan, J., & Bolla, P.D. (2016). Tracing Shifting Conceptual Vocabularies Through Time. Drift-a-LOD@EKAW</li>
+                                            <li>Stavropoulos, Thanos G., Andreadis, Stelios, Kontopoulos, Efstratios, Riga, Marina, Mitzias, Panagiotis, & Kompatsiaris, Ioannis. (2017). SemaDrift: A Protégé Plugin for Measuring Semantic Drift in Ontologies. Presented at the Detection, Representation and Management of Concept Drift in Linked Open Data (Drift-a-LOD), Bologna, Italy: Zenodo. http://doi.org/10.5281/zenodo.345374</li>
+                                            <li>Tichy, W. F. (1984). RCS: A System for Version Control. Department of Computer Science Technical Reports. Paper 394. https://docs.lib.purdue.edu/cstech/394</li>
+                                        </ol>
+                                    </li>
+                                    <li>Il metodo <strong>get_history</strong> restituisce sempre una tupla di due elementi. Il secondo elemento è un dizionario con metadati sulla provenance se il parametro include_prov_metadata è True, altrimenti è None. Allo stesso modo, il metodo <strong>get_state_at_time</strong> restituisce sempre una tupla di tre elementi, dove il terzo elemento è un dizionario con metadati sulla provenance se il parametro include_prov_metadata è True, altrimenti è None.</li>
+                                    <li>Il metodo get_history riporta anche la dc:description dello snapshot in caso di parametro include_prov_metadata passato a True. Di conseguenza, anche l'interfaccia riporta questa informazione, particolarmente informativa in caso di merge tra entità o cancellazione. All'interno della descrizione, le entità vengono rese più leggibili nel caso in cui l'utente abbia fornito uno o più URI base nel file di configurazione. Inoltre, le entità nella descrizione vengono mostrate come link, cliccando sui quali viene ricostruita la storia dell'entità corrispondente.
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                            <img src="./assets/img/se_desc.png" alt="line-through">
+                                        </div>
+                                    </li>
+                                </ol>
+                            <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>Domande relative all'articolo <em>A document-inspired way for tracking changes of RDF data</em> (<a href="https://rawgit.com/essepuntato/opencitations/master/paper/occ-driftalod2016.html" target="_blank">Peroni, et al., 2016</a>):
+                                        <ol>
+                                            <li>Nell'articolo si legge:
+                                                <blockquote class="blockquote ml-5 mt-3">[...] while preserving provenance information of such
+                                                    addition/deletion actions in an appropriate contextual space, i.e. the provenance
+                                                    graph associated to such entity (as also suggested in [16]).</blockquote>
+                                                <p>[16] sarebbe l'articolo <em>Tracking RDF Graph Provenance using RDF Molecules</em> (<a href="http://ebiquity.umbc.edu/get/a/publication/178.pdf" target="_blank">Ding, et al., 2005</a>). Ho studiato l'articolo citato e non sono riuscito a capire in che modo questo suggerisca di utilizzare il grafo associato a un'entità come contesto per registrare la provenance. L'articolo sembra piuttosto suggerire come livello appropriato una "molecola RDF", ovvero una tripla in assenza di blank nodes, il risultato di un algoritmo di decomposizione secondo un'ontologia data in caso di blank nodes.</p>
+                                            </li>
+                                            <li>Nel secondo capitolo dell'articolo vengono discussi due approcci per tenere traccia dei cambiamenti in dati RDF, ovvero l'approccio <em>statement-centric</em> e <em>resource-centric</em>: non ho capito se questa tassonomia sia un contributo originale dell'articolo o esista altrove. Nel caso, mi piacerebbe approfondire perché non mi è del tutto chiara. 
+                                                <ol>
+                                                    <li>Tra gli approcci di tipo <em>statement-centric</em> viene menzionato il <em>massive statement reification</em>. Si riferisce a RDF reification? Ovvero all'unica sintassi standard per catturare provenance RDF (<a href="https://www.w3.org/TR/2004/REC-rdf-primer-20040210/#reification" target="_blank">https://www.w3.org/TR/2004/REC-rdf-primer-20040210/#reification</a>).</li>
+                                                </ol></li>
+                                        </ol>
+                                    </li>
+                                    <li>Potresti suggerirmi della bibliografia in materia di change tracking sui documenti testuali? In particolare, mi piacerebbe ricostruire in che modo l'approccio sulla provenance dell'OCDM si ispira a Microsoft Word e OpenOffice Writer.</li>
+                                    <li>È legittimo inserire in bibliografia testi che non corrispondono ad alcuna citazione intratestuale? Ovvero documenti che sono risultati utili alla comprensione del problema, ma che per ragioni di sintesi non sono stati menzionati nel discorso.</li>
+                                    <li>Oltre a EXCITE, al Linked Open Citation Database e al Venice Scholar Index, esistono altre repository o progetti che hanno adottato l'OCDM?</li>
+                                    <li>Esistono casi in cui un documento RDF costruito seguendo l'OCDM contenga blank nodes?</li>
+                                </ol>            
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-19" data-target="#panel-19" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-19">
+                            <span class="h6 mb-0 font-weight-bold">dd/mm/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-19">
                             <div class="pt-3">
                             </div>
                         </div>
