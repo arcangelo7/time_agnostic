@@ -56,78 +56,207 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (22/07/2021)</h2>
+                    <h2>Prossimo incontro (28/07/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                     <ol>
-                        <li>Ho scritto la prima versione del capitolo sulla literature review. È coerente dall'inizio alla fine, ma incompleto. Può essere scaricato cliccando sul seguente bottone:
-                            <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0.pdf" download="literature_review_1-0-0-alpha.pdf">
+                        <li>Ho scritto una sezione della literature review in cui introduco tutti i <em>metadata representation models</em> per la provenance esistenti, o almeno questo è l'obiettivo (difficile dire se siano realmente tutti, ogni volta che leggo un nuovo articolo ne scopro di nuovi). Riporto due tabelle che riassumono l'intero discorso a riguardo.
+                            <table class="table shadow-soft rounded table-striped my-4">
+                                <thead>
+                                    <tr>
+                                        <th>TYPE OF APPROACH</th>
+                                        <th>METADATA REPRESENTATION MODELS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Quadruples</td>
+                                        <td>Named graphs, RDF/S graphsets, RDF triple coloring</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Extension of the RDF data model</td>
+                                        <td>Notation 3 Logic, RDF+, annotated RDF (aRDF) and Annotated RDF Schema, SPOTL(X), RDF*</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Encapsulating Provenance with RDF Triples</td>
+                                        <td>PaCE, singleton property</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Data models alternative to RDF</td>
+                                        <td>GSMM, mapping entities to vectors</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Knowledge organisation system</td>
+                                        <td>OPM, PML, Provenir, PREMIS, SWAN, DC, PROV, OCDM</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="table shadow-soft rounded table-striped my-4">
+                                <thead>
+                                    <tr>
+                                        <th>APPROACH</th>
+                                        <th>TUPLE TYPE</th>
+                                        <th>COMPLIANCE WITH THE RDF DATA MODEL</th>
+                                        <th>COMPLIANCE WITH SPARQL</th>
+                                        <th>RDF SERIALISATIONS</th>
+                                        <th>EXTERNAL VOCABULARY</th>
+                                        <th>SCALABLE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Named graphs</td>
+                                        <td>Quadruple</td>
+                                        <td>+</td>
+                                        <td>+</td>
+                                        <td>TriG, TriX, N-Quads</td>
+                                        <td>-</td>
+                                        <td>+</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RDF/S graphsets</td>
+                                        <td>Quadruple</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>TriG, TriX, N-Quads</td>
+                                        <td>-</td>
+                                        <td>+</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RDF triple coloring</td>
+                                        <td>Quadruple</td>
+                                        <td>+</td>
+                                        <td>+</td>
+                                        <td>TriG, TriX, N-Quads</td>
+                                        <td>-</td>
+                                        <td>+</td>
+                                    </tr>
+                                    <tr>
+                                        <td>N3Logic</td>
+                                        <td>Triple (in N3)</td>
+                                        <td>-</td>
+                                        <td>+</td>
+                                        <td>N3</td>
+                                        <td>N3 Logic Vocabulary</td>
+                                        <td>+</td>
+                                    </tr>
+                                    <tr>
+                                        <td>aRDF</td>
+                                        <td>Nonstandard</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>+</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Annotated RDF Schema</td>
+                                        <td>Nonstandard</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>+</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RDF+</td>
+                                        <td>Quintuple</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>SPOTL(X)</td>
+                                        <td>Quintuple/sextuple</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RDF*</td>
+                                        <td>Nonstandard</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PaCE</td>
+                                        <td>Triple</td>
+                                        <td>+</td>
+                                        <td>+</td>
+                                        <td>RDF/XML, N3, Turtle, N-Triples, RDF-JSON, JSON-LD, RDFa, HTML5 Microdata</td>
+                                        <td>Provenir ontology</td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Singleton property</td>
+                                        <td>Triple</td>
+                                        <td>+</td>
+                                        <td>+</td>
+                                        <td>RDF/XML, N3, Turtle, N-Triples, RDF-JSON, JSON-LD, RDFa, HTML5 Microdata</td>
+                                        <td>singletonPropertyOf property</td>
+                                        <td>-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </li>
+                        <li>
+                            <p>Nuovi documenti studiati e citati:
+                                <ol>
+                                    <li>Beckett, D. (2010, April 10). RDF Syntaxes 2.0. Retrieved 07 22, 2021, from W3C: https://www.w3.org/2009/12/rdf-ws/papers/ws11</li>
+                                    <li>Damiani, E., Oliboni, B., Quintarelli, E., & Tanca , L. (2019). A graph-based meta-model for heterogeneous data management. Knowledge and Information Systems, 61(1), 107–136. doi:10.1007/s10115-018-1305-8</li>
+                                    <li>Dividino, R., Sizov, S., Staab, S., & Schueler, B. (2009). Querying for provenance, trust, uncertainty and other meta knowledge in RDF. Journal of Web Semantics, 7(3), 204-219. doi:10.1016/j.websem.2009.07.004</li>
+                                    <li>Flouris, G., Fundulaki, I., Pediaditis, P., Theoharis, Y., & Christophides, V. (2009). Coloring RDF Triples to Capture Provenance. The Semantic Web - ISWC 2009. Springer, Berlin, Heidelberg. doi:10.1007/978-3-642-04930-9_13</li>
+                                    <li>Groth, P., Gibson, A., & Velterop, J. (2010, 09 21). The anatomy of a nanopublication. Information Services & Use, 30(1-2), 51-56. doi:10.3233/ISU-2010-0613</li>
+                                    <li>Hartig, O., & Thompson, B. (2019, March 20). Foundations of an Alternative Approach to Reification in RDF. Retrieved from https://arxiv.org/abs/1406.3399</li>
+                                    <li>Hoffart, J., Suchanek, F. M., Berberich, K., & Weikum, G. (2013). YAGO2: A spatially and temporally enhanced knowledge base. Artificial Intelligence, 194, 28-61. doi:10.1016/j.artint.2012.06.001</li>
+                                    <li>Keskisärkkä, R., Blomqvist, E., Lind, L., & Hartig, O. (2019, November 04). RSP-QL* : Enabling Statement-Level Annotations in RDF Streams. The Power of AI and Knowledge Graphs. SEMANTiCS 2019. Lecture Notes in Computer Science. 11702. Karlsruhe, Germany: Springer, Cham. doi:10.1007/978-3-030-33220-4_11</li>
+                                    <li>Manola, F., & Miller, E. (Eds.). (2004, February 10). RDF Primer. Retrieved 07 22, 2021, from W3C: http://www.w3.org/TR/2004/REC-rdf-primer-20040210/</li>
+                                    <li>Nguyen, V., Bodenreider, O., & Sheth, A. (2014). Don't like RDF reification?: making statements about statements using singleton property. WWW '14: Proceedings of the 23rd international conference on World wide web (pp. 759–770). New York, NY, USA: Association for Computing Machinery. doi:10.1145/2566486.2567973</li>
+                                    <li>Noy, N., & Rector, A. (Eds.). (2006, 04 12). Defining N-ary Relations on the Semantic Web. Retrieved 07 22, 2021, from W3C: http://www.w3.org/TR/2006/NOTE-swbp-n-aryRelations-20060412/</li>
+                                    <li>Pediaditis, P., Flouris, G., Fundulaki, I., & Christophides, V. (2009). On Explicit Provenance Management in RDF/S Graphs. First Workshop on the Theory and Practice of Provenance. San Francisco, CA, USA: USENIX. Retrieved from https://www.usenix.org/legacy/event/tapp09/tech/full_papers/pediaditis/pediaditis.pdf</li>
+                                    <li>Pinheiro da Silva, P., McGuinness, D. L., & Fikes, R. (2006). A proof markup language for Semantic Web services. Information Systems, 31(4–5), 381-395. doi:10.1016/j.is.2005.02.003</li>
+                                    <li>Sahoo, S. S., Bodenreider, O., Hitzler, P., Sheth, A., & Thirunarayan, K. (2010). Provenance Context Entity (PaCE): Scalable Provenance Tracking for Scientific RDF Data. In G. M., & L. B., Scientific and Statistical Database Management (Vol. 6187, pp. 461-470). Berlin, Heidelberg: Springer. doi:10.1007/978-3-642-13818-8_32</li>
+                                    <li>Sikos, L., & Philp, D. (2020). Provenance-Aware Knowledge Representation: A Survey of Data Models and Contextualized Knowledge Graphs. Data Science and Engineering, 5(3), 293-316. doi:10.1007/s41019-020-00118-0</li>
+                                    <li>- Suchanek, F. M., Lajus, J., Boschin, A., & Weikum, G. (2019). Knowledge Representation and Rule. In M. Krötzsch, & D. Stepanova (Ed.), Reasoning Web. Explainable Artificial Intelligence: 15th International Summer School 2019, Bolzano, Italy, September 20-24, 2019, Tutorial Lectures (pp. 110-152). Springer International Publishing. doi:10.1007/978-3-030-31423-1_4</li>
+                                    <li>Udrea, O., Recupero, D. R., & Subrahmanian, V. S. (2010, January). Annotated RDF. ACM Transactions on Computational Logic, 11(2), 1–41. doi:10.1145/1656242.1656245</li>
+                                    <li>Zimmermann, A., Lopes, N., Polleres, A., & Straccia, U. (2012). A general framework for representing, reasoning and querying with annotated Semantic Web data. Journal of Web Semantics, 11, 72-95. doi:10.1016/j.websem.2011.08.006</li>
+                                </ol>
+                            </p>
+                        </li>
+                        <li>Lo stato corrente del capitolo sulla <em>literature review</em> può essere scaricato cliccando sul seguente bottone:
+                            <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0_alpha_2.pdf" download="literature_review_1-0-0-alpha.pdf">
                                 <span class="mr-1"><span class="fas fa-download"></span></span>
                                 Download literature review 1.0.0-alpha
                             </a>
                         </li>
-                        <li>Documenti studiati e inclusi nella literature review:
-                            <ol>
-                                <li>Barabucci, G. (2013). Introduction to the Universal Delta Model. Proceedings of the 2013 ACM Symposium on Document Engineering (p. 47–56). Florence, Italy: Association for Computing Machinery. doi:10.1145/2494266.2494284</li>
-                                <li>Barabucci, G., Ciancarini, P., Iorio, A. D., & Vitali, F. (2016). Measuring the quality of diff algorithms: a formalization. Computer Standards & Interfaces, 46, 52-65. doi:10.1016/j.csi.2015.12.005</li>
-                                <li>Berners-Lee, T. (1999). Weaving the Web: the original design and ultimate destiny of the World Wide Web. San Francisco: Harper San Francisco</li>
-                                <li>Berners-Lee, T., & Connolly, D. (2004). Delta: an ontology for the distribution of differences between RDF graphs. Retrieved from https://www.w3.org/DesignIssues/lncs04/Diff.pdf</li>
-                                <li>Caplan, P. (2017). Understanding PREMIS: an overview of the PREMIS Data Dictionary for Preservation Metadata. Library of Congress. Retrieved from Library of Congress: https://www.loc.gov/standards/premis/understanding-premis-rev2017.pdf</li>
-                                <li>Carroll, J. J., Bizer, C., Hayes, P., & Stickler, P. (2005). Named graphs, provenance and trust. Proceedings of the 14th international conference on World Wide Web (p. 613–622). New York: Association for Computing Machinery. doi:10.1145/1060745.1060835</li>
-                                <li>Ciccarese, P., Wu, E., Kinoshita, J., Wong, G. T., Ocana, M., Ruttenberg, A., & Clark, T. (2008). The SWAN Scientific Discourse Ontology. Journal of biomedical informatics, 41(5), 739–751. doi:10.1016/j.jbi.2008.04.010</li>
-                                <li>Daquino, M., Peroni, S., Shotton, D., Colavizza, G., Ghavimi, B., Lauscher, A., . . . Zumstein, P. (2020). The OpenCitations Data Model. In J. Z. Pan, V. Tamma, C. d’Amato, K. Janowicz, B. Fu, A. Polleres, . . . L. Kagal (A cura di), International Semantic Web Conference. 12507, p. 447-463. Springer, Cham. doi:10.1007/978-3-030-62466-8_28</li>
-                                <li>DCMI Metadata Terms. (2020, 01 20). Retrieved 07 16, 2021, from Dublin Core Metadata Initiative: http://dublincore.org/specifications/dublin-core/dcmi-terms/2020-01-20/</li>
-                                <li>Ding, L., Finin, T., Peng, Y., Silva, P. P., & L., D. (2005). Tracking RDF Graph Provenance. Technical report. Retrieved from http://ebiquity.umbc.edu/get/a/publication/178.pdf</li>
-                                <li>Gil, Y., & Miles, S. (Eds.). (2013, 04 30). PROV Model Primer. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/NOTE-prov-primer-20130430/</li>
-                                <li>Lebo, T., Sahoo, S., & McGuinness, D. (Eds.). (2013, 04 30). PROV-O: The PROV Ontology. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/REC-prov-o-20130430/</li>
-                                <li>Moreau, L., & Missier, P. (Eds.). (2013, 04 30). PROV-DM: The PROV Data Model. Retrieved 07 16, 2021, from W3C: http://www.w3.org/TR/2013/REC-prov-dm-20130430/</li>
-                                <li>Moreau, L., Clifford, B., Freire, J., Futrelle, J., Gil, Y., Groth, P., . . . Bussche, J. V. (2011). The Open Provenance Model core specification (v1.1). Future Generation Computer Systems,, 27(6), 743-756. doi:10.1016/j.future.2010.07.005</li>
-                                <li>Ognyanov, D., & Kiryakov, A. (2002). Tracking Changes in RDF(S) Repositories. In G.-P. A., & B. V.R. (Ed.), Knowledge Engineering and Knowledge Management: Ontologies and the Semantic Web (pp. 373-378). Berlin, Heidelberg: Springer. doi:10.1007/3-540-45810-7_33</li>
-                                <li>Peroni, S., Shotton, D., & Vitali, F. (2016). A Document-inspired Way for Tracking Changes of RDF Data. In L. Hollink, S. Darányi, A. M. Peñuela, & E. Kontopoulos (Ed.), Detection, Representation and Management of Concept Drift in Linked Open Data. 1799, pp. 26-33. Bologna: CEUR Workshop Proceedings. Retrieved from http://ceur-ws.org/Vol-1799/Drift-a-LOD2016_paper_4.pdf</li>
-                                <li>Provenance Incubator Group Charter. (2010). Retrieved July 15, 2021, from https://www.w3.org/2005/Incubator/prov/charter</li>
-                                <li>(08 December 2010). Provenance XG Final Report. W3C. Retrieved from http://www.w3.org/2005/Incubator/prov/XGR-prov-20101214/</li>
-                                <li>Sahoo, S. S., & Sheth, A. P. (2009). Provenir Ontology: Towards a Framework for eScience Provenance Management. Retrieved from https://corescholar.libraries.wright.edu/knoesis/80</li>
-                            </ol>
-                        </li>
-                        <li>Documenti studiati ma esclusi dalla literature review perché poco pertinenti o per ragioni di sintesi:
-                            <ol>
-                                <li>Aggelen, A.V., Hollink, L., & Ossenbruggen, J.V. (2016). Combining Distributional Semantics and Structured Data to Study Lexical Change. Drift-a-LOD@EKAW</li>
-                                <li>Berliner, B. (1990). CVS II: Parallelizing Software Development. Prisma Inc. Retrieved from https://docs.freebsd.org/44doc/psd/28.cvs/paper.pdf</li>
-                                <li>Fokkens, A. S., ter Braake, S., Maks, E., & Ceolin, D. (2016). On the Semantics of Concept Drift: Towards Formal Definitions of Semantic Change. In S. Darányi, L. Hollink, A. Meroño Peñuela, & E. Kontopoulos (Eds.), Proceedings of Drift-a-LOD</li>
-                                <li>Ding, L., Finin, T., Joshi, A., Pan, R., Scott Cost, R., Peng, Y.,  Reddivari, P., Doshi, V., and Sachs, J. (2004). Swoogle: a search and metadata engine for the semantic web. In Proceedings of the thirteenth ACM international conference on Information and knowledge management (CIKM '04). Association for Computing Machinery, New York, NY, USA, 652–659. DOI:https://doi.org/10.1145/1031171.1031289</li>
-                                <li>Meroño-Peñuela, A., Wittek, P., & Darányi, S. (2016). Visualizing the Drift of Linked Open Data Using Self-Organizing Maps. Drift-a-LOD@EKAW</li>
-                                <li>Recchia, G., Jones, E., Nulty, P., Regan, J., & Bolla, P.D. (2016). Tracing Shifting Conceptual Vocabularies Through Time. Drift-a-LOD@EKAW</li>
-                                <li>Stavropoulos, Thanos G., Andreadis, Stelios, Kontopoulos, Efstratios, Riga, Marina, Mitzias, Panagiotis, & Kompatsiaris, Ioannis. (2017). SemaDrift: A Protégé Plugin for Measuring Semantic Drift in Ontologies. Presented at the Detection, Representation and Management of Concept Drift in Linked Open Data (Drift-a-LOD), Bologna, Italy: Zenodo. http://doi.org/10.5281/zenodo.345374</li>
-                                <li>Tichy, W. F. (1984). RCS: A System for Version Control. Department of Computer Science Technical Reports. Paper 394. https://docs.lib.purdue.edu/cstech/394</li>
-                            </ol>
-                        </li>
-                        <li>Il metodo <strong>get_history</strong> restituisce sempre una tupla di due elementi. Il secondo elemento è un dizionario con metadati sulla provenance se il parametro include_prov_metadata è True, altrimenti è None. Allo stesso modo, il metodo <strong>get_state_at_time</strong> restituisce sempre una tupla di tre elementi, dove il terzo elemento è un dizionario con metadati sulla provenance se il parametro include_prov_metadata è True, altrimenti è None.</li>
-                        <li>Il metodo get_history riporta anche la <strong>dc:description</strong> dello snapshot in caso di parametro include_prov_metadata passato a True. Di conseguenza, anche l'interfaccia riporta questa informazione, particolarmente informativa in caso di merge tra entità o cancellazione. All'interno della descrizione, le entità vengono rese più leggibili nel caso in cui l'utente abbia fornito uno o più URI base nel file di configurazione. Inoltre, le entità nella descrizione vengono mostrate come link, cliccando sui quali viene ricostruita la storia dell'entità corrispondente.
-                            <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                <img src="./assets/img/se_desc.png" alt="line-through">
-                            </div>
-                        </li>
                     </ol>
                 <h3>Cosa non ho capito</h3>
                     <ol>
-                        <li>Domande relative all'articolo <em>A document-inspired way for tracking changes of RDF data</em> (<a href="https://rawgit.com/essepuntato/opencitations/master/paper/occ-driftalod2016.html" target="_blank">Peroni, et al., 2016</a>):
-                            <ol>
-                                <li>Nell'articolo si legge:
-                                    <blockquote class="blockquote ml-5 mt-3">[...] while preserving provenance information of such
-                                        addition/deletion actions in an appropriate contextual space, i.e. the provenance
-                                        graph associated to such entity (as also suggested in [16]).</blockquote>
-                                    <p>[16] sarebbe l'articolo <em>Tracking RDF Graph Provenance using RDF Molecules</em> (<a href="http://ebiquity.umbc.edu/get/a/publication/178.pdf" target="_blank">Ding, et al., 2005</a>). Ho studiato l'articolo citato e non sono riuscito a capire in che modo questo suggerisca di utilizzare il grafo associato a un'entità come contesto per registrare la provenance. L'articolo sembra piuttosto suggerire come livello appropriato una "molecola RDF", ovvero una tripla in assenza di blank nodes, il risultato di un algoritmo di decomposizione secondo un'ontologia data in caso di blank nodes.</p>
-                                </li>
-                                <li>Nel secondo capitolo dell'articolo vengono discussi due approcci per tenere traccia dei cambiamenti in dati RDF, ovvero l'approccio <em>statement-centric</em> e <em>resource-centric</em>: non ho capito se questa tassonomia sia un contributo originale dell'articolo o esista altrove. Nel caso, mi piacerebbe approfondire perché non mi è del tutto chiara. 
-                                    <ol>
-                                        <li>Tra gli approcci di tipo <em>statement-centric</em> viene menzionato il <em>massive statement reification</em>. Si riferisce a RDF reification? Ovvero all'unica sintassi standard per catturare provenance RDF (<a href="https://www.w3.org/TR/2004/REC-rdf-primer-20040210/#reification" target="_blank">https://www.w3.org/TR/2004/REC-rdf-primer-20040210/#reification</a>).</li>
-                                    </ol></li>
-                            </ol>
+                        <li>C'è un'aurea di mistero intorno all'articolo <em>Context in graphs</em>, di tale Hogan A (2018). Viene citato da <a href="https://doi.org/10.1007/s41019-020-00118-0" target="_blank">https://doi.org/10.1007/s41019-020-00118-0</a> e <a href="https://doi.org/10.1007/978-3-030-67681-0" target="_blank">https://doi.org/10.1007/978-3-030-67681-0</a> a proposito della <em>Hoganification</em>, una tecnica per catturare la provenance di un grafo. Ecco la citazione completa, identica in entrambe le fonti:
+                            <blockquote class="blockquote ml-5 mt-3">
+                                Hogan A (2018) Context in graphs. In: Proceedings of the 1st International Workshop on Conceptualized Knowledge Graphs. RWTH Aachen University, Aachen
+                            </blockquote>
+                            <p>Tuttavia, tale documento sembra non esistere. Non è nemmeno menzionato sul sito personale dell'autore (<a href="https://aidanhogan.com/" target="_blank">https://aidanhogan.com/</a>) o su quello istituzionale (<a href="https://dblp.org/pid/h/AidanHogan.html" target="_blank">https://dblp.org/pid/h/AidanHogan.html</a>). Conosci la <em>Hoganification</em>? Conosci fonti a riguardo? Mi piacerebbe parlarne per completezza, ma non trovo informazioni significative.</p>
                         </li>
-                        <li>Potresti suggerirmi della bibliografia in materia di change tracking sui documenti testuali? In particolare, mi piacerebbe ricostruire in che modo l'approccio sulla provenance dell'OCDM si ispira a Microsoft Word e OpenOffice Writer.</li>
-                        <li>È legittimo inserire in bibliografia testi che non corrispondono ad alcuna citazione intratestuale? Ovvero documenti che sono risultati utili alla comprensione del problema, ma che per ragioni di sintesi non sono stati menzionati nel discorso.</li>
-                        <li>Oltre a EXCITE, al Linked Open Citation Database e al Venice Scholar Index, esistono altre repository o progetti che hanno adottato l'OCDM?</li>
-                        <li>Esistono casi in cui un documento RDF costruito seguendo l'OCDM contenga blank nodes?</li>
+                        <li>Ha senso inserire una sezione della <em>literature review</em> in cui si parla di algoritmi di delta tra dati RDF?</li>
+                    </ol>
+                <h3>Punto della situazione</h3>
+                    <p>In questa sezione ricapitolo cosa rimane da fare.</p>
+                    <p>Per quanto riguarda il codice:</p>
+                    <ol>
+                        <li>Supporto per le inverse path nelle query SPARQL.</li>
+                        <li>Nuovo parametro di configurazione che permetta di caricare i grafi del passato ricostruiti su un triplestore, al fine di rendere più veloci le successive query agnostiche.</li>
+                    </ol>
+                    <p>Per quanto riguarda la <em>literature review</em>:</p>
+                    <ol>
+                        <li>Sezione sul change tracking. La stesura è già avviata, proseguirà dopo la pubblicazione del diario.</li>
                     </ol>
             </div>
         </section>
@@ -4003,10 +4132,21 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-19" data-target="#panel-19" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-19">
-                            <span class="h6 mb-0 font-weight-bold">dd/mm/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">28/07/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-19">
+                            <div class="pt-3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-20" data-target="#panel-20" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-20">
+                            <span class="h6 mb-0 font-weight-bold">04/08/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-20">
                             <div class="pt-3">
                             </div>
                         </div>
