@@ -56,7 +56,7 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (02/08/2021)</h2>
+                    <h2>Prossimo incontro (04/08/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                     <ol>
@@ -255,14 +255,16 @@
                             </p>
                         </li>
                         <li>
-                            <p>Sono state apportate le modifiche da te indicate: 
+                            <p>Modifiche apportate in seguito alle tue considerazioni: 
                                 <ol>
                                     <li>
-                                        <p>È stata apportata la seguente modifica:</p>
                                         <p><s>There is a shorthand notation, the rdf:ID attribute in RDF/XML (Figure 2), but RDF Reification has no syntactic support for other serialisations.</s></p>
+                                        <p class="text-center"><i class="fas fa-long-arrow-alt-down"></i></p>
                                         <p>There is a shorthand notation, the rdf:ID attribute in RDF/XML (Figure 2), but it is not present in other serializations.</p>
                                     </li>
                                     <li>La didascalia di Figura 1 non copre più parte dell'immagine.</li>
+                                    <li>Quando parlo di "valid time" apro una finestra sulla complessità del problema, citando il proceeding <em>Supporting Complexity and Conjectures in Cultural Heritage Descriptions</em> di Barabucci, Tomasi e Vitali.</li>
+                                    <li>Conclusa la rassegna di software e datasets rilevanti per il change tracking, sottolineo come i software per effettuare time-travel queries esistenti necessitino tutti di pre-indicizzazioni, a differenza del mio che, grazie al modello di provenance dell'OpenCitations Data Model, può elaborare la richiesta al volo.</li>
                                 </ol>
                             </p>
                         </li>
@@ -275,12 +277,13 @@
                     </ol>
                 <h3>Cosa non ho capito</h3>
                     <ol>
-                        <li>Ho scoperto che Wikidata utilizza la reificazione solo a livello metadatale, ma per il change tracking utilizza dei veri e propri phisical snapshots. Ogni volta che c'è una revisione, l'intero stato della risorsa dopo la revisione viene salvato. Nella literature review ho incluso una descrizione più dettagliata di cosa avviene. Sei d'accordo nel catalogare la politica di archiviazione di Wikipedia come indipendent-copies/physical snapshots?</li>
+                        <li>Ho scoperto che Wikidata utilizza la reificazione solo a livello metadatale, ma per il change tracking utilizza dei veri e propri phisical snapshots. Ogni volta che c'è una revisione, l'intero stato della risorsa dopo la revisione viene salvato. Nella literature review ho incluso una descrizione più dettagliata di cosa avviene. Sei d'accordo nel catalogare la politica di archiviazione di Wikipedia come independent-copies/physical snapshots?</li>
                         <li>Consideriamo un autore di nome Dong-Hyuk Im, dove Dong-Hyuk è il nome. Come va abbreviato per citarlo in APA style? Im, D.-H.? Im, D.? Im, D.H.?</li>
                         <li>Cristian vorrebbe citare il mio dataset. Come si potrebbe fare? Momentaneamente l'ho caricato su Zenodo con questo DOI: <a href="https://doi.org/10.5281/zenodo.5151264" target="_blank">https://doi.org/10.5281/zenodo.5151264</a>.</li>
                         <li>Posso usare Chicago come stile di citazione? Perché APA sesta edizione prevede di inserire tutti gli autori fino al quinto prima di abbreviare con "et al." nella prima citazione intra-testuale, che non è bellissimo. Fonte: <a href="https://blog.apastyle.org/apastyle/2011/11/the-proper-use-of-et-al-in-apa-style.html" target="_blank">https://blog.apastyle.org/apastyle/2011/11/the-proper-use-of-et-al-in-apa-style.html</a>.</li>
                         <li>Qual è il miglior modo per citare l'API di Crossref?</li>
                         <li>Alla luce della classificazione riassunta in Tabella 2, il mio software al momento è in grafo di effettuare una version materialization (get_state_at_time) e una cross-version structured query (run_agnostic_query). Non è in grado di effettuare una single-version structured query, ovvero una query soddisfatta in un tempo specifico, né un qualsiasi tipo di query sui delta. Infine, la delta materialization è possibile by design, perché oco:hasUpdateQuery contiene già il delta tra due risorse. Sei d'accordo con queste affermazioni?</li>
+                        <li>Quali sono le parole italiane solitamente utilizzate per tradurre <em>proceeding</em> e <em>literature review</em>?</li>
                     </ol>
             </div>
         </section>
@@ -4372,6 +4375,233 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-20">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>Ho scritto l'ultima sezione della literature review, in cui indago lo stato dell'arte sul change tracking in RDF, introduco le possibili politiche di archiviazione, le tipologie di query, riporto casi d'uso e li catalogo. Riporto tre tabelle che riassumono l'intero discorso a riguardo.
+                                        <table class="table shadow-soft rounded table-striped my-4">
+                                            <caption>Table 1 Datasets and software divided by storage policy.</caption>
+                                            <thead>
+                                                <tr>
+                                                    <th>Archiving policy</th>
+                                                    <th>Datasets / Software</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Independent copies (IC)</td>
+                                                    <td>DBPedia, Wikidata, YAGO, Dynamic Linked Data Observatory, SemVersion, PromptDiff</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Change-based (CB)</td>
+                                                    <td>(Im, Lee, & Kim, 2012),  (Papavasileiou, Flouris, Fundulaki, Kotzinos, & Christophides, 2013), R&Wbase</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Timestamp-based (TB)</td>
+                                                    <td>x-RDF-3X, v-RDFCSA</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Hybrid</td>
+                                                    <td>OSTRICH (CB/TB), OpenCitations Corpus (CB/TB), (Tanon & Suchanek, 2019) (IC/CB/TB)</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <table class="table shadow-soft rounded table-striped my-4">
+                                            <caption>Table 2 Retrieval functionalities according to (Fernández, Umbrich, Polleres, & Knuth, 2016).</caption>
+                                            <tr>
+                                                <th rowspan="2">&nbsp;</th>
+                                                <th rowspan="2">Materialization</th>
+                                                <th colspan="2" class="text-center">Structured queries</th>
+                                            </tr>
+                                            <tr class="text-center">
+                                                <th>Single time</th>
+                                                <th>Cross time</th>
+                                            </tr>
+                                            <tr>
+                                                <th>Version</th>
+                                                <td>
+                                                    <p>Version materialization</p>
+                                                    <p><em>Get snapshot at time t<sub>i</sub></em></p>
+                                                </td>
+                                                <td>
+                                                    <p>Single-version structured queries</p>
+                                                    <p><em>Articles written by a specific author at time t<sub>i</sub></em></p>
+                                                </td>
+                                                <td>
+                                                    <p>Cross-version structured queries</p>
+                                                    <p><em>Articles associated with the same DOI simultaneously</em></p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Delta</th>
+                                                <td>
+                                                    <p>Delta materialization</p>
+                                                    <p><em>Get delta at time t<sub>i</sub></em></p>
+                                                </td>
+                                                <td>
+                                                    <p>Single-delta structured queries</p>
+                                                    <p><em>DOI modified between two consecutive snapshots</em></p>
+                                                </td>
+                                                <td>
+                                                    <p>Cross-delta structured queries</p>
+                                                    <p><em>The most significant change in the number of articles in the history of the dataset</em></p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <table class="table shadow-soft rounded table-striped my-4">
+                                            <caption>Table 3 Software catalogued by allowed query types and the need for indexing.</caption>
+                                            <thead>
+                                                <tr>
+                                                    <th>Software</th>
+                                                    <th>Version materialization</th>
+                                                    <th>Delta materialization</th>
+                                                    <th>Single version structured query</th>
+                                                    <th>Cross version structured query</th>
+                                                    <th>Single delta structured query</th>
+                                                    <th>Cross delta structured query</th>
+                                                    <th>On the fly</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>PromptDiff</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>+</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>SemVersion</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>+</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>(Im, Lee, & Kim, 2012)</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>R&Wbase</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>+</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>x-RDF-3X</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>v-RDFCSA</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>OSTRICH</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>(Tanon & Suchanek, 2019)</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>+</td>
+                                                    <td>-</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </li>
+                                    <li>
+                                        <p>Nuovi documenti studiati e citati:
+                                            <ol>
+                                                <li>Barabucci, G., Tomasi, F., & Vitali, F. (2021). Supporting Complexity and Conjectures in Cultural Heritage Descriptions. CEUR Workshop Proceedings, 2810, 104-115. Retrieved from http://ceur-ws.org/Vol-2810/paper9.pdf</li>
+                                                <li>Cerdeira-Pena, A., Farina, A., Fernández, J. D., & Martınez-Prieto, M. A. (2016). Self-indexing rdf archives. Proceedings of IEEE Data Compression Conference.</li>
+                                                <li>Dooley, P., & Božić, B. (2019). Towards Linked Data for Wikidata Revisions and Twitter. iiWAS2019: Proceedings of the 21st International Conference on Information Integration and Web-based Applications & Services (pp. 166–175). New York, NY, USA: Association for Computing Machinery. doi:10.1145/3366030.3366048</li>
+                                                <li>Erxleben, F., Günther, M., Krötzsch, M., Mendez, J., & Vrandečić, D. (2014). Introducing Wikidata to the Linked Data Web. The Semantic Web – ISWC 2014 (pp. 50–65). Springer International Publishing.</li>
+                                                <li>Fernández, J. D., Polleres, A., & Umbrich, J. (2015). Towards Efficient Archiving of Dynamic Linked. DIACRON@ESWC (pp. 34–49). Portorož, Slovenia : Computer Science.</li>
+                                                <li>Fernández, J. D., Umbrich, J., Polleres, A., & Knuth, M. (2016). Evaluating Query and Storage Strategies for RDF Archives. Proceedings of the 12th International Conference on Semantic Systems.</li>
+                                                <li>Käfer, T., Abdelrahman, A., Umbrich, J., Byrne, P. O., & Hogan, A. (2013). Observing Linked Data Dynamics. The Semantic Web: Semantics and Big Data (pp. 213-227). Berlin, Heidelberg: Springer. Retrieved from https://link.springer.com/content/pdf/10.1007%2F978-3-642-38288-8_15.pdf</li>
+                                                <li>Im, D.-H., Lee, S.-W., & Kim, H.-J. (2012). A Version Management Framework for RDF Triple Stores. International Journal of Software Engineering and Knowledge Engineering, 22, 85-106. doi:10.1142/S0218194012500040</li>
+                                                <li>Lehmann, J., Isele, R., Jakob, M., Jentzsch, A., Kontokostas, D., Mendes, P. N., . . . Bizer, C. (2015). DBpedia – A large-scale, multilingual knowledge base extracted from Wikipedia. Semantic Web, 6(2), 167-195. doi:10.3233/SW-140134</li>
+                                                <li>Neumann, T., & Weikum, G. (2010). x-RDF-3X: Fast Querying, High Update Rates, and Consistency for RDF Databases. Proceedings of the VLDB Endowment, 3, pp. 256–263.</li>
+                                                <li>Noy, N. F., & Musen, M. A. (2002). Promptdiff: A Fixed-Point Algorithm for Comparing Ontology Versions. Proc. of IAAI, (pp. 744–750).</li>
+                                                <li>Sande, M. V., Colpaert, P., Verborgh, R., Coppens, S., Mannens, E., & Walle, R. V. (2013). R&Wbase: Git for triples. Proceedings of the 6th Workshop on Linked Data on the Web. 996. CEUR Workshop Proceedings.</li>
+                                                <li>Snodgrass, R. (1986). Temporal Databases. IEEE Computer, 19, 35–42. Retrieved from https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.464.8688&rep=rep1&type=pdf</li>
+                                                <li>Orlandi, F., & Passant, A. (2011). Modelling provenance of DBpedia resources using Wikipedia contributions. Journal of Web Semantics, 9(2), 149-164. doi:10.1016/j.websem.2011.03.002</li>
+                                                <li>Papavasileiou, V., Flouris, G., Fundulaki, I., Kotzinos, D., & Christophides, V. (2013). High-level Change Detection in RDF(S) KBs. ACM Transactions on Database Systems, 38(1). doi:10.1145/2445583.2445584</li>
+                                                <li>Taelman, R., Sande, M. V., & Verborgh, R. (2018). OSTRICH: Versioned Random-Access Triple Store. Companion Proceedings of the Web Conference 2018, (pp. 127-130). Retrieved from https://core.ac.uk/download/pdf/157574975.pdf</li>
+                                                <li>Tanon, T. P., & Suchanek, F. M. (2019). Querying the Edit History of Wikidata. Extended Semantic Web Conference, (pp. 161-166). Portorož, Slovenia. doi:10.1007/978-3-030-32327-1_32</li>
+                                                <li>Tanon, T. P., Weikum, G., & Suchanek, F. (2020). YAGO 4: A Reason-able Knowledge Base. The Semantic Web. ESWC 2020 (pp. 583-596). Cham: Springer.</li>
+                                                <li>Umbrich, J., Hausenblas, M., Hogan, A., Polleres, A., & Decker, S. (2010). Towards Dataset Dynamics: Change Frequency of Linked Open Data Sources. In C. Bizer, T. Heath, T. Berners-Lee, & M. Hausenblas (Ed.), Proceedings of the WWW2010 Workshop on Linked Data on the Web. Raleigh, USA: CEUR Workshop Proceedings. Retrieved from http://ceur-ws.org/Vol-628/ldow2010_paper12.pdf</li>
+                                                <li>Völkel, M., Winkler, W., Sure, Y., Kruk, S., & Synak, M. (2005). SemVersion: A Versioning System for RDF and Ontologies. Proc. of ESWC.</li>
+                                            </ol>        
+                                        </p>
+                                    </li>
+                                    <li>
+                                        <p>Modifiche apportate in seguito alle tue considerazioni: 
+                                            <ol>
+                                                <li>
+                                                    <p><s>There is a shorthand notation, the rdf:ID attribute in RDF/XML (Figure 2), but RDF Reification has no syntactic support for other serialisations.</s></p>
+                                                    <p class="text-center"><i class="fas fa-long-arrow-alt-down"></i></p>
+                                                    <p>There is a shorthand notation, the rdf:ID attribute in RDF/XML (Figure 2), but it is not present in other serializations.</p>
+                                                </li>
+                                                <li>La didascalia di Figura 1 non copre più parte dell'immagine.</li>
+                                                <li>Quando parlo di "valid time" apro una finestra sulla complessità del problema, citando il proceeding <em>Supporting Complexity and Conjectures in Cultural Heritage Descriptions</em> di Barabucci, Tomasi e Vitali.</li>
+                                                <li>Conclusa la rassegna di software e datasets rilevanti per il change tracking, sottolineo come i software per effettuare time-travel queries esistenti necessitino tutti di pre-indicizzazioni, a differenza del mio che, grazie al modello di provenance dell'OpenCitations Data Model, può elaborare la richiesta al volo.</li>
+                                            </ol>
+                                        </p>
+                                    </li>
+                                    <li>Considero il capitolo potenzialmente concluso. Pertanto, avanzo la versione da alpha a beta:
+                                        <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0_beta.pdf" download="literature_review_1-0-0-beta.pdf">
+                                            <span class="mr-1"><span class="fas fa-download"></span></span>
+                                            Download literature review 1.0.0-beta
+                                        </a>
+                                    </li>
+                                </ol>
+                            <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>Ho scoperto che Wikidata utilizza la reificazione solo a livello metadatale, ma per il change tracking utilizza dei veri e propri phisical snapshots. Ogni volta che c'è una revisione, l'intero stato della risorsa dopo la revisione viene salvato. Nella literature review ho incluso una descrizione più dettagliata di cosa avviene. Sei d'accordo nel catalogare la politica di archiviazione di Wikipedia come independent-copies/physical snapshots?</li>
+                                    <li>Consideriamo un autore di nome Dong-Hyuk Im, dove Dong-Hyuk è il nome. Come va abbreviato per citarlo in APA style? Im, D.-H.? Im, D.? Im, D.H.?</li>
+                                    <li>Cristian vorrebbe citare il mio dataset. Come si potrebbe fare? Momentaneamente l'ho caricato su Zenodo con questo DOI: <a href="https://doi.org/10.5281/zenodo.5151264" target="_blank">https://doi.org/10.5281/zenodo.5151264</a>.</li>
+                                    <li>Posso usare Chicago come stile di citazione? Perché APA sesta edizione prevede di inserire tutti gli autori fino al quinto prima di abbreviare con "et al." nella prima citazione intra-testuale, che non è bellissimo. Fonte: <a href="https://blog.apastyle.org/apastyle/2011/11/the-proper-use-of-et-al-in-apa-style.html" target="_blank">https://blog.apastyle.org/apastyle/2011/11/the-proper-use-of-et-al-in-apa-style.html</a>.</li>
+                                    <li>Qual è il miglior modo per citare l'API di Crossref?</li>
+                                    <li>Alla luce della classificazione riassunta in Tabella 2, il mio software al momento è in grafo di effettuare una version materialization (get_state_at_time) e una cross-version structured query (run_agnostic_query). Non è in grado di effettuare una single-version structured query, ovvero una query soddisfatta in un tempo specifico, né un qualsiasi tipo di query sui delta. Infine, la delta materialization è possibile by design, perché oco:hasUpdateQuery contiene già il delta tra due risorse. Sei d'accordo con queste affermazioni?</li>
+                                    <li>Quali sono le parole italiane solitamente utilizzate per tradurre <em>proceeding</em> e <em>literature review</em>?</li>
+                                </ol>            
                             </div>
                         </div>
                     </div>
