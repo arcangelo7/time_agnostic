@@ -265,11 +265,34 @@
                                     <li>La didascalia di Figura 1 non copre più parte dell'immagine.</li>
                                     <li>Quando parlo di "valid time" apro una finestra sulla complessità del problema, citando il proceeding <em>Supporting Complexity and Conjectures in Cultural Heritage Descriptions</em> di Barabucci, Tomasi e Vitali.</li>
                                     <li>Conclusa la rassegna di software e datasets rilevanti per il change tracking, sottolineo come i software per effettuare time-travel queries esistenti necessitino tutti di pre-indicizzazioni, a differenza del mio che, grazie al modello di provenance dell'OpenCitations Data Model, può elaborare la richiesta al volo.</li>
+                                    <li>È stato adottato Chigago XV edizione come stile di citazione, al posto di APA VI edizione.</li>
+                                    <li>L'indice prevede ora i seguenti capitoli:
+                                        <ul>
+                                            <li>Table of Contents</li>
+                                            <li>Abstract</li>
+                                            <li>Introduction</li>
+                                            <li>Literature review</li>
+                                            <li>Materials and Methods</li>
+                                            <li>The Time Agnostic Library</li>
+                                            <li>Library implementation</li>
+                                            <li>Discussion</li>
+                                            <li>Conclusion</li>
+                                            <li>References</li>
+                                        </ul>
+                                    </li>
+                                    <li>Modifiche di layout, sulla base di <a href="https://corsi.unibo.it/2cycle/DigitalHumanitiesKnowledge/information-on-writing-a-dissertation" target="_blank">https://corsi.unibo.it/2cycle/DigitalHumanitiesKnowledge/information-on-writing-a-dissertation</a>:
+                                        <ol>
+                                            <li>Font: Times New Roman, 12pt.</li>
+                                            <li>Interlinea: 1.5.</li>
+                                            <li>Margini: 2-2-2-2.</li>
+                                            <li>Ho aggiunto il frontespizio.</li>
+                                        </ol>
+                                    </li>
                                 </ol>
                             </p>
                         </li>
                         <li>Considero il capitolo potenzialmente concluso. Pertanto, avanzo la versione da alpha a beta:
-                            <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0_beta.pdf" download="literature_review_1-0-0-beta.pdf">
+                            <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0_beta_2.pdf" download="literature_review_1-0-0-beta.pdf">
                                 <span class="mr-1"><span class="fas fa-download"></span></span>
                                 Download literature review 1.0.0-beta
                             </a>
@@ -280,10 +303,12 @@
                         <li>Ho scoperto che Wikidata utilizza la reificazione solo a livello metadatale, ma per il change tracking utilizza dei veri e propri phisical snapshots. Ogni volta che c'è una revisione, l'intero stato della risorsa dopo la revisione viene salvato. Nella literature review ho incluso una descrizione più dettagliata di cosa avviene. Sei d'accordo nel catalogare la politica di archiviazione di Wikipedia come independent-copies/physical snapshots?</li>
                         <li>Consideriamo un autore di nome Dong-Hyuk Im, dove Dong-Hyuk è il nome. Come va abbreviato per citarlo in APA style? Im, D.-H.? Im, D.? Im, D.H.?</li>
                         <li>Cristian vorrebbe citare il mio dataset. Come si potrebbe fare? Momentaneamente l'ho caricato su Zenodo con questo DOI: <a href="https://doi.org/10.5281/zenodo.5151264" target="_blank">https://doi.org/10.5281/zenodo.5151264</a>.</li>
-                        <li>Posso usare Chicago come stile di citazione? Perché APA sesta edizione prevede di inserire tutti gli autori fino al quinto prima di abbreviare con "et al." nella prima citazione intra-testuale, che non è bellissimo. Fonte: <a href="https://blog.apastyle.org/apastyle/2011/11/the-proper-use-of-et-al-in-apa-style.html" target="_blank">https://blog.apastyle.org/apastyle/2011/11/the-proper-use-of-et-al-in-apa-style.html</a>.</li>
                         <li>Qual è il miglior modo per citare l'API di Crossref?</li>
                         <li>Alla luce della classificazione riassunta in Tabella 2, il mio software al momento è in grafo di effettuare una version materialization (get_state_at_time) e una cross-version structured query (run_agnostic_query). Non è in grado di effettuare una single-version structured query, ovvero una query soddisfatta in un tempo specifico, né un qualsiasi tipo di query sui delta. Infine, la delta materialization è possibile by design, perché oco:hasUpdateQuery contiene già il delta tra due risorse. Sei d'accordo con queste affermazioni?</li>
                         <li>Quali sono le parole italiane solitamente utilizzate per tradurre <em>proceeding</em> e <em>literature review</em>?</li>
+                        <li>Il font prescritto per la tesi è "Times o simili". È possibile utilizzare un'alternativa senza grazie?</li>
+                        <li>Tra le regole di layout per la tesi non ci sono indicazioni circa la spaziatura tra paragrafi. Solitamente, lascio 10 pt dopo ogni paragrafo, perché mi sembra una soluzione più leggibile dell'indentazione, ma so che le dissertazioni scientifiche usano l'indentazione. Cosa mi suggerisci di usare?</li>
+                        <li>Relativamente al frontespizio, qual è la materia di riferimento per la tesi? Computational thinking? Open Science?</li>
                     </ol>
             </div>
         </section>
@@ -4586,7 +4611,7 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                         </p>
                                     </li>
                                     <li>Considero il capitolo potenzialmente concluso. Pertanto, avanzo la versione da alpha a beta:
-                                        <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0_beta.pdf" download="literature_review_1-0-0-beta.pdf">
+                                        <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0_beta_2.pdf" download="literature_review_1-0-0-beta.pdf">
                                             <span class="mr-1"><span class="fas fa-download"></span></span>
                                             Download literature review 1.0.0-beta
                                         </a>
