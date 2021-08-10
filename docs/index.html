@@ -56,7 +56,7 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (04/08/2021)</h2>
+                    <h2>Prossimo incontro (11/08/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                     <ol>
@@ -135,12 +135,14 @@
                         <li>Ho riflettuto su come si potrebbero implementare query sui delta, e mi sono accorto che in realtà ci sono dei modi per farle senza libreria. Consideriamo la query: "Voglio tutti gli id il cui DOI è stato modificato". Posso ottenere una risposta senza scrivere una singola linea di codice con la seguente query:
                             <div class="card bg-primary shadow-inset border-light">
                                 <pre><code class="prettyprint">  
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
     prefix oco: &lt;https://w3id.org/oc/ontology/&gt;
     prefix prov: &lt;http://www.w3.org/ns/prov#&gt;
     SELECT DISTINCT ?id
     WHERE {
         ?se prov:specializationOf ?id;
             oco:hasUpdateQuery ?updateQuery.
+        ?id a datacite:Identifier. 
         FILTER CONTAINS (?updateQuery, "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue")
     }
                                 </code></pre>
