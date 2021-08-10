@@ -60,255 +60,100 @@
                 </div>
                 <h3>Cosa ho fatto</h3>
                     <ol>
-                        <li>Ho scritto l'ultima sezione della literature review, in cui indago lo stato dell'arte sul change tracking in RDF, introduco le possibili politiche di archiviazione, le tipologie di query, riporto casi d'uso e li catalogo. Riporto tre tabelle che riassumono l'intero discorso a riguardo.
-                            <table class="table shadow-soft rounded table-striped my-4">
-                                <caption>Table 1 Datasets and software divided by storage policy.</caption>
-                                <thead>
-                                    <tr>
-                                        <th>Archiving policy</th>
-                                        <th>Datasets / Software</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Independent copies (IC)</td>
-                                        <td>DBPedia, Wikidata, YAGO, Dynamic Linked Data Observatory, SemVersion, PromptDiff</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Change-based (CB)</td>
-                                        <td>(Im, Lee, & Kim, 2012),  (Papavasileiou, Flouris, Fundulaki, Kotzinos, & Christophides, 2013), R&Wbase</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Timestamp-based (TB)</td>
-                                        <td>x-RDF-3X, v-RDFCSA</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Hybrid</td>
-                                        <td>OSTRICH (CB/TB), OpenCitations Corpus (CB/TB), (Tanon & Suchanek, 2019) (IC/CB/TB)</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <table class="table shadow-soft rounded table-striped my-4">
-                                <caption>Table 2 Retrieval functionalities according to (Fernández, Umbrich, Polleres, & Knuth, 2016).</caption>
-                                <tr>
-                                    <th rowspan="2">&nbsp;</th>
-                                    <th rowspan="2">Materialization</th>
-                                    <th colspan="2" class="text-center">Structured queries</th>
-                                </tr>
-                                <tr class="text-center">
-                                    <th>Single time</th>
-                                    <th>Cross time</th>
-                                </tr>
-                                <tr>
-                                    <th>Version</th>
-                                    <td>
-                                        <p>Version materialization</p>
-                                        <p><em>Get snapshot at time t<sub>i</sub></em></p>
-                                    </td>
-                                    <td>
-                                        <p>Single-version structured queries</p>
-                                        <p><em>Articles written by a specific author at time t<sub>i</sub></em></p>
-                                    </td>
-                                    <td>
-                                        <p>Cross-version structured queries</p>
-                                        <p><em>Articles associated with the same DOI simultaneously</em></p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Delta</th>
-                                    <td>
-                                        <p>Delta materialization</p>
-                                        <p><em>Get delta at time t<sub>i</sub></em></p>
-                                    </td>
-                                    <td>
-                                        <p>Single-delta structured queries</p>
-                                        <p><em>DOI modified between two consecutive snapshots</em></p>
-                                    </td>
-                                    <td>
-                                        <p>Cross-delta structured queries</p>
-                                        <p><em>The most significant change in the number of articles in the history of the dataset</em></p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <table class="table shadow-soft rounded table-striped my-4">
-                                <caption>Table 3 Software catalogued by allowed query types and the need for indexing.</caption>
-                                <thead>
-                                    <tr>
-                                        <th>Software</th>
-                                        <th>Version materialization</th>
-                                        <th>Delta materialization</th>
-                                        <th>Single version structured query</th>
-                                        <th>Cross version structured query</th>
-                                        <th>Single delta structured query</th>
-                                        <th>Cross delta structured query</th>
-                                        <th>On the fly</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>PromptDiff</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>+</td>
-                                    </tr>
-                                    <tr>
-                                        <td>SemVersion</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>+</td>
-                                    </tr>
-                                    <tr>
-                                        <td>(Im, Lee, & Kim, 2012)</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                    </tr>
-                                    <tr>
-                                        <td>R&Wbase</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>+</td>
-                                    </tr>
-                                    <tr>
-                                        <td>x-RDF-3X</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                    </tr>
-                                    <tr>
-                                        <td>v-RDFCSA</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                    </tr>
-                                    <tr>
-                                        <td>OSTRICH</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                    </tr>
-                                    <tr>
-                                        <td>(Tanon & Suchanek, 2019)</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>+</td>
-                                        <td>-</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <li>Novità relative alla <strong>cache</strong>:
+                            <ol>
+                                <li>Per utilizzare la cache, l'utente passa l'url del triplestore da usare come cache nel nuovo campo "<strong>cache_triplestore_url</strong>" del file di configurazione, che di default ha come valore una stringa vuota. I metodi usati per gestire la cache sono generici, non specifici per Blazegraph. Pertanto, la cache è utilizzabile sia tramite la classe AgnosticQuery, che tramite la classe BlazegraphQuery che eredita dalla prima.</li>
+                                <li>Vantaggi del meccanismo di cache:
+                                    <ol>
+                                        <li>Tutti i grafi del passato ricostruiti vengono salvati su triplestore e mai sulla RAM. L'impatto del processo sulla RAM in caso di molte entità è quindi abbattuto.</li>
+                                        <li>Le query agnostiche sul tempo vengono lanciate sul triplestore di cache e non su dei grafi salvati in RAM, quindi sono ordini di magnitudo più veloci.</li>
+                                        <li>Se una query viene lanciata una seconda volta, la storia delle entità rilevanti per quella query non viene ricostruita, ma ricavata dalla cache.</li>
+                                    </ol>
+                                </li>
+                                <li>Svantaggi della cache:
+                                    <ol>
+                                        <li>Occupa spazio.</li>
+                                        <li>Non permette di accelerare il processo di scoperta delle entità rilevanti per una query. Le variabili devono comunque essere risolte ogni volta. Se si tratta di variabili in triple isolate, per esempio, la ricerca su tutte le query di update va ripetuta.</li>
+                                    </ol>
+                                </li>
+                                <li>L'implementazione della cache ha richiesto modifiche profonde, che non hanno riguardato solo l'aggiunta di nuovi metodi, ma anche un ripensamento di quelli già esistenti.
+                                    <ol>
+                                        <li>Metodi nuovi:
+                                            <ol>
+                                                <li><strong>_cache_entity_graph</strong>: dato un grafo e un timestamp, salva quel grafo nel triplestore in un named-graph il cui URI ha la forma "https://github.com/opencitations/time-agnostic-library/{timestamp}".</li>
+                                                <li><strong>_cache_provenance</strong>: salva unicamente il nome dello snapshot collegato all'entità tramite prov:spacializationOf. Lo scopo è quello di poter verificare, in un secondo momento, quali snapshot sono già in cache e quali no.</li>
+                                                <li><strong>_entity_in_cache</strong>: data un entità, restituisce True se il grafo di quell'entità è in cache, False altrimenti.</li>
+                                                <li><strong>_store_relevant_timestamps</strong>: data un'entità, cerca nel dataset (non nella cache) i timestamp in cui quell'entità ha subito modifiche, quindi li salva. Lo scopo è restituire in output solo snapshot significativi per una certa query, non tutti gli snapshot del dataset.</li>
+                                                <li>Metodo di supporto <strong>empty_the_cache</strong>, che permette di cancellare l'intera cache.</li>
+                                            </ol>
+                                        </li>
+                                        <li>Per quanto riguarda i metodi preesistenti, alcuni sono stati modificati per poter funzionare sia con che senza cache:
+                                            <ol>
+                                                <li><strong>run_agnostic_query</strong>: in caso di cache, lancia la time-travel query su tutti i grafi della cache rilevanti per quella query, ognuno dei quali corrisponde a uno snapshot. In pratica, la query dell'utente viene modificata aggiungendo "FROM https://github.com/opencitations/time-agnostic-library/{timestamp}", dove timestamp è uno dei tempi rilevanti salvati tramite il già citato _store_relevant_timestamps.</li>
+                                                <li><strong>_rebuild_relevant_entity</strong>: se un'entità è in cache, vengono salvati i suoi timestamp rilevanti e la funzione viene interrotta, saltando la ricostruzione dell'entità. Se non è in cache ma c'è una cache, l'entità viene ricostruita e salvata in cache. Se una cache non c'è, l'entità viene ricostruita e salvata in RAM.</li>
+                                                <li><strong>_align_snapshots</strong>: all'interno del triplestore di cache, se c'è una cache, i grafi delle entità che non sono cambiate in uno snapshot in cui sono assenti vengono copiate in quello snapshot. Se non c'è una cache, il metodo opera come in passato.</li>
+                                                <li><strong>_explicit_solvable_variables</strong>: se c'è una cache, le variabili in triple non isolate di una query agnostica sul tempo vengono esplicitate tramite il triplestore di cache.</li>
+                                            </ol>
+                                        </li>
+                                        <li>Tutti i nuovi metodi sono stati testati.</li>
+                                        <li>Tutte le query testate in passato senza cache sono state testate con la cache.</li>
+                                        <li>Tutti i metodi già esistenti e modificati per gestire la cache sono stati ritestati senza la cache, con la cache vuota e con la cache piena.</li>
+                                    </ol>
+                                </li>
+                            </ol>
                         </li>
-                        <li>
-                            <p>Nuovi documenti studiati e citati:
-                                <ol>
-                                    <li>Barabucci, G., Tomasi, F., & Vitali, F. (2021). Supporting Complexity and Conjectures in Cultural Heritage Descriptions. CEUR Workshop Proceedings, 2810, 104-115. Retrieved from http://ceur-ws.org/Vol-2810/paper9.pdf</li>
-                                    <li>Cerdeira-Pena, A., Farina, A., Fernández, J. D., & Martınez-Prieto, M. A. (2016). Self-indexing rdf archives. Proceedings of IEEE Data Compression Conference.</li>
-                                    <li>Dooley, P., & Božić, B. (2019). Towards Linked Data for Wikidata Revisions and Twitter. iiWAS2019: Proceedings of the 21st International Conference on Information Integration and Web-based Applications & Services (pp. 166–175). New York, NY, USA: Association for Computing Machinery. doi:10.1145/3366030.3366048</li>
-                                    <li>Erxleben, F., Günther, M., Krötzsch, M., Mendez, J., & Vrandečić, D. (2014). Introducing Wikidata to the Linked Data Web. The Semantic Web – ISWC 2014 (pp. 50–65). Springer International Publishing.</li>
-                                    <li>Fernández, J. D., Polleres, A., & Umbrich, J. (2015). Towards Efficient Archiving of Dynamic Linked. DIACRON@ESWC (pp. 34–49). Portorož, Slovenia : Computer Science.</li>
-                                    <li>Fernández, J. D., Umbrich, J., Polleres, A., & Knuth, M. (2016). Evaluating Query and Storage Strategies for RDF Archives. Proceedings of the 12th International Conference on Semantic Systems.</li>
-                                    <li>Käfer, T., Abdelrahman, A., Umbrich, J., Byrne, P. O., & Hogan, A. (2013). Observing Linked Data Dynamics. The Semantic Web: Semantics and Big Data (pp. 213-227). Berlin, Heidelberg: Springer. Retrieved from https://link.springer.com/content/pdf/10.1007%2F978-3-642-38288-8_15.pdf</li>
-                                    <li>Im, D.-H., Lee, S.-W., & Kim, H.-J. (2012). A Version Management Framework for RDF Triple Stores. International Journal of Software Engineering and Knowledge Engineering, 22, 85-106. doi:10.1142/S0218194012500040</li>
-                                    <li>Lehmann, J., Isele, R., Jakob, M., Jentzsch, A., Kontokostas, D., Mendes, P. N., . . . Bizer, C. (2015). DBpedia – A large-scale, multilingual knowledge base extracted from Wikipedia. Semantic Web, 6(2), 167-195. doi:10.3233/SW-140134</li>
-                                    <li>Neumann, T., & Weikum, G. (2010). x-RDF-3X: Fast Querying, High Update Rates, and Consistency for RDF Databases. Proceedings of the VLDB Endowment, 3, pp. 256–263.</li>
-                                    <li>Noy, N. F., & Musen, M. A. (2002). Promptdiff: A Fixed-Point Algorithm for Comparing Ontology Versions. Proc. of IAAI, (pp. 744–750).</li>
-                                    <li>Sande, M. V., Colpaert, P., Verborgh, R., Coppens, S., Mannens, E., & Walle, R. V. (2013). R&Wbase: Git for triples. Proceedings of the 6th Workshop on Linked Data on the Web. 996. CEUR Workshop Proceedings.</li>
-                                    <li>Snodgrass, R. (1986). Temporal Databases. IEEE Computer, 19, 35–42. Retrieved from https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.464.8688&rep=rep1&type=pdf</li>
-                                    <li>Orlandi, F., & Passant, A. (2011). Modelling provenance of DBpedia resources using Wikipedia contributions. Journal of Web Semantics, 9(2), 149-164. doi:10.1016/j.websem.2011.03.002</li>
-                                    <li>Papavasileiou, V., Flouris, G., Fundulaki, I., Kotzinos, D., & Christophides, V. (2013). High-level Change Detection in RDF(S) KBs. ACM Transactions on Database Systems, 38(1). doi:10.1145/2445583.2445584</li>
-                                    <li>Taelman, R., Sande, M. V., & Verborgh, R. (2018). OSTRICH: Versioned Random-Access Triple Store. Companion Proceedings of the Web Conference 2018, (pp. 127-130). Retrieved from https://core.ac.uk/download/pdf/157574975.pdf</li>
-                                    <li>Tanon, T. P., & Suchanek, F. M. (2019). Querying the Edit History of Wikidata. Extended Semantic Web Conference, (pp. 161-166). Portorož, Slovenia. doi:10.1007/978-3-030-32327-1_32</li>
-                                    <li>Tanon, T. P., Weikum, G., & Suchanek, F. (2020). YAGO 4: A Reason-able Knowledge Base. The Semantic Web. ESWC 2020 (pp. 583-596). Cham: Springer.</li>
-                                    <li>Umbrich, J., Hausenblas, M., Hogan, A., Polleres, A., & Decker, S. (2010). Towards Dataset Dynamics: Change Frequency of Linked Open Data Sources. In C. Bizer, T. Heath, T. Berners-Lee, & M. Hausenblas (Ed.), Proceedings of the WWW2010 Workshop on Linked Data on the Web. Raleigh, USA: CEUR Workshop Proceedings. Retrieved from http://ceur-ws.org/Vol-628/ldow2010_paper12.pdf</li>
-                                    <li>Völkel, M., Winkler, W., Sure, Y., Kruk, S., & Synak, M. (2005). SemVersion: A Versioning System for RDF and Ontologies. Proc. of ESWC.</li>
-                                </ol>        
-                            </p>
+                        <li>È adesso possibile effettuare <strong>query su una specifica versione</strong>. È sufficiente inizializzare la classe AgnosticQuery specificando un tempo.
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">  
+    query = """
+        PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
+        PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;
+        SELECT DISTINCT ?o
+        WHERE {
+            &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?o;
+                rdf:type pro:RoleInTime.
+        }
+    """
+    agnostic_query = AgnosticQuery(query, on_time="2021-05-31T18:19:47")
+    agnostic_query.run_agnostic_query()
+                                </code></pre>
+                            </div>
+                            <ol>
+                                <li>Il tempo può essere indicato in qualunque formato standard e non deve essere necessariamente esistente tra gli snapshot. Se non esiste, viene considerato quello immediatamente precedente. Infine, se il campo on_time non viene specificato, la query avviene su tutte le versioni.</li>
+                                <li>Non sono stati introdotti metodi nuovi per effettuare query su una versione, ma sono stati modificati quelli già esistenti.</li>
+                                <li>Se il campo on_time è stato specificato, per ciascuna entità viene ricostruita solo quella specifica versione, non tutta la storia.</li>
+                                <li>Tutte le query precedentemente testate come <em>time-travel queries</em> sono state nuovamente testate su una singola versione.</li>
+                            </ol>
                         </li>
-                        <li>
-                            <p>Modifiche apportate in seguito alle tue considerazioni: 
-                                <ol>
-                                    <li>
-                                        <p><s>There is a shorthand notation, the rdf:ID attribute in RDF/XML (Figure 2), but RDF Reification has no syntactic support for other serialisations.</s></p>
-                                        <p class="text-center"><i class="fas fa-long-arrow-alt-down"></i></p>
-                                        <p>There is a shorthand notation, the rdf:ID attribute in RDF/XML (Figure 2), but it is not present in other serializations.</p>
-                                    </li>
-                                    <li>La didascalia di Figura 1 non copre più parte dell'immagine.</li>
-                                    <li>Quando parlo di "valid time" apro una finestra sulla complessità del problema, citando il proceeding <em>Supporting Complexity and Conjectures in Cultural Heritage Descriptions</em> di Barabucci, Tomasi e Vitali.</li>
-                                    <li>Conclusa la rassegna di software e datasets rilevanti per il change tracking, sottolineo come i software per effettuare time-travel queries esistenti necessitino tutti di pre-indicizzazioni, a differenza del mio che, grazie al modello di provenance dell'OpenCitations Data Model, può elaborare la richiesta al volo.</li>
-                                    <li>È stato adottato Chigago XV edizione come stile di citazione, al posto di APA VI edizione.</li>
-                                    <li>L'indice prevede ora i seguenti capitoli:
-                                        <ul>
-                                            <li>Table of Contents</li>
-                                            <li>Abstract</li>
-                                            <li>Introduction</li>
-                                            <li>Literature review</li>
-                                            <li>Materials and Methods</li>
-                                            <li>The Time Agnostic Library</li>
-                                            <li>Library implementation</li>
-                                            <li>Discussion</li>
-                                            <li>Conclusion</li>
-                                            <li>References</li>
-                                        </ul>
-                                    </li>
-                                    <li>Modifiche di layout, sulla base di <a href="https://corsi.unibo.it/2cycle/DigitalHumanitiesKnowledge/information-on-writing-a-dissertation" target="_blank">https://corsi.unibo.it/2cycle/DigitalHumanitiesKnowledge/information-on-writing-a-dissertation</a>:
-                                        <ol>
-                                            <li>Font: Times New Roman, 12pt.</li>
-                                            <li>Interlinea: 1.5.</li>
-                                            <li>Margini: 2-2-2-2.</li>
-                                            <li>Ho aggiunto il frontespizio.</li>
-                                        </ol>
-                                    </li>
-                                </ol>
-                            </p>
-                        </li>
-                        <li>Considero il capitolo potenzialmente concluso. Pertanto, avanzo la versione da alpha a beta:
-                            <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/lr_1_0_0_beta_2.pdf" download="literature_review_1-0-0-beta.pdf">
-                                <span class="mr-1"><span class="fas fa-download"></span></span>
-                                Download literature review 1.0.0-beta
-                            </a>
-                        </li>
+                        <li>È stato aggiunto il supporto per gli <strong>inverse property paths</strong>.</li>
+                        <li>time-agnostic-library è ufficialmente una libreria scaricabile con <strong>pip</strong>! <a href="https://pypi.org/project/time-agnostic-library/1.0.0b0/" target="_blank">https://pypi.org/project/time-agnostic-library/1.0.0b0/</a></li>
+                        <li>Il README è stato aggiornato con una guida a come installare e utilizzare la libreria. È anche disponibile una versione della documentazione su <a href="https://time-agnostic-library.readthedocs.io" target="_blank">https://time-agnostic-library.readthedocs.io</a>, che si auto ricostruisce a ogni push.</li>
+                        <li>La versione 1.0.0-beta è su Zenodo con il seguente DOI <a href="https://doi.org/10.5281/zenodo.5172996" target="_blank">10.5281/zenodo.5172996</a>.</li>
                     </ol>
                 <h3>Cosa non ho capito</h3>
                     <ol>
-                        <li>Ho scoperto che Wikidata utilizza la reificazione solo a livello metadatale, ma per il change tracking utilizza dei veri e propri phisical snapshots. Ogni volta che c'è una revisione, l'intero stato della risorsa dopo la revisione viene salvato. Nella literature review ho incluso una descrizione più dettagliata di cosa avviene. Sei d'accordo nel catalogare la politica di archiviazione di Wikipedia come independent-copies/physical snapshots?</li>
-                        <li>Consideriamo un autore di nome Dong-Hyuk Im, dove Dong-Hyuk è il nome. Come va abbreviato per citarlo in APA style? Im, D.-H.? Im, D.? Im, D.H.?</li>
-                        <li>Cristian vorrebbe citare il mio dataset. Come si potrebbe fare? Momentaneamente l'ho caricato su Zenodo con questo DOI: <a href="https://doi.org/10.5281/zenodo.5151264" target="_blank">https://doi.org/10.5281/zenodo.5151264</a>.</li>
-                        <li>Qual è il miglior modo per citare l'API di Crossref?</li>
-                        <li>Alla luce della classificazione riassunta in Tabella 2, il mio software al momento è in grafo di effettuare una version materialization (get_state_at_time) e una cross-version structured query (run_agnostic_query). Non è in grado di effettuare una single-version structured query, ovvero una query soddisfatta in un tempo specifico, né un qualsiasi tipo di query sui delta. Infine, la delta materialization è possibile by design, perché oco:hasUpdateQuery contiene già il delta tra due risorse. Sei d'accordo con queste affermazioni?</li>
-                        <li>Quali sono le parole italiane solitamente utilizzate per tradurre <em>proceeding</em> e <em>literature review</em>?</li>
-                        <li>Il font prescritto per la tesi è "Times o simili". È possibile utilizzare un'alternativa senza grazie?</li>
-                        <li>Tra le regole di layout per la tesi non ci sono indicazioni circa la spaziatura tra paragrafi. Solitamente, lascio 10 pt dopo ogni paragrafo, perché mi sembra una soluzione più leggibile dell'indentazione, ma so che le dissertazioni scientifiche usano l'indentazione. Cosa mi suggerisci di usare?</li>
-                        <li>Relativamente al frontespizio, qual è la materia di riferimento per la tesi? Computational thinking? Open Science?</li>
+                        <li>Ho riflettuto su come si potrebbero implementare query sui delta, e mi sono accorto che in realtà ci sono dei modi per farle senza libreria. Consideriamo la query: "Voglio tutti gli id il cui DOI è stato modificato". Posso ottenere una risposta senza scrivere una singola linea di codice con la seguente query:
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">  
+    prefix oco: &lt;https://w3id.org/oc/ontology/&gt;
+    prefix prov: &lt;http://www.w3.org/ns/prov#&gt;
+    SELECT DISTINCT ?id
+    WHERE {
+        ?se prov:specializationOf ?id;
+            oco:hasUpdateQuery ?updateQuery.
+        FILTER CONTAINS (?updateQuery, "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue")
+    }
+                                </code></pre>
+                            </div>
+                            <p>Cosa ne pensi?</p>
+                        </li>
+                        <li>Posso ottenere in Python un meccanismo di <em>object swap</em>? Per esempio, posso forzare l'utilizzo di una certa classe se mi accorgo che l'utente ha usato quella sbagliata? Poniamo che l'utente utilizzi per sbaglio la classe AgnosticQuery per sfruttare gli indici testuali di Blazegraph al posto della classe BlazegraphQuery. Posso aggiustare il tiro via codice?</li>
+                        <li>Ho cercato i classificatori PyPI che più si addicessero alla mia libreria per quanto riguarda l'argomento (<a href="https://pypi.org/classifiers/" target="_blank">https://pypi.org/classifiers/</a>). Non mi sembra ce ne siano di davvero pertinenti, per cui ho scelto solo Libraries :: Python Modules. Ritieni che ce ne siano altri più appropriati?</li>
+                        <li>Non capisco come usare i trattini per nominare una libreria Python. Le librerie vengono nominate solo con i trattini alti, installate con i trattini indifferentemente alti o bassi, importate solo con i trattini bassi.
+                            <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                <img src="./assets/img/wat_meme.png" alt="Wat meme">
+                            </div>
+                        </li>
                     </ol>
             </div>
         </section>
@@ -4607,6 +4452,29 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                                 <li>La didascalia di Figura 1 non copre più parte dell'immagine.</li>
                                                 <li>Quando parlo di "valid time" apro una finestra sulla complessità del problema, citando il proceeding <em>Supporting Complexity and Conjectures in Cultural Heritage Descriptions</em> di Barabucci, Tomasi e Vitali.</li>
                                                 <li>Conclusa la rassegna di software e datasets rilevanti per il change tracking, sottolineo come i software per effettuare time-travel queries esistenti necessitino tutti di pre-indicizzazioni, a differenza del mio che, grazie al modello di provenance dell'OpenCitations Data Model, può elaborare la richiesta al volo.</li>
+                                                <li>È stato adottato Chigago XV edizione come stile di citazione, al posto di APA VI edizione.</li>
+                                                <li>L'indice prevede ora i seguenti capitoli:
+                                                    <ul>
+                                                        <li>Table of Contents</li>
+                                                        <li>Abstract</li>
+                                                        <li>Introduction</li>
+                                                        <li>Literature review</li>
+                                                        <li>Materials and Methods</li>
+                                                        <li>The Time Agnostic Library</li>
+                                                        <li>Library implementation</li>
+                                                        <li>Discussion</li>
+                                                        <li>Conclusion</li>
+                                                        <li>References</li>
+                                                    </ul>
+                                                </li>
+                                                <li>Modifiche di layout, sulla base di <a href="https://corsi.unibo.it/2cycle/DigitalHumanitiesKnowledge/information-on-writing-a-dissertation" target="_blank">https://corsi.unibo.it/2cycle/DigitalHumanitiesKnowledge/information-on-writing-a-dissertation</a>:
+                                                    <ol>
+                                                        <li>Font: Times New Roman, 12pt.</li>
+                                                        <li>Interlinea: 1.5.</li>
+                                                        <li>Margini: 2-2-2-2.</li>
+                                                        <li>Ho aggiunto il frontespizio.</li>
+                                                    </ol>
+                                                </li>
                                             </ol>
                                         </p>
                                     </li>
@@ -4622,10 +4490,12 @@ for index, author_agent_role in enumerate(author_agent_roles):
                                     <li>Ho scoperto che Wikidata utilizza la reificazione solo a livello metadatale, ma per il change tracking utilizza dei veri e propri phisical snapshots. Ogni volta che c'è una revisione, l'intero stato della risorsa dopo la revisione viene salvato. Nella literature review ho incluso una descrizione più dettagliata di cosa avviene. Sei d'accordo nel catalogare la politica di archiviazione di Wikipedia come independent-copies/physical snapshots?</li>
                                     <li>Consideriamo un autore di nome Dong-Hyuk Im, dove Dong-Hyuk è il nome. Come va abbreviato per citarlo in APA style? Im, D.-H.? Im, D.? Im, D.H.?</li>
                                     <li>Cristian vorrebbe citare il mio dataset. Come si potrebbe fare? Momentaneamente l'ho caricato su Zenodo con questo DOI: <a href="https://doi.org/10.5281/zenodo.5151264" target="_blank">https://doi.org/10.5281/zenodo.5151264</a>.</li>
-                                    <li>Posso usare Chicago come stile di citazione? Perché APA sesta edizione prevede di inserire tutti gli autori fino al quinto prima di abbreviare con "et al." nella prima citazione intra-testuale, che non è bellissimo. Fonte: <a href="https://blog.apastyle.org/apastyle/2011/11/the-proper-use-of-et-al-in-apa-style.html" target="_blank">https://blog.apastyle.org/apastyle/2011/11/the-proper-use-of-et-al-in-apa-style.html</a>.</li>
                                     <li>Qual è il miglior modo per citare l'API di Crossref?</li>
                                     <li>Alla luce della classificazione riassunta in Tabella 2, il mio software al momento è in grafo di effettuare una version materialization (get_state_at_time) e una cross-version structured query (run_agnostic_query). Non è in grado di effettuare una single-version structured query, ovvero una query soddisfatta in un tempo specifico, né un qualsiasi tipo di query sui delta. Infine, la delta materialization è possibile by design, perché oco:hasUpdateQuery contiene già il delta tra due risorse. Sei d'accordo con queste affermazioni?</li>
                                     <li>Quali sono le parole italiane solitamente utilizzate per tradurre <em>proceeding</em> e <em>literature review</em>?</li>
+                                    <li>Il font prescritto per la tesi è "Times o simili". È possibile utilizzare un'alternativa senza grazie?</li>
+                                    <li>Tra le regole di layout per la tesi non ci sono indicazioni circa la spaziatura tra paragrafi. Solitamente, lascio 10 pt dopo ogni paragrafo, perché mi sembra una soluzione più leggibile dell'indentazione, ma so che le dissertazioni scientifiche usano l'indentazione. Cosa mi suggerisci di usare?</li>
+                                    <li>Relativamente al frontespizio, qual è la materia di riferimento per la tesi? Computational thinking? Open Science?</li>
                                 </ol>            
                             </div>
                         </div>
