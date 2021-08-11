@@ -4510,6 +4510,116 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-21">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>Novità relative alla <strong>cache</strong>:
+                                        <ol>
+                                            <li>Per utilizzare la cache, l'utente passa l'url del triplestore da usare come cache nel nuovo campo "<strong>cache_triplestore_url</strong>" del file di configurazione, che di default ha come valore una stringa vuota. I metodi usati per gestire la cache sono generici, non specifici per Blazegraph. Pertanto, la cache è utilizzabile sia tramite la classe AgnosticQuery, che tramite la classe BlazegraphQuery che eredita dalla prima.</li>
+                                            <li>Vantaggi del meccanismo di cache:
+                                                <ol>
+                                                    <li>Tutti i grafi del passato ricostruiti vengono salvati su triplestore e mai sulla RAM. L'impatto del processo sulla RAM in caso di molte entità è quindi abbattuto.</li>
+                                                    <li>Le query agnostiche sul tempo vengono lanciate sul triplestore di cache e non su dei grafi salvati in RAM, quindi sono ordini di magnitudo più veloci.</li>
+                                                    <li>Se una query viene lanciata una seconda volta, la storia delle entità rilevanti per quella query non viene ricostruita, ma ricavata dalla cache.</li>
+                                                </ol>
+                                            </li>
+                                            <li>Svantaggi della cache:
+                                                <ol>
+                                                    <li>Occupa spazio.</li>
+                                                    <li>Non permette di accelerare il processo di scoperta delle entità rilevanti per una query. Le variabili devono comunque essere risolte ogni volta. Se si tratta di variabili in triple isolate, per esempio, la ricerca su tutte le query di update va ripetuta.</li>
+                                                </ol>
+                                            </li>
+                                            <li>L'implementazione della cache ha richiesto modifiche profonde, che non hanno riguardato solo l'aggiunta di nuovi metodi, ma anche un ripensamento di quelli già esistenti.
+                                                <ol>
+                                                    <li>Metodi nuovi:
+                                                        <ol>
+                                                            <li><strong>_cache_entity_graph</strong>: dato un grafo e un timestamp, salva quel grafo nel triplestore in un named-graph il cui URI ha la forma "https://github.com/opencitations/time-agnostic-library/{timestamp}".</li>
+                                                            <li><strong>_cache_provenance</strong>: salva unicamente il nome dello snapshot collegato all'entità tramite prov:spacializationOf. Lo scopo è quello di poter verificare, in un secondo momento, quali snapshot sono già in cache e quali no.</li>
+                                                            <li><strong>_entity_in_cache</strong>: data un entità, restituisce True se il grafo di quell'entità è in cache, False altrimenti.</li>
+                                                            <li><strong>_store_relevant_timestamps</strong>: data un'entità, cerca nel dataset (non nella cache) i timestamp in cui quell'entità ha subito modifiche, quindi li salva. Lo scopo è restituire in output solo snapshot significativi per una certa query, non tutti gli snapshot del dataset.</li>
+                                                            <li>Metodo di supporto <strong>empty_the_cache</strong>, che permette di cancellare l'intera cache.</li>
+                                                        </ol>
+                                                    </li>
+                                                    <li>Per quanto riguarda i metodi preesistenti, alcuni sono stati modificati per poter funzionare sia con che senza cache:
+                                                        <ol>
+                                                            <li><strong>run_agnostic_query</strong>: in caso di cache, lancia la time-travel query su tutti i grafi della cache rilevanti per quella query, ognuno dei quali corrisponde a uno snapshot. In pratica, la query dell'utente viene modificata aggiungendo "FROM https://github.com/opencitations/time-agnostic-library/{timestamp}", dove timestamp è uno dei tempi rilevanti salvati tramite il già citato _store_relevant_timestamps.</li>
+                                                            <li><strong>_rebuild_relevant_entity</strong>: se un'entità è in cache, vengono salvati i suoi timestamp rilevanti e la funzione viene interrotta, saltando la ricostruzione dell'entità. Se non è in cache ma c'è una cache, l'entità viene ricostruita e salvata in cache. Se una cache non c'è, l'entità viene ricostruita e salvata in RAM.</li>
+                                                            <li><strong>_align_snapshots</strong>: all'interno del triplestore di cache, se c'è una cache, i grafi delle entità che non sono cambiate in uno snapshot in cui sono assenti vengono copiate in quello snapshot. Se non c'è una cache, il metodo opera come in passato.</li>
+                                                            <li><strong>_explicit_solvable_variables</strong>: se c'è una cache, le variabili in triple non isolate di una query agnostica sul tempo vengono esplicitate tramite il triplestore di cache.</li>
+                                                        </ol>
+                                                    </li>
+                                                    <li>Tutti i nuovi metodi sono stati testati.</li>
+                                                    <li>Tutte le query testate in passato senza cache sono state testate con la cache.</li>
+                                                    <li>Tutti i metodi già esistenti e modificati per gestire la cache sono stati ritestati senza la cache, con la cache vuota e con la cache piena.</li>
+                                                </ol>
+                                            </li>
+                                        </ol>
+                                    </li>
+                                    <li>È adesso possibile effettuare <strong>query su una specifica versione</strong>. È sufficiente inizializzare la classe AgnosticQuery specificando un tempo.
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">  
+    query = """
+        PREFIX pro: &lt;http://purl.org/spar/pro/&gt;
+        PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;
+        SELECT DISTINCT ?o
+        WHERE {
+            &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; pro:isHeldBy ?o;
+                rdf:type pro:RoleInTime.
+        }
+    """
+    agnostic_query = AgnosticQuery(query, on_time="2021-05-31T18:19:47")
+    agnostic_query.run_agnostic_query()
+                                            </code></pre>
+                                        </div>
+                                        <ol>
+                                            <li>Il tempo può essere indicato in qualunque formato standard e non deve essere necessariamente esistente tra gli snapshot. Se non esiste, viene considerato quello immediatamente precedente. Infine, se il campo on_time non viene specificato, la query avviene su tutte le versioni.</li>
+                                            <li>Non sono stati introdotti metodi nuovi per effettuare query su una versione, ma sono stati modificati quelli già esistenti.</li>
+                                            <li>Se il campo on_time è stato specificato, per ciascuna entità viene ricostruita solo quella specifica versione, non tutta la storia.</li>
+                                            <li>Tutte le query precedentemente testate come <em>time-travel queries</em> sono state nuovamente testate su una singola versione.</li>
+                                        </ol>
+                                    </li>
+                                    <li>È stato aggiunto il supporto per gli <strong>inverse property paths</strong>.</li>
+                                    <li>time-agnostic-library è ufficialmente una libreria scaricabile con <strong>pip</strong>! <a href="https://pypi.org/project/time-agnostic-library/1.0.0b0/" target="_blank">https://pypi.org/project/time-agnostic-library/1.0.0b0/</a></li>
+                                    <li>Il README è stato aggiornato con una guida a come installare e utilizzare la libreria. È anche disponibile una versione della documentazione su <a href="https://time-agnostic-library.readthedocs.io" target="_blank">https://time-agnostic-library.readthedocs.io</a>, che si auto ricostruisce a ogni push.</li>
+                                    <li>La versione 1.0.0-beta è su Zenodo con il seguente DOI <a href="https://doi.org/10.5281/zenodo.5172996" target="_blank">10.5281/zenodo.5172996</a>.</li>
+                                </ol>
+                            <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>Ho riflettuto su come si potrebbero implementare query sui delta, e mi sono accorto che in realtà ci sono dei modi per farle senza libreria. Consideriamo la query: "Voglio tutti gli id il cui DOI è stato modificato". Posso ottenere una risposta senza scrivere una singola linea di codice con la seguente query:
+                                        <div class="card bg-primary shadow-inset border-light">
+                                            <pre><code class="prettyprint">  
+    prefix datacite: &lt;http://purl.org/spar/datacite/&gt;
+    prefix oco: &lt;https://w3id.org/oc/ontology/&gt;
+    prefix prov: &lt;http://www.w3.org/ns/prov#&gt;
+    SELECT DISTINCT ?id
+    WHERE {
+        ?se prov:specializationOf ?id;
+            oco:hasUpdateQuery ?updateQuery.
+        ?id a datacite:Identifier. 
+        FILTER CONTAINS (?updateQuery, "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue")
+    }
+                                            </code></pre>
+                                        </div>
+                                        <p>Cosa ne pensi?</p>
+                                    </li>
+                                    <li>Posso ottenere in Python un meccanismo di <em>object swap</em>? Per esempio, posso forzare l'utilizzo di una certa classe se mi accorgo che l'utente ha usato quella sbagliata? Poniamo che l'utente utilizzi per sbaglio la classe AgnosticQuery per sfruttare gli indici testuali di Blazegraph al posto della classe BlazegraphQuery. Posso aggiustare il tiro via codice?</li>
+                                    <li>Ho cercato i classificatori PyPI che più si addicessero alla mia libreria per quanto riguarda l'argomento (<a href="https://pypi.org/classifiers/" target="_blank">https://pypi.org/classifiers/</a>). Non mi sembra ce ne siano di davvero pertinenti, per cui ho scelto solo Libraries :: Python Modules. Ritieni che ce ne siano altri più appropriati?</li>
+                                    <li>Non capisco come usare i trattini per nominare una libreria Python. Le librerie vengono nominate solo con i trattini alti, installate con i trattini indifferentemente alti o bassi, importate solo con i trattini bassi.
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                            <img src="./assets/img/wat_meme.png" alt="Wat meme">
+                                        </div>
+                                    </li>
+                                </ol>            
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-22" data-target="#panel-22" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-22">
+                            <span class="h6 mb-0 font-weight-bold">dd/mm/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-22">
+                            <div class="pt-3">
                             </div>
                         </div>
                     </div>

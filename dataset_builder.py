@@ -163,7 +163,8 @@ class DatasetBuilder(object):
                     reference_ci.has_citation_creation_date(creation_date)
                     #BibliographicReference
                     reference_be = graphset.add_be(resp_agent=self.resp_agent, source=source)
-                    reference_be.has_content(reference["unstructured"])
+                    if "unstructured" in reference:
+                        reference_be.has_content(reference["unstructured"])
                     reference_be.references_br(citing_entity)
                     citing_entity.contains_in_reference_list(reference_be)
     
@@ -199,12 +200,12 @@ class DatasetBuilder(object):
             publisher_ra.has_identifier(journal_id)
         pbar = tqdm(total=len(journal_data_items))
         for item in journal_data_items:
-            source_item = f"https://api.crossref.org/works/{item['DOI']}"
-            # Identifier
-            item_id = journal_graphset.add_id(resp_agent=self.resp_agent, source=source_item)
-            item_id.create_doi(item["DOI"])
             # BibliographicResource
             if item["type"] != "journal":
+                source_item = f"https://api.crossref.org/works/{item['DOI']}"
+                # Identifier
+                item_id = journal_graphset.add_id(resp_agent=self.resp_agent, source=source_item)
+                item_id.create_doi(item["DOI"])
                 item_br = journal_graphset.add_br(resp_agent=self.resp_agent, source=source_item)  
                 DatasetBuilder._manage_br_type(item_br, item)
                 item_br.has_identifier(item_id)
@@ -222,21 +223,23 @@ class DatasetBuilder(object):
                     pub_date = item["issued"]["date-parts"][0]
                     iso_date_string = create_date(pub_date)
                     item_br.has_pub_date(iso_date_string)
-            # ResponsibleAgent / AgentRole
-            if "author" in item:
-                DatasetBuilder._manage_author_ra_ar(journal_graphset, item, item_br, self.resp_agent, source_item)
-            if "publisher" in item and journal_item is None:
-                publisher_ra = journal_graphset.add_ra(resp_agent=self.resp_agent, source=source_item)
-                publisher_ra.has_name(item["publisher"])
-                journal_id = journal_graphset.add_id(resp_agent=self.resp_agent, source=source_journal)
-                journal_id.create_issn(item["ISSN"][0])
-                publisher_ra.has_identifier(journal_id)
-            publisher_ar = journal_graphset.add_ar(resp_agent=self.resp_agent, source=source_item)
-            publisher_ar.create_publisher()
-            publisher_ar.is_held_by(publisher_ra)
-            item_br.has_contributor(publisher_ar)
-            # Citation
-            self._manage_citations(journal_graphset, item, item_br, source_item)
-            pbar.update(1)
+                # ResponsibleAgent / AgentRole
+                if "author" in item:
+                    DatasetBuilder._manage_author_ra_ar(journal_graphset, item, item_br, self.resp_agent, source_item)
+                if "publisher" in item and journal_item is None:
+                    publisher_ra = journal_graphset.add_ra(resp_agent=self.resp_agent, source=source_item)
+                    publisher_ra.has_name(item["publisher"])
+                    journal_id = journal_graphset.add_id(resp_agent=self.resp_agent, source=source_journal)
+                    journal_id.create_issn(item["ISSN"][0])
+                    publisher_ra.has_identifier(journal_id)
+                publisher_ar = journal_graphset.add_ar(resp_agent=self.resp_agent, source=source_item)
+                publisher_ar.create_publisher()
+                publisher_ar.is_held_by(publisher_ra)
+                item_br.has_contributor(publisher_ar)
+                # Citation
+                self._manage_citations(journal_graphset, item, item_br, source_item)
+                pbar.update(1)
+            else:
+                pbar.update(1)
         pbar.close()
         return journal_graphset
