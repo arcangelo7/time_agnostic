@@ -60,6 +60,12 @@
                 </div>
                 <h3>Cosa ho fatto</h3>
                 <ol>
+                    <li>Ho scritto i capitoli <em>Materials and methods</em> e <em>The Time-Agnostic Library</em>, in cui parlo dei metodi adottati in maniera astratta e di come utilizzare concretamente la libreria.
+                        <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/mm_l_1_0_0_beta.pdf" download="materials_and_methods_&_the_time_agnostic_library_1_0_0-beta.pdf">
+                            <span class="mr-1"><span class="fas fa-download"></span></span>
+                            Download Materials and methods & The Time-Agnostic Library 1.0.0-beta
+                        </a>
+                    </li>
                     <li>È adesso possibile effettuare <em>single </em>e <em>cross-time delta queries</em>. 
                         <ol>
                             <li>La classe <strong>DeltaQuery </strong>si istanzia specificando una query, un tempo, un set
@@ -67,7 +73,7 @@
                                 <ol>
                                     <li>La <strong>query </strong>permette di individuare le entità di cui si vuole
                                         conoscere se e come siano cambiate.</li>
-                                    <li>Il <strong>tempo </strong>(opzionale)<strong> </strong>è una tupla, nella forma
+                                    <li id="i0109_212_chf">Il <strong>tempo </strong>(opzionale)<strong> </strong>è una tupla, nella forma
                                         (DOPO, PRIMA). La spiego con tre esempi:
                                         <ul>
                                             <li>(&quot;2021-06-01&quot;, &quot;2021-06-02T18:46&quot;) considera un
@@ -143,7 +149,7 @@
                     <li>Anche VersionQuery permette adesso di specificare intervalli di tempo, prima e dopo, oltre a istanti
                         come in precedenza. Per raggiungere questo obiettivo, si è reso necessario <strong>potenziare
                             get_state_at_time. </strong>La funzione riceve adesso una tupla come valore temporale, secondo
-                        lo stesso modello già visto in x.x. 
+                        lo stesso modello già visto in <a href="#i0109_212_chf">2.1.2</a>. 
                         <ol>
                             <li>È cambiato anche l&#x27;output. Il primo elemento delle tupla non è più il grafo secco al
                                 tempo t, ma un dizionario che associa i grafi ai timestamp compresi nell&#x27;intervallo
@@ -191,7 +197,7 @@
                      </li>
                     <li>Lo <strong>script </strong>per <strong>lanciare</strong> tutti i <strong>test </strong>è adesso
                         funzionante. La chiave è stata aggiungere al comando java per aprire la connessione al database il
-                        parametro &quot;-Dcom.bigdata.journal.AbstractJournal.file=path/to/blazegraph.jnl. </li>
+                        parametro &quot;-Dcom.bigdata.journal.AbstractJournal.file=path/to/blazegraph.jnl&quot;. </li>
                     <li>Tutte le novità sono state testate. </li>
                     <li>Le documentazioni sono state aggiornate. </li>
                     <li>La nuova versione della libreria è incompatibile con la precedente. Pertanto, la nuova versione è
@@ -201,9 +207,6 @@
                 <ol>
                     <li>In quale inglese mi consigli di scrivere? Inglese americano o britannico? Materialize o materialise,
                         modelled o modeled, centre o center: questo è il dilemma. </li>
-                    <li>I diagrammi di flusso che ho realizzato non riproducono al 100% gli algoritmi, ma rappresentano una
-                        veduta a volo di uccello sul loro funzionamento, con l&#x27;unico obiettivo di semplificare la
-                        comprensione del testo al lettore. Sei d&#x27;accordo con questo approccio? </li>
                     <li>L&#x27;algoritmo per effettuare ricerche sui delta, così come l&#x27;abbiamo concepito durante il
                         nostro ultimo incontro l&#x27;11/08, ha un problema: dato che la query per identificare le entità di
                         cui si vuole studiare il cambiamento viene eseguita solo sul dataset del presente, tutte le entità
@@ -4686,6 +4689,174 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-22">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>Ho scritto i capitoli <em>Materials and methods</em> e <em>The Time-Agnostic Library</em>, in cui parlo dei metodi adottati in maniera astratta e di come utilizzare concretamente la libreria.
+                                        <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/mm_l_1_0_0_beta.pdf" download="materials_and_methods_&_the_time_agnostic_library_1_0_0-beta.pdf">
+                                            <span class="mr-1"><span class="fas fa-download"></span></span>
+                                            Download Materials and methods & The Time-Agnostic Library 1.0.0-beta
+                                        </a>
+                                    </li>
+                                    <li>È adesso possibile effettuare <em>single </em>e <em>cross-time delta queries</em>. 
+                                        <ol>
+                                            <li>La classe <strong>DeltaQuery </strong>si istanzia specificando una query, un tempo, un set
+                                                di proprietà e un file di configurazione.
+                                                <ol>
+                                                    <li>La <strong>query </strong>permette di individuare le entità di cui si vuole
+                                                        conoscere se e come siano cambiate.</li>
+                                                    <li id="i0109_212_chf">Il <strong>tempo </strong>(opzionale)<strong> </strong>è una tupla, nella forma
+                                                        (DOPO, PRIMA). La spiego con tre esempi:
+                                                        <ul>
+                                                            <li>(&quot;2021-06-01&quot;, &quot;2021-06-02T18:46&quot;) considera un
+                                                                intervallo di tempo che va dal primo giugno 2021 al 2 giugno 2021 alle
+                                                                18:46. </li>
+                                                            <li>(&quot;2021-06-01&quot;, None) considera gli snapshot successivi al primo
+                                                                giugno 2021. </li>
+                                                            <li>(None, &quot;2021-06-01&quot;) considera gli snapshot precedenti al primo
+                                                                giugno 2021. </li>
+                                                            <li>(&quot;2021-06-01&quot;, &quot;2021-06-01&quot;) considera lo snapshot del
+                                                                &quot;2021-06-01&quot;. 
+                                                                <ul>
+                                                                    <li><strong>Nota bene</strong>: se lo snapshot non esiste l&#x27;output
+                                                                        è vuoto. Prima veniva ritornato lo snapshot precedente più vicino,
+                                                                        ma adesso non più, dato che l&#x27;utente può esplicitamente
+                                                                        scegliere se ritornare gli snapshot precedenti passando None come
+                                                                        primo elemento della tupla. </li>
+                                                                    </ul>
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                    <li>Il <strong>set di proprietà</strong> (opzionale) permette di restringere il campo a
+                                                        tutte e sole quelle entità identificate di cui sono cambiate le proprietà presenti
+                                                        nel set. 
+                                                        <ul>
+                                                            <li><strong>Nota bene</strong>: è un AND, non un OR. </li>
+                                                        </ul>
+                                                    </li>
+                                                    <li>Il <strong>file di configurazione</strong> (opzionale) è il medesimo già descritto
+                                                        in passato. 
+                                                    </li>        
+                                                </ol>
+                                            </li>
+                                            <li>Ecco un esempio d&#x27;uso.
+                                                <div class="card bg-primary shadow-inset border-light">
+                                                    <pre><code class="prettyprint"> 
+    query = &quot;&quot;&quot;
+        PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
+        SELECT DISTINCT ?id
+        WHERE {
+            ?id a datacite:Identifier. 
+        }
+    &quot;&quot;&quot;
+    on_time = (&quot;2021-06-01&quot;, &quot;2021-06-02T18:46:41&quot;)
+    changed_properties = {&quot;http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue&quot;}
+    config_path = &quot;./config.json&quot;
+    delta_query = DeltaQuery(query, on_time, changed_properties, config_path)
+    delta_query.run_agnostic_query()                          
+                                                    </code></pre>
+                                                </div>
+                                            </li>
+                                            <li>L&#x27;output è un dizionario che riporta le entità identificate dalla query in cui sono
+                                                cambiate le proprietà specificate (se specificate). Registra inoltre in quale tempo sono
+                                                cambiate e come, secondo questo formato.
+                                                <div class="card bg-primary shadow-inset border-light">
+                                                    <pre><code class="prettyprint"> 
+    {
+        RES_URI_1: {
+            TIMESTAMP_1: UPDATE_QUERY_1,
+            TIMESTAMP_2: UPDATE_QUERY_2
+        },
+        RES_URI_2: {
+            TIMESTAMP_1: UPDATE_QUERY_1,
+            TIMESTAMP_2: UPDATE_QUERY_2
+        },	
+    }
+                                                </code></pre>
+                                            </li>    
+                                        </ol>
+                                    </li>
+                                    <li>Per simmetria, la classe precedentemente chiamata AgnosticQuery è stata ribattezzata
+                                        <strong>VersionQuery</strong>. </li>
+                                    <li>Anche VersionQuery permette adesso di specificare intervalli di tempo, prima e dopo, oltre a istanti
+                                        come in precedenza. Per raggiungere questo obiettivo, si è reso necessario <strong>potenziare
+                                            get_state_at_time. </strong>La funzione riceve adesso una tupla come valore temporale, secondo
+                                        lo stesso modello già visto in <a href="#i0109_212_chf">2.1.2</a>. 
+                                        <ol>
+                                            <li>È cambiato anche l&#x27;output. Il primo elemento delle tupla non è più il grafo secco al
+                                                tempo t, ma un dizionario che associa i grafi ai timestamp compresi nell&#x27;intervallo
+                                                specificato.
+                                                <div class="card bg-primary shadow-inset border-light">
+                                                    <pre><code class="prettyprint"> 
+    (
+        {
+            TIME_1: ENTITY_GRAPH_AT_TIME_1, 
+            TIME_2: ENTITY_GRAPH_AT_TIME_2
+        },
+        {
+            SNAPSHOT_URI_AT_TIME_1: {
+                &#x27;http://www.w3.org/ns/prov#generatedAtTime&#x27;: TIME_1, 
+                &#x27;http://www.w3.org/ns/prov#wasAttributedTo&#x27;: ATTRIBUTION, 
+                &#x27;http://www.w3.org/ns/prov#hadPrimarySource&#x27;: PRIMARY_SOURCE
+            },
+            SNAPSHOT_URI_AT_TIME_2: {
+                &#x27;http://www.w3.org/ns/prov#generatedAtTime&#x27;: TIME_2, 
+                &#x27;http://www.w3.org/ns/prov#wasAttributedTo&#x27;: ATTRIBUTION, 
+                &#x27;http://www.w3.org/ns/prov#hadPrimarySource&#x27;: PRIMARY_SOURCE
+            }
+        }, 
+        {
+            OTHER_SNAPSHOT_URI_1: {
+                &#x27;http://www.w3.org/ns/prov#generatedAtTime&#x27;: GENERATION_TIME, 
+                &#x27;http://www.w3.org/ns/prov#wasAttributedTo&#x27;: ATTRIBUTION, 
+                &#x27;http://www.w3.org/ns/prov#hadPrimarySource&#x27;: PRIMARY_SOURCE
+            }, 
+            OTHER_SNAPSHOT_URI_2: {
+                &#x27;http://www.w3.org/ns/prov#generatedAtTime&#x27;: GENERATION_TIME, 
+                &#x27;http://www.w3.org/ns/prov#wasAttributedTo&#x27;: ATTRIBUTION, 
+                &#x27;http://www.w3.org/ns/prov#hadPrimarySource&#x27;: PRIMARY_SOURCE
+            }
+        }
+    )
+                                            </code></pre>
+                                        </li>
+                                    </ol>
+                                    </li>
+                                    <li>Sia VersionQuery che DeltaQuery ereditano da una nuova classe AgnosticQuery, che inizializza i
+                                        parametri in comune. Non serve pressoché a niente, ma trovo molto appagante la sua presenza. Ecco un
+                                        grafico che mostra la gerarchia tra le classi.
+                                        <img src="assets/img/AgnosticQuery.svg" alt="Hierarchy of the classes related to time-travel queries">
+                                     </li>
+                                    <li>Lo <strong>script </strong>per <strong>lanciare</strong> tutti i <strong>test </strong>è adesso
+                                        funzionante. La chiave è stata aggiungere al comando java per aprire la connessione al database il
+                                        parametro &quot;-Dcom.bigdata.journal.AbstractJournal.file=path/to/blazegraph.jnl&quot;. </li>
+                                    <li>Tutte le novità sono state testate. </li>
+                                    <li>Le documentazioni sono state aggiornate. </li>
+                                    <li>La nuova versione della libreria è incompatibile con la precedente. Pertanto, la nuova versione è
+                                        2.0.0-beta ed è stata caricata su PyPi. </li>
+                                </ol>
+                                <h3>Cosa non ho capito</h1>
+                                <ol>
+                                    <li>In quale inglese mi consigli di scrivere? Inglese americano o britannico? Materialize o materialise,
+                                        modelled o modeled, centre o center: questo è il dilemma. </li>
+                                    <li>L&#x27;algoritmo per effettuare ricerche sui delta, così come l&#x27;abbiamo concepito durante il
+                                        nostro ultimo incontro l&#x27;11/08, ha un problema: dato che la query per identificare le entità di
+                                        cui si vuole studiare il cambiamento viene eseguita solo sul dataset del presente, tutte le entità
+                                        che rispondono a quella query ma che non esistono più vengono escluse. Potrei certamente
+                                        reintegrarle in maniera analoga a quanto già fatto per le query sulle versioni. Tuttavia, ciò
+                                        significherebbe rallentare la query sui delta, che nasce per velocizzare quella sulle versioni, dato
+                                        che permette di ottenere gli URI delle entità che hanno effettivamente più di uno snapshot. Cosa ne
+                                        pensi?</li>
+                                    <li>Quando riporto del codice all&#x27;interno del testo come lo catalogo nella didascalia? Va
+                                        considerato come un&#x27;immagine? </li>
+                                </ol>
+                                <h3>Scadenze</h1>
+                                <ol>
+                                    <li>La scadenza per iscriversi alla sessione di laurea di novembre è il 15 settembre. Nel modulo da
+                                        inoltrare occorre specificare il correlatore e non sono certo che questa informazione possa essere
+                                        modificata in seguito. Vitali ha risposto?</li>
+                                    <li>Il tirocinio in preparazione alla tesi va verbalizzato come un normale tirocinio? Ovvero tramite
+                                        appuntamento con Tamburini, che ne è il responsabile. </li>
+                                </ol>                
                             </div>
                         </div>
                     </div>
