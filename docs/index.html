@@ -56,175 +56,145 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (01/09/2021)</h2>
+                    <h2>Prossimo incontro (09/09/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
+                <p>Novità relative al codice:</p>
                 <ol>
-                    <li>Ho scritto i capitoli <em>Materials and methods</em> e <em>The Time-Agnostic Library</em>, in cui parlo dei metodi adottati in maniera astratta e di come utilizzare concretamente la libreria.
-                        <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/mm_l_1_0_0_beta.pdf" download="materials_and_methods_&_the_time_agnostic_library_1_0_0-beta.pdf">
-                            <span class="mr-1"><span class="fas fa-download"></span></span>
-                            Download Materials and methods & The Time-Agnostic Library 1.0.0-beta
-                        </a>
-                    </li>
-                    <li>È adesso possibile effettuare <em>single </em>e <em>cross-time delta queries</em>. 
-                        <ol>
-                            <li>La classe <strong>DeltaQuery </strong>si istanzia specificando una query, un tempo, un set
-                                di proprietà e un file di configurazione.
-                                <ol>
-                                    <li>La <strong>query </strong>permette di individuare le entità di cui si vuole
-                                        conoscere se e come siano cambiate.</li>
-                                    <li id="i0109_212_chf">Il <strong>tempo </strong>(opzionale)<strong> </strong>è una tupla, nella forma
-                                        (DOPO, PRIMA). La spiego con tre esempi:
-                                        <ul>
-                                            <li>(&quot;2021-06-01&quot;, &quot;2021-06-02T18:46&quot;) considera un
-                                                intervallo di tempo che va dal primo giugno 2021 al 2 giugno 2021 alle
-                                                18:46. </li>
-                                            <li>(&quot;2021-06-01&quot;, None) considera gli snapshot successivi al primo
-                                                giugno 2021. </li>
-                                            <li>(None, &quot;2021-06-01&quot;) considera gli snapshot precedenti al primo
-                                                giugno 2021. </li>
-                                            <li>(&quot;2021-06-01&quot;, &quot;2021-06-01&quot;) considera lo snapshot del
-                                                &quot;2021-06-01&quot;. 
-                                                <ul>
-                                                    <li><strong>Nota bene</strong>: se lo snapshot non esiste l&#x27;output
-                                                        è vuoto. Prima veniva ritornato lo snapshot precedente più vicino,
-                                                        ma adesso non più, dato che l&#x27;utente può esplicitamente
-                                                        scegliere se ritornare gli snapshot precedenti passando None come
-                                                        primo elemento della tupla. </li>
-                                                    </ul>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                    <li>Il <strong>set di proprietà</strong> (opzionale) permette di restringere il campo a
-                                        tutte e sole quelle entità identificate di cui sono cambiate le proprietà presenti
-                                        nel set. 
-                                        <ul>
-                                            <li><strong>Nota bene</strong>: è un AND, non un OR. </li>
-                                        </ul>
-                                    </li>
-                                    <li>Il <strong>file di configurazione</strong> (opzionale) è il medesimo già descritto
-                                        in passato. 
-                                    </li>        
-                                </ol>
-                            </li>
-                            <li>Ecco un esempio d&#x27;uso.
-                                <div class="card bg-primary shadow-inset border-light">
-                                    <pre><code class="prettyprint"> 
-    query = &quot;&quot;&quot;
-        PREFIX datacite: &lt;http://purl.org/spar/datacite/&gt;
-        SELECT DISTINCT ?id
-        WHERE {
-            ?id a datacite:Identifier. 
-        }
-    &quot;&quot;&quot;
-    on_time = (&quot;2021-06-01&quot;, &quot;2021-06-02T18:46:41&quot;)
-    changed_properties = {&quot;http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue&quot;}
-    config_path = &quot;./config.json&quot;
-    delta_query = DeltaQuery(query, on_time, changed_properties, config_path)
-    delta_query.run_agnostic_query()                          
-                                    </code></pre>
-                                </div>
-                            </li>
-                            <li>L&#x27;output è un dizionario che riporta le entità identificate dalla query in cui sono
-                                cambiate le proprietà specificate (se specificate). Registra inoltre in quale tempo sono
-                                cambiate e come, secondo questo formato.
-                                <div class="card bg-primary shadow-inset border-light">
-                                    <pre><code class="prettyprint"> 
+                    <li>(AFTER, BEFORE) → (START, END)</li>
+                    <li>L&#x27;output delle query sui delta riporta adesso anche la data di creazione e cancellazione delle
+                        entità. Se l&#x27;utente indica un intervallo temporale e l&#x27;entità non è stata creata o
+                        cancellata entro quell&#x27;intervallo, il valore di &quot;created&quot; o &quot;deleted&quot; è
+                        None.
+                        <div class="card bg-primary shadow-inset border-light">
+                        <pre><code class="prettyprint">
     {
         RES_URI_1: {
-            TIMESTAMP_1: UPDATE_QUERY_1,
-            TIMESTAMP_2: UPDATE_QUERY_2
+            &quot;created&quot;: TIMESTAMP_CREATION,
+            &quot;modified&quot;: {
+                TIMESTAMP_1: UPDATE_QUERY_1,
+                TIMESTAMP_2: UPDATE_QUERY_2,
+                TIMESTAMP_N: UPDATE_QUERY_N
+            },
+            &quot;deleted&quot;: TIMESTAMP_DELETION
         },
         RES_URI_2: {
-            TIMESTAMP_1: UPDATE_QUERY_1,
-            TIMESTAMP_2: UPDATE_QUERY_2
-        },	
-    }
-                                </code></pre>
-                            </li>    
-                        </ol>
-                    </li>
-                    <li>Per simmetria, la classe precedentemente chiamata AgnosticQuery è stata ribattezzata
-                        <strong>VersionQuery</strong>. </li>
-                    <li>Anche VersionQuery permette adesso di specificare intervalli di tempo, prima e dopo, oltre a istanti
-                        come in precedenza. Per raggiungere questo obiettivo, si è reso necessario <strong>potenziare
-                            get_state_at_time. </strong>La funzione riceve adesso una tupla come valore temporale, secondo
-                        lo stesso modello già visto in <a href="#i0109_212_chf">2.1.2</a>. 
-                        <ol>
-                            <li>È cambiato anche l&#x27;output. Il primo elemento delle tupla non è più il grafo secco al
-                                tempo t, ma un dizionario che associa i grafi ai timestamp compresi nell&#x27;intervallo
-                                specificato.
-                                <div class="card bg-primary shadow-inset border-light">
-                                    <pre><code class="prettyprint"> 
-    (
-        {
-            TIME_1: ENTITY_GRAPH_AT_TIME_1, 
-            TIME_2: ENTITY_GRAPH_AT_TIME_2
-        },
-        {
-            SNAPSHOT_URI_AT_TIME_1: {
-                &#x27;http://www.w3.org/ns/prov#generatedAtTime&#x27;: TIME_1, 
-                &#x27;http://www.w3.org/ns/prov#wasAttributedTo&#x27;: ATTRIBUTION, 
-                &#x27;http://www.w3.org/ns/prov#hadPrimarySource&#x27;: PRIMARY_SOURCE
+            &quot;created&quot;: TIMESTAMP_CREATION,
+            &quot;modified&quot;: {
+                TIMESTAMP_1: UPDATE_QUERY_1,
+                TIMESTAMP_2: UPDATE_QUERY_2,
+                TIMESTAMP_N: UPDATE_QUERY_N
             },
-            SNAPSHOT_URI_AT_TIME_2: {
-                &#x27;http://www.w3.org/ns/prov#generatedAtTime&#x27;: TIME_2, 
-                &#x27;http://www.w3.org/ns/prov#wasAttributedTo&#x27;: ATTRIBUTION, 
-                &#x27;http://www.w3.org/ns/prov#hadPrimarySource&#x27;: PRIMARY_SOURCE
-            }
-        }, 
-        {
-            OTHER_SNAPSHOT_URI_1: {
-                &#x27;http://www.w3.org/ns/prov#generatedAtTime&#x27;: GENERATION_TIME, 
-                &#x27;http://www.w3.org/ns/prov#wasAttributedTo&#x27;: ATTRIBUTION, 
-                &#x27;http://www.w3.org/ns/prov#hadPrimarySource&#x27;: PRIMARY_SOURCE
-            }, 
-            OTHER_SNAPSHOT_URI_2: {
-                &#x27;http://www.w3.org/ns/prov#generatedAtTime&#x27;: GENERATION_TIME, 
-                &#x27;http://www.w3.org/ns/prov#wasAttributedTo&#x27;: ATTRIBUTION, 
-                &#x27;http://www.w3.org/ns/prov#hadPrimarySource&#x27;: PRIMARY_SOURCE
-            }
+            &quot;deleted&quot;: TIMESTAMP_DELETION
+        },
+        RES_URI_N: {
+            &quot;created&quot;: TIMESTAMP_CREATION,
+            &quot;modified&quot;: {
+                TIMESTAMP_1: UPDATE_QUERY_1,
+                TIMESTAMP_2: UPDATE_QUERY_2,
+                TIMESTAMP_N: UPDATE_QUERY_N
+            },
+            &quot;deleted&quot;: TIMESTAMP_DELETION
+        },		
+    }
+                </code></pre></div>
+                <div class="card bg-primary shadow-inset border-light">
+                        <pre><code class="prettyprint">
+    # Ad esempio 
+    {
+        &#x27;https://github.com/arcangelo7/time_agnostic/ar/15519&#x27;: {
+            &quot;created&quot;: &quot;2021-05-07T09:59:15&quot;,
+            &quot;modified&quot;: {
+                &#x27;2021-06-01T18:46:41&#x27;: 
+                    &#x27;DELETE DATA { GRAPH &lt;https://github.com/arcangelo7/time_agnostic/ar/&gt; { 
+                        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; 
+                        &lt;http://purl.org/spar/pro/isHeldBy&gt; 
+                        &lt;https://github.com/arcangelo7/time_agnostic/ra/15519&gt; .} 
+                    }; INSERT DATA { GRAPH &lt;https://github.com/arcangelo7/time_agnostic/ar/&gt; { 
+                        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; 
+                        &lt;http://purl.org/spar/pro/isHeldBy&gt; 
+                        &lt;https://github.com/arcangelo7/time_agnostic/ra/4&gt; .} 
+                    }&#x27;
+            },
+            &quot;deleted&quot;: None
         }
-    )
-                            </code></pre>
+    }
+            </code></pre></div>
+                    </li>
+                    <li>La <strong>ricerca testuale</strong> di <strong>Blazegraph </strong>è stata implementata anche per
+                        le ricerche sui delta. Inoltre, ne è stato semplificato l&#x27;utilizzo. Ora non è più necessario
+                        utilizzare una classe a parte: è sufficiente indicare che esiste un indice testuale sol file di
+                        configurazione, dopodiché la libreria si occupa di utilizzare i metodi giusti. Infine, la classe
+                        BlazegraphQuery è stata cancellata, perché generava più complicazioni che soluzioni. </li>
+                    <li>I test e la documentazione sono stati aggiornati. </li>
+                    <li>La nuova versione è stata caricata su PyPi. Le modifiche finora descritte rappresentano delle nuove
+                        funzionalità e non creano problemi di retrocompatibilità, avanzando la versione a 2.1.0-beta.
+                        Continuerò a considerare questa libreria una beta finché qualcun altro non l&#x27;avrà utilizzata e
+                        testata. </li>
+                    <li>Corretto un bug per cui pip non installava la libreria, ma scaricava solo il file .egg-info in
+                        */site-packages/. Questo ha avanzato la versione a 2.1.1-beta. </li>
+                </ol>
+                <p>Novità nel testo della tesi:
+                    <ol>
+                        <li>Il codice viene riportato come Listing e non più come Figure. </li>
+                        <li>Capitolo 5: Methodology
+                            <ol>
+                                <li>Le parole &quot;library&quot; e &quot;algorithm&quot; sono state tutte sostituite da
+                                    &quot;software&quot;, &quot;methodology&quot; e &quot;procedure&quot;, a seconda del
+                                    contesto. </li>
+                                <li>Ho rifatto il diagramma sol modello di provenance di OpenCitations e corretto la
+                                    direzione della freccia che collega prov:Entity a owl:Thing. Per farlo, ho utilizzato <a
+                                        href="http://draw.io">draw.io</a> con la palette sviluppata da Luigi Asprino basata
+                                    su Graffoo. </li>
+                                <li>Il capitolo esordisce con una descrizione del modello di provenance di OpenCitations,
+                                    corredata da un diagramma e da un esempio in Turtle. Tale esempio viene richiamato da
+                                    tutti i successivi, in modo che il lettore ne debba comprendere solo uno, vedendolo da
+                                    diversi di vista. </li>
+                                <li>I diagrammi di flusso sono stati aggiornati. In particolare, i database non vengono più
+                                    mostrati, il diagramma sui delta integra la procedura per esplicitare le variabili nella
+                                    query e il diagramma solle versioni è stato compattato rimuovendo il blocco condizionale
+                                    solla presenza di URI nella query. Le spiegazioni sono state aggiornate di conseguenza.
+                                </li>
+                            </ol>
+                        </li>
+                        <li>Capitolo 6: The time-agnostic-library
+                            <ol>
+                                <li>È stato aggiunto un diagramma UML delle classi. </li>
+                                <li>Tutti i template di utilizzo della libreria e degli output sono stati corredati da
+                                    esempi concreti, i quali riprendono l&#x27;esempio iniziale del capitolo precedente.
+                                </li>
+                                <li>L&#x27;utilizzo di rdflib per la manipolazione e rappresentazione dei grafi è stato
+                                    esplicitato. </li>
+                                <li>Negli esempi d&#x27;uso, ai metodi che restituiscono un output è stato aggiunto
+                                    &quot;output =&quot;.</li>
+                                <li>È stata aggiunta una sezione che parla del time-agnostic-browser. </li>
+                            </ol>
                         </li>
                     </ol>
+                <h3>Cosa non ho capito</h3>
+                <ol>
+                    <li>Questo è il nuovo diagramma sol modello di provenance di OpenCitations. 
+                        <div class="card bg-primary shadow-inset border-light col-7 mt-3 mb-4 p-4">
+                        <img src="assets/img/ocdm_provenance_model_new.png" /></div>
+                        <ol>
+                            <li>Qual è il significato delle frecce tratteggiate?</li>
+                            <li>La freccia verde relativa alle data properties è sempre tratteggiata? Se sì, come mai nel
+                                diagramma originale quella relativa al periodo di validità dello snapshot è continua? (<a
+                                    href="https://link.springer.com/content/pdf/10.1007%2F978-3-030-62466-8_28.pdf" target="_blank">https://link.springer.com/content/pdf/10.1007%2F978-3-030-62466-8_28.pdf</a>)
+                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                                        <img src="assets/img/ocdm_provenance_model_old.png" />
+                                    </div>
+                            </li>
+                            <li>Attualmente il nuovo diagramma si trova sia nel capitolo sollo stato dell&#x27;arte, che in
+                                quello solla metodologia. Sei d&#x27;accordo con questa ripetizione? </li>
+                        </ol>
                     </li>
-                    <li>Sia VersionQuery che DeltaQuery ereditano da una nuova classe AgnosticQuery, che inizializza i
-                        parametri in comune. Non serve pressoché a niente, ma trovo molto appagante la sua presenza. Ecco un
-                        grafico che mostra la gerarchia tra le classi.
-                        <img src="assets/img/AgnosticQuery.svg" alt="Hierarchy of the classes related to time-travel queries">
-                     </li>
-                    <li>Lo <strong>script </strong>per <strong>lanciare</strong> tutti i <strong>test </strong>è adesso
-                        funzionante. La chiave è stata aggiungere al comando java per aprire la connessione al database il
-                        parametro &quot;-Dcom.bigdata.journal.AbstractJournal.file=path/to/blazegraph.jnl&quot;. </li>
-                    <li>Tutte le novità sono state testate. </li>
-                    <li>Le documentazioni sono state aggiornate. </li>
-                    <li>La nuova versione della libreria è incompatibile con la precedente. Pertanto, la nuova versione è
-                        2.0.0-beta ed è stata caricata su PyPi. </li>
+                    <li>Posso usare la parola &quot;dataset&quot; nel capitolo solla metodologia?</li>
                 </ol>
-                <h3>Cosa non ho capito</h1>
+                <h3>Aggiornamento solle scadenze</h3>
                 <ol>
-                    <li>In quale inglese mi consigli di scrivere? Inglese americano o britannico? Materialize o materialise,
-                        modelled o modeled, centre o center: questo è il dilemma. </li>
-                    <li>L&#x27;algoritmo per effettuare ricerche sui delta, così come l&#x27;abbiamo concepito durante il
-                        nostro ultimo incontro l&#x27;11/08, ha un problema: dato che la query per identificare le entità di
-                        cui si vuole studiare il cambiamento viene eseguita solo sul dataset del presente, tutte le entità
-                        che rispondono a quella query ma che non esistono più vengono escluse. Potrei certamente
-                        reintegrarle in maniera analoga a quanto già fatto per le query sulle versioni. Tuttavia, ciò
-                        significherebbe rallentare la query sui delta, che nasce per velocizzare quella sulle versioni, dato
-                        che permette di ottenere gli URI delle entità che hanno effettivamente più di uno snapshot. Cosa ne
-                        pensi?</li>
-                    <li>Quando riporto del codice all&#x27;interno del testo come lo catalogo nella didascalia? Va
-                        considerato come un&#x27;immagine? </li>
-                </ol>
-                <h3>Scadenze</h1>
-                <ol>
-                    <li>La scadenza per iscriversi alla sessione di laurea di novembre è il 15 settembre. Nel modulo da
-                        inoltrare occorre specificare il correlatore e non sono certo che questa informazione possa essere
-                        modificata in seguito. Vitali ha risposto?</li>
-                    <li>Il tirocinio in preparazione alla tesi va verbalizzato come un normale tirocinio? Ovvero tramite
-                        appuntamento con Tamburini, che ne è il responsabile. </li>
+                    <li>Ho parlato con Elisa, la quale mi ha detto i tirocini in preparazione alla tesi vengono verbalizzati
+                        dal relatore e non da Tamburini. </li>
                 </ol>
             </div>
         </section>
@@ -4863,10 +4833,21 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-23" data-target="#panel-23" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-23">
-                            <span class="h6 mb-0 font-weight-bold">dd/09/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">09/09/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-23">
+                            <div class="pt-3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-24" data-target="#panel-24" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-24">
+                            <span class="h6 mb-0 font-weight-bold">dd/09/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-24">
                             <div class="pt-3">
                             </div>
                         </div>
