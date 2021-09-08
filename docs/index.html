@@ -132,14 +132,15 @@
                         */site-packages/.</li>
                 </ol>
                 <p>Novità nel testo della tesi:</p>
-                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/mm_l_1_1_0_beta.pdf" download="materials_and_methods_&amp;_the_time_agnostic_library_1_1_0-beta.pdf">
+                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/m_l_1_1_0_beta.pdf" download="materials_and_methods_&amp;_the_time_agnostic_library_1_1_0-beta.pdf">
                         <span class="mr-1"><span class="fas fa-download"></span></span>
-                        Download Materials and methods &amp; The Time-Agnostic Library 1.1.0-beta
+                        Download <em>Methodology</em> &amp; <em>The Time-Agnostic Library</em> 1.1.0-beta
                     </a>                    
                     <ol>
                         <li>Il codice viene riportato come Listing e non più come Figure. </li>
-                        <li>Capitolo 5: Methodology
+                        <li>Capitolo 5: <em>Methodology</em>
                             <ol>
+                                <li>Il capitolo <em>Materials and methods</em> è stato rinominato <em>Methodology</em>.</li>
                                 <li>Le parole &quot;library&quot; e &quot;algorithm&quot; sono state tutte sostituite da
                                     &quot;software&quot;, &quot;methodology&quot; e &quot;procedure&quot;, a seconda del
                                     contesto. </li>
@@ -158,7 +159,7 @@
                                 </li>
                             </ol>
                         </li>
-                        <li>Capitolo 6: The time-agnostic-library
+                        <li>Capitolo 6: <em>The Time-Agnostic Library</em>
                             <ol>
                                 <li>È stato aggiunto un diagramma UML delle classi. </li>
                                 <li>Tutti i template di utilizzo della libreria e degli output sono stati corredati da
@@ -4839,17 +4840,18 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-23">
                             <div class="pt-3">
-                                <p>Novità relative al codice:</p>
-                                <ol>
-                                    <li>(AFTER, BEFORE) → (START, END)</li>
-                                    <li>La ricerca sui delta integra una procedura per esplicitare le variabili nella query attraverso il tempo, 
-                                        in modo da considerare le entità rilevanti nel passato ma irrilevanti o cancellate nel presente.</li>
-                                    <li>L&#x27;output delle query sui delta riporta adesso anche la data di creazione e cancellazione delle
-                                        entità. Se l&#x27;utente indica un intervallo temporale e l&#x27;entità non è stata creata o
-                                        cancellata entro quell&#x27;intervallo, il valore di &quot;created&quot; o &quot;deleted&quot; è
-                                        None.
-                                        <div class="card bg-primary shadow-inset border-light">
-                                        <pre><code class="prettyprint">
+                            <h3>Cosa ho fatto</h3>
+                            <p>Novità relative al codice:</p>
+                            <ol>
+                                <li>(AFTER, BEFORE) → (START, END)</li>
+                                <li>La ricerca sui delta integra una procedura per esplicitare le variabili nella query attraverso il tempo, 
+                                    in modo da considerare le entità rilevanti nel passato ma irrilevanti o cancellate nel presente.</li>
+                                <li>L&#x27;output delle query sui delta riporta adesso anche la data di creazione e cancellazione delle
+                                    entità. Se l&#x27;utente indica un intervallo temporale e l&#x27;entità non è stata creata o
+                                    cancellata entro quell&#x27;intervallo, il valore di &quot;created&quot; o &quot;deleted&quot; è
+                                    None.
+                                    <div class="card bg-primary shadow-inset border-light">
+                                    <pre><code class="prettyprint">
     {
         RES_URI_1: {
             &quot;created&quot;: TIMESTAMP_CREATION,
@@ -4879,9 +4881,9 @@ for index, author_agent_role in enumerate(author_agent_roles):
             &quot;deleted&quot;: TIMESTAMP_DELETION
         },		
     }
-                                </code></pre></div>
-                                <div class="card bg-primary shadow-inset border-light">
-                                        <pre><code class="prettyprint">
+                            </code></pre></div>
+                            <div class="card bg-primary shadow-inset border-light">
+                                    <pre><code class="prettyprint">
     # Ad esempio 
     {
         &#x27;https://github.com/arcangelo7/time_agnostic/ar/15519&#x27;: {
@@ -4901,82 +4903,58 @@ for index, author_agent_role in enumerate(author_agent_roles):
             &quot;deleted&quot;: None
         }
     }
-                            </code></pre></div>
-                                    </li>
-                                    <li>La ricerca testuale di Blazegraph è stata implementata anche per
-                                        le ricerche sui delta. Inoltre, ne è stato semplificato l&#x27;utilizzo. Ora non è più necessario
-                                        utilizzare una classe a parte: è sufficiente indicare che esiste un indice testuale nel file di
-                                        configurazione, dopodiché la libreria si occupa di utilizzare i metodi giusti.</li>
-                                    <li>I test e la documentazione sono stati aggiornati. </li>
-                                    <li>Corretto un bug per cui pip non installava la libreria, ma scaricava solo il file .egg-info in
-                                        */site-packages/.</li>
-                                </ol>
-                                <p>Novità nel testo della tesi:</p>
-                                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/mm_l_1_1_0_beta.pdf" download="materials_and_methods_&amp;_the_time_agnostic_library_1_1_0-beta.pdf">
-                                        <span class="mr-1"><span class="fas fa-download"></span></span>
-                                        Download Materials and methods &amp; The Time-Agnostic Library 1.1.0-beta
-                                    </a>                    
-                                    <ol>
-                                        <li>Il codice viene riportato come Listing e non più come Figure. </li>
-                                        <li>Capitolo 5: Methodology
-                                            <ol>
-                                                <li>Le parole &quot;library&quot; e &quot;algorithm&quot; sono state tutte sostituite da
-                                                    &quot;software&quot;, &quot;methodology&quot; e &quot;procedure&quot;, a seconda del
-                                                    contesto. </li>
-                                                <li>Ho rifatto il diagramma sol modello di provenance di OpenCitations e corretto la
-                                                    direzione della freccia che collega prov:Entity a owl:Thing. Per farlo, ho utilizzato <a
-                                                        href="http://draw.io">draw.io</a> con la palette sviluppata da Luigi Asprino basata
-                                                    su Graffoo. </li>
-                                                <li>Il capitolo esordisce con una descrizione del modello di provenance di OpenCitations,
-                                                    corredata da un diagramma e da un esempio in Turtle. Tale esempio viene richiamato da
-                                                    tutti i successivi, in modo che il lettore ne debba comprendere solo uno, vedendolo da
-                                                    diversi di vista. </li>
-                                                <li>I diagrammi di flusso sono stati aggiornati. In particolare, i database non vengono più
-                                                    mostrati, il diagramma sui delta integra la procedura per esplicitare le variabili nella
-                                                    query e il diagramma sulle versioni è stato compattato rimuovendo il blocco condizionale
-                                                    solla presenza di URI nella query. Le spiegazioni sono state aggiornate di conseguenza.
-                                                </li>
-                                            </ol>
-                                        </li>
-                                        <li>Capitolo 6: The time-agnostic-library
-                                            <ol>
-                                                <li>È stato aggiunto un diagramma UML delle classi. </li>
-                                                <li>Tutti i template di utilizzo della libreria e degli output sono stati corredati da
-                                                    esempi concreti, i quali riprendono l&#x27;esempio iniziale del capitolo precedente.
-                                                </li>
-                                                <li>L&#x27;utilizzo di rdflib per la manipolazione e rappresentazione dei grafi è stato
-                                                    esplicitato. </li>
-                                                <li>Negli esempi d&#x27;uso, ai metodi che restituiscono un output è stato aggiunto
-                                                    &quot;output =&quot;.</li>
-                                                <li>È stata aggiunta una sezione che parla del time-agnostic-browser. </li>
-                                            </ol>
-                                        </li>
-                                    </ol>
-                                <h3>Cosa non ho capito</h3>
+                        </code></pre></div>
+                                </li>
+                                <li>La ricerca testuale di Blazegraph è stata implementata anche per
+                                    le ricerche sui delta. Inoltre, ne è stato semplificato l&#x27;utilizzo. Ora non è più necessario
+                                    utilizzare una classe a parte: è sufficiente indicare che esiste un indice testuale nel file di
+                                    configurazione, dopodiché la libreria si occupa di utilizzare i metodi giusti.</li>
+                                <li>I test e la documentazione sono stati aggiornati. </li>
+                                <li>Corretto un bug per cui pip non installava la libreria, ma scaricava solo il file .egg-info in
+                                    */site-packages/.</li>
+                            </ol>
+                            <p>Novità nel testo della tesi:</p>
+                                <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/m_l_1_1_0_beta.pdf" download="materials_and_methods_&amp;_the_time_agnostic_library_1_1_0-beta.pdf">
+                                    <span class="mr-1"><span class="fas fa-download"></span></span>
+                                    Download <em>Methodology</em> &amp; <em>The Time-Agnostic Library</em> 1.1.0-beta
+                                </a>                    
                                 <ol>
-                                    <li>Questo è il nuovo diagramma sul modello di provenance di OpenCitations. 
-                                        <div class="card bg-primary shadow-inset border-light col-7 mt-3 mb-4 p-4">
-                                        <img src="assets/img/ocdm_provenance_model_new.png" /></div>
+                                    <li>Il codice viene riportato come Listing e non più come Figure. </li>
+                                    <li>Capitolo 5: <em>Methodology</em>
                                         <ol>
-                                            <li>Qual è il significato delle frecce tratteggiate?</li>
-                                            <li>La freccia verde relativa alle data properties è sempre tratteggiata? Se sì, come mai nel
-                                                diagramma originale quella relativa al periodo di validità dello snapshot è continua? (<a
-                                                    href="https://link.springer.com/content/pdf/10.1007%2F978-3-030-62466-8_28.pdf" target="_blank">https://link.springer.com/content/pdf/10.1007%2F978-3-030-62466-8_28.pdf</a>)
-                                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                                        <img src="assets/img/ocdm_provenance_model_old.png" />
-                                                    </div>
+                                            <li>Il capitolo <em>Materials and methods</em> è stato rinominato <em>Methodology</em>.</li>
+                                            <li>Le parole &quot;library&quot; e &quot;algorithm&quot; sono state tutte sostituite da
+                                                &quot;software&quot;, &quot;methodology&quot; e &quot;procedure&quot;, a seconda del
+                                                contesto. </li>
+                                            <li>Ho rifatto il diagramma sol modello di provenance di OpenCitations e corretto la
+                                                direzione della freccia che collega prov:Entity a owl:Thing. Per farlo, ho utilizzato <a
+                                                    href="http://draw.io">draw.io</a> con la palette sviluppata da Luigi Asprino basata
+                                                su Graffoo. </li>
+                                            <li>Il capitolo esordisce con una descrizione del modello di provenance di OpenCitations,
+                                                corredata da un diagramma e da un esempio in Turtle. Tale esempio viene richiamato da
+                                                tutti i successivi, in modo che il lettore ne debba comprendere solo uno, vedendolo da
+                                                diversi di vista. </li>
+                                            <li>I diagrammi di flusso sono stati aggiornati. In particolare, i database non vengono più
+                                                mostrati, il diagramma sui delta integra la procedura per esplicitare le variabili nella
+                                                query e il diagramma sulle versioni è stato compattato rimuovendo il blocco condizionale
+                                                solla presenza di URI nella query. Le spiegazioni sono state aggiornate di conseguenza.
                                             </li>
-                                            <li>Attualmente il nuovo diagramma si trova sia nel capitolo sullo stato dell&#x27;arte, che in
-                                                quello sulla metodologia. Sei d&#x27;accordo con questa ripetizione? </li>
                                         </ol>
                                     </li>
-                                    <li>Posso usare la parola &quot;dataset&quot; nel capitolo sulla metodologia?</li>
+                                    <li>Capitolo 6: <em>The Time-Agnostic Library</em>
+                                        <ol>
+                                            <li>È stato aggiunto un diagramma UML delle classi. </li>
+                                            <li>Tutti i template di utilizzo della libreria e degli output sono stati corredati da
+                                                esempi concreti, i quali riprendono l&#x27;esempio iniziale del capitolo precedente.
+                                            </li>
+                                            <li>L&#x27;utilizzo di rdflib per la manipolazione e rappresentazione dei grafi è stato
+                                                esplicitato. </li>
+                                            <li>Negli esempi d&#x27;uso, ai metodi che restituiscono un output è stato aggiunto
+                                                &quot;output =&quot;.</li>
+                                            <li>È stata aggiunta una sezione che parla del time-agnostic-browser. </li>
+                                        </ol>
+                                    </li>
                                 </ol>
-                                <h3>Aggiornamento sulle scadenze</h3>
-                                <ol>
-                                    <li>Ho parlato con Elisa, la quale mi ha detto i tirocini in preparazione alla tesi vengono verbalizzati
-                                        dal relatore e non da Tamburini. </li>
-                                </ol>                
                             </div>
                         </div>
                     </div>
