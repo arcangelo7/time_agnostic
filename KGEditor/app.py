@@ -14,9 +14,10 @@ from inspect import signature
 app = Flask(__name__)
 app.config["SECRET_KEY"] = b'\x94R\x06?\xa4!+\xaa\xae\xb2\xf3Z\xb4\xb7\xab\xf8'
 endpoint = "http://localhost:9999/blazegraph/sparql"
+provenance_endpoint = "http://localhost:19999/blazegraph/sparql"
 base_iri = "https://github.com/arcangelo7/time_agnostic/"
-info_dir_graph = "./data/info_dir/graph/"
-info_dir_prov = "./data/info_dir/prov/"
+info_dir_graph = "./db/final2/info_dir/"
+info_dir_prov = "./db/final2_prov/info_dir/"
 graphset = GraphSet(base_iri=base_iri, info_dir=info_dir_graph, wanted_label=False)
 with open('KGEditor/static/config/config.json', 'r') as f:
     config = json.load(f)
@@ -55,7 +56,8 @@ def save_create_query(subj:str, predicate:str, obj:str, resp_agent:str,
     method_name = config[s_entity_type][predicate]["create"]
     if (isinstance(method_name, dict)):
         if predicate == "http://www.essepuntato.it/2010/06/literalreification/hasLiteralValue":
-            identifier_scheme = s_entity.get_scheme()
+            # identifier_scheme = s_entity.get_scheme()
+            identifier_scheme = "http://purl.org/spar/datacite/doi"
             method_name = method_name[str(identifier_scheme)]
         else:
             method_name = method_name[obj]
@@ -241,7 +243,7 @@ def done():
     storer_graph = Storer(graphset)
     storer_prov = Storer(provset)
     storer_graph.upload_all(endpoint)
-    storer_prov.upload_all(endpoint)
+    storer_prov.upload_all(provenance_endpoint)
     graphset.commit_changes()
     update_query = {}
     return jsonify({"result": "Successful upload"})

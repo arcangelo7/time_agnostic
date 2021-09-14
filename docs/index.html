@@ -56,148 +56,119 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (09/09/2021)</h2>
+                    <h2>Prossimo incontro (15/09/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
-                <p>Novità relative al codice:</p>
+                <p>Novità relative al codice.</p>
                 <ol>
-                    <li>(AFTER, BEFORE) → (START, END)</li>
-                    <li>La ricerca sui delta integra una procedura per esplicitare le variabili nella query attraverso il tempo, 
-                        in modo da considerare le entità rilevanti nel passato ma irrilevanti o cancellate nel presente.</li>
-                    <li>L&#x27;output delle query sui delta riporta adesso anche la data di creazione e cancellazione delle
-                        entità. Se l&#x27;utente indica un intervallo temporale e l&#x27;entità non è stata creata o
-                        cancellata entro quell&#x27;intervallo, il valore di &quot;created&quot; o &quot;deleted&quot; è
-                        None.
-                        <div class="card bg-primary shadow-inset border-light">
-                        <pre><code class="prettyprint">
-    {
-        RES_URI_1: {
-            &quot;created&quot;: TIMESTAMP_CREATION,
-            &quot;modified&quot;: {
-                TIMESTAMP_1: UPDATE_QUERY_1,
-                TIMESTAMP_2: UPDATE_QUERY_2,
-                TIMESTAMP_N: UPDATE_QUERY_N
-            },
-            &quot;deleted&quot;: TIMESTAMP_DELETION
+                    <li>Gli output di get_state_at_time e get_history sono cambiati. Ora i metadati degli snapshot hanno
+                        delle chiavi dai nomi semplificati:
+                        <ol>
+                            <li>http://www.w3.org/ns/prov#generatedAtTime → generatedAtTime</li>
+                            <li>http://www.w3.org/ns/prov#wasAttributedTo → wasAttributedTo</li>
+                            <li>http://www.w3.org/ns/prov#hadPrimarySource → hadPrimarySource </li>
+                            <li>http://purl.org/dc/terms/description → description</li>
+                            <div class="card bg-primary shadow-inset border-light">
+                                <pre><code class="prettyprint">
+    # NUOVO OUTPUT DI GET_HISTORY
+    # MODELLO
+    ({
+            RES_URI: {
+                TIME_1: ENTITY_GRAPH_AT_TIME_1, 
+                TIME_2: ENTITY_GRAPH_AT_TIME_2
+            }
         },
-        RES_URI_2: {
-            &quot;created&quot;: TIMESTAMP_CREATION,
-            &quot;modified&quot;: {
-                TIMESTAMP_1: UPDATE_QUERY_1,
-                TIMESTAMP_2: UPDATE_QUERY_2,
-                TIMESTAMP_N: UPDATE_QUERY_N
-            },
-            &quot;deleted&quot;: TIMESTAMP_DELETION
-        },
-        RES_URI_N: {
-            &quot;created&quot;: TIMESTAMP_CREATION,
-            &quot;modified&quot;: {
-                TIMESTAMP_1: UPDATE_QUERY_1,
-                TIMESTAMP_2: UPDATE_QUERY_2,
-                TIMESTAMP_N: UPDATE_QUERY_N
-            },
-            &quot;deleted&quot;: TIMESTAMP_DELETION
-        },		
-    }
-                </code></pre></div>
-                <div class="card bg-primary shadow-inset border-light">
-                        <pre><code class="prettyprint">
-    # Ad esempio 
-    {
-        &#x27;https://github.com/arcangelo7/time_agnostic/ar/15519&#x27;: {
-            &quot;created&quot;: &quot;2021-05-07T09:59:15&quot;,
-            &quot;modified&quot;: {
-                &#x27;2021-06-01T18:46:41&#x27;: 
-                    &#x27;DELETE DATA { GRAPH &lt;https://github.com/arcangelo7/time_agnostic/ar/&gt; { 
-                        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; 
-                        &lt;http://purl.org/spar/pro/isHeldBy&gt; 
-                        &lt;https://github.com/arcangelo7/time_agnostic/ra/15519&gt; .} 
-                    }; INSERT DATA { GRAPH &lt;https://github.com/arcangelo7/time_agnostic/ar/&gt; { 
-                        &lt;https://github.com/arcangelo7/time_agnostic/ar/15519&gt; 
-                        &lt;http://purl.org/spar/pro/isHeldBy&gt; 
-                        &lt;https://github.com/arcangelo7/time_agnostic/ra/4&gt; .} 
-                    }&#x27;
-            },
-            &quot;deleted&quot;: None
+        {
+            RES_URI: {
+                SNAPSHOT_URI_AT_TIME_1: {
+                    &#x27;generatedAtTime&#x27;: GENERATION_TIME, 
+                    &#x27;wasAttributedTo&#x27;: ATTRIBUTION, 
+                    &#x27;hadPrimarySource&#x27;: PRIMARY_SOURCE
+                }, 
+                SNAPSHOT_URI_AT_TIME_2: {
+                    &#x27;generatedAtTime&#x27;: GENERATION_TIME, 
+                    &#x27;wasAttributedTo&#x27;: ATTRIBUTION, 
+                    &#x27;hadPrimarySource&#x27;: PRIMARY_SOURCE
+                }
+    } )
+
+    # ESEMPIO CONCRETO
+    ({
+        &#x27;https://example.it/id/1&#x27;: {
+            &#x27;2021-07-04T10:06:34&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;, 
+            &#x27;2021-07-05T11:07:34&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;,
+            &#x27;2021-07-06T09:49:56&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;
         }
-    }
-            </code></pre></div>
-                    </li>
-                    <li>La ricerca testuale di Blazegraph è stata implementata anche per
-                        le ricerche sui delta. Inoltre, ne è stato semplificato l&#x27;utilizzo. Ora non è più necessario
-                        utilizzare una classe a parte: è sufficiente indicare che esiste un indice testuale nel file di
-                        configurazione, dopodiché la libreria si occupa di utilizzare i metodi giusti.</li>
-                    <li>I test e la documentazione sono stati aggiornati. </li>
-                    <li>Corretto un bug per cui pip non installava la libreria, ma scaricava solo il file .egg-info in
-                        */site-packages/.</li>
+    }, 
+    {
+        {
+            &#x27;https://example.it/id/1/prov/se/1&#x27;: {
+                &#x27;generatedAtTime&#x27;: &#x27;2021-07-04T10:06:34&#x27;, 
+                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
+                &#x27;hadPrimarySource&#x27;: None
+            },
+            &#x27;https://example.it/id/1/prov/se/2&#x27;: {
+                &#x27;generatedAtTime&#x27;: &#x27;2021-07-05T11:07:34&#x27;, 
+                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
+                &#x27;hadPrimarySource&#x27;: None
+            }
+        {
+            &#x27;https://example.it/id/1/prov/se/3&#x27;: {
+                &#x27;generatedAtTime&#x27;: &#x27;2021-07-06T09:49:56&#x27;, 
+                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
+                &#x27;hadPrimarySource&#x27;: &#x27;https://api.crossref.org/works/10.1162/qss_a_00023&#x27;
+            }
+        }
+    })
+                                </code></pre></div>
+                            </li>
+                    <li>Ho compilato il <a
+                            href="https://github.com/opencitations/time-agnostic-browser/blob/main/README.md">README.md</a>
+                        del time-agnostic-browser, specificando i requisiti, come lanciare l&#x27;applicazione, come
+                        configurarla e come usarla. </li>
                 </ol>
-                <p>Novità nel testo della tesi:</p>
-                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/m_l_1_1_0_beta.pdf" download="materials_and_methods_&amp;_the_time_agnostic_library_1_1_0-beta.pdf">
-                        <span class="mr-1"><span class="fas fa-download"></span></span>
-                        Download <em>Methodology</em> &amp; <em>The Time-Agnostic Library</em> 1.1.0-beta
-                    </a>                    
-                    <ol>
-                        <li>Il codice viene riportato come Listing e non più come Figure. </li>
-                        <li>Capitolo 5: <em>Methodology</em>
-                            <ol>
-                                <li>Il capitolo <em>Materials and methods</em> è stato rinominato <em>Methodology</em>.</li>
-                                <li>Le parole &quot;library&quot; e &quot;algorithm&quot; sono state tutte sostituite da
-                                    &quot;software&quot;, &quot;methodology&quot; e &quot;procedure&quot;, a seconda del
-                                    contesto. </li>
-                                <li>Ho rifatto il diagramma sol modello di provenance di OpenCitations e corretto la
-                                    direzione della freccia che collega prov:Entity a owl:Thing. Per farlo, ho utilizzato <a
-                                        href="http://draw.io">draw.io</a> con la palette sviluppata da Luigi Asprino basata
-                                    su Graffoo. </li>
-                                <li>Il capitolo esordisce con una descrizione del modello di provenance di OpenCitations,
-                                    corredata da un diagramma e da un esempio in Turtle. Tale esempio viene richiamato da
-                                    tutti i successivi, in modo che il lettore ne debba comprendere solo uno, vedendolo da
-                                    diversi di vista. </li>
-                                <li>I diagrammi di flusso sono stati aggiornati. In particolare, i database non vengono più
-                                    mostrati, il diagramma sui delta integra la procedura per esplicitare le variabili nella
-                                    query e il diagramma sulle versioni è stato compattato rimuovendo il blocco condizionale
-                                    solla presenza di URI nella query. Le spiegazioni sono state aggiornate di conseguenza.
-                                </li>
-                            </ol>
-                        </li>
-                        <li>Capitolo 6: <em>The Time-Agnostic Library</em>
-                            <ol>
-                                <li>È stato aggiunto un diagramma UML delle classi. </li>
-                                <li>Tutti i template di utilizzo della libreria e degli output sono stati corredati da
-                                    esempi concreti, i quali riprendono l&#x27;esempio iniziale del capitolo precedente.
-                                </li>
-                                <li>L&#x27;utilizzo di rdflib per la manipolazione e rappresentazione dei grafi è stato
-                                    esplicitato. </li>
-                                <li>Negli esempi d&#x27;uso, ai metodi che restituiscono un output è stato aggiunto
-                                    &quot;output =&quot;.</li>
-                                <li>È stata aggiunta una sezione che parla del time-agnostic-browser. </li>
-                            </ol>
-                        </li>
-                    </ol>
+                <p>Novità relative alla testo della tesi.</p>
+                <ol>
+                    <li>Nel diagramma del modello di provenance di OpenCitations viene usata una linea continua per
+                        prov:generatedAtTime e prov:invalidatedAtTime, in quanto il loro range è concretamente xsd:dateTime.
+                    </li>
+                    <li>(AFTER, BEFORE) → (START, END) all&#x27;interno dei Listings.</li>
+                    <li>triples → triple patterns, in riferimento alle triple RDF contenenti variabili all&#x27;interno
+                        delle query SPARQL. </li>
+                    <li>Ho scritto il capitolo 8 <em>Library implementation</em>.
+                        <a class="btn btn-primary d-block my-3 col-md-12 col-sm-12" type="submit" href="assets/documents/li_1_0_0_beta.pdf" download="library_implementation_1_0_0-beta.pdf">
+                            <span class="mr-1"><span class="fas fa-download"></span></span>
+                            Download <em>Library implementation</em> 1.0.0-beta
+                        </a>
+                    </li>
+                    <li>Ho trovato un esempio reale che prevedo di poter usare in tutta la tesi. Nello specifico, ho trovato
+                        nel dataset un DOI sbagliato, che ho corretto a mano tramite il mio KG editor. Non ho avuto il tempo
+                        di aggiornare il testo, ma ho realizzato un diagramma tramite Graffoo che ne illustra i punti
+                        salienti. 
+                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4" style="background-color: #fff;">
+                            <img src="assets/img/universal_example.png" />
+                        </div>
+                    </li>
+                </ol>
                 <h3>Cosa non ho capito</h3>
                 <ol>
-                    <li>Questo è il nuovo diagramma sul modello di provenance di OpenCitations. 
-                        <div class="card bg-primary shadow-inset border-light col-7 mt-3 mb-4 p-4">
-                        <img src="assets/img/ocdm_provenance_model_new.png" /></div>
-                        <ol>
-                            <li>Qual è il significato delle frecce tratteggiate?</li>
-                            <li>La freccia verde relativa alle data properties è sempre tratteggiata? Se sì, come mai nel
-                                diagramma originale quella relativa al periodo di validità dello snapshot è continua? (<a
-                                    href="https://link.springer.com/content/pdf/10.1007%2F978-3-030-62466-8_28.pdf" target="_blank">https://link.springer.com/content/pdf/10.1007%2F978-3-030-62466-8_28.pdf</a>)
-                                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
-                                        <img src="assets/img/ocdm_provenance_model_old.png" />
-                                    </div>
-                            </li>
-                            <li>Attualmente il nuovo diagramma si trova sia nel capitolo sullo stato dell&#x27;arte, che in
-                                quello sulla metodologia. Sei d&#x27;accordo con questa ripetizione? </li>
-                        </ol>
+                    <li>Per quanto riguarda il capitolo 8 <em>Library implementation</em>, hai consigli su come formattare i
+                        nomi di variabili e metodi all&#x27;interno del testo?</li>
+                    <li>Tutto il codice finora incluso nella tesi è stato formattato in Times New Roman per uniformità con
+                        il resto. Tuttavia, Consolas sarebbe decisamente più leggibile. Posso usare un font diverso solo per
+                        il codice?</li>
+                    <li>Quando cito del codice come nomino gli autori? Uso il loro nickname o il loro vero nome? Come mi
+                        comporto se il vero nome non è noto? Infine, nel caso in cui del codice abbia decine o centinaia di
+                        autori, va bene se cito solo i primi 7?</li>
+                    <li>Desideri essere citato come coautore di time-agnostic-library e time-agnostic-browser?</li>
+                    <li>Nel capitolo 8 scrivo:<blockquote>The library
+                            supports reverse paths because placing an object URI as a subject makes queries more efficient.
+                        </blockquote>
+                        <p>Questa affermazione è monca e rappresenta un
+                            placeholder perché non so come dettagliarla. Avevamo parlato di questo argomento, ma non ne
+                            ricordo la giustificazione precisa. Potresti rinfrescarmi la memoria?</p>
                     </li>
-                    <li>Posso usare la parola &quot;dataset&quot; nel capitolo sulla metodologia?</li>
-                </ol>
-                <h3>Aggiornamento sulle scadenze</h3>
-                <ol>
-                    <li>Ho parlato con Elisa, la quale mi ha detto i tirocini in preparazione alla tesi vengono verbalizzati
-                        dal relatore e non da Tamburini. </li>
-                </ol>
+                </ol>                
             </div>
         </section>
 
@@ -4961,10 +4932,21 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-24" data-target="#panel-24" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-24">
-                            <span class="h6 mb-0 font-weight-bold">dd/09/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">15/09/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-24">
+                            <div class="pt-3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-25" data-target="#panel-25" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-25">
+                            <span class="h6 mb-0 font-weight-bold">dd/09/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-25">
                             <div class="pt-3">
                             </div>
                         </div>
