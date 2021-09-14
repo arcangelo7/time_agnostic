@@ -4933,6 +4933,113 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-24">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <p>Novità relative al codice.</p>
+                                <ol>
+                                    <li>Gli output di get_state_at_time e get_history sono cambiati. Ora i metadati degli snapshot hanno
+                                        delle chiavi dai nomi semplificati:
+                                        <ol>
+                                            <li>http://www.w3.org/ns/prov#generatedAtTime → generatedAtTime</li>
+                                            <li>http://www.w3.org/ns/prov#wasAttributedTo → wasAttributedTo</li>
+                                            <li>http://www.w3.org/ns/prov#hadPrimarySource → hadPrimarySource </li>
+                                            <li>http://purl.org/dc/terms/description → description</li>
+                                            <div class="card bg-primary shadow-inset border-light">
+                                                <pre><code class="prettyprint">
+    # NUOVO OUTPUT DI GET_HISTORY
+    # MODELLO
+    ({
+            RES_URI: {
+                TIME_1: ENTITY_GRAPH_AT_TIME_1, 
+                TIME_2: ENTITY_GRAPH_AT_TIME_2
+            }
+        },
+        {
+            RES_URI: {
+                SNAPSHOT_URI_AT_TIME_1: {
+                    &#x27;generatedAtTime&#x27;: GENERATION_TIME, 
+                    &#x27;wasAttributedTo&#x27;: ATTRIBUTION, 
+                    &#x27;hadPrimarySource&#x27;: PRIMARY_SOURCE
+                }, 
+                SNAPSHOT_URI_AT_TIME_2: {
+                    &#x27;generatedAtTime&#x27;: GENERATION_TIME, 
+                    &#x27;wasAttributedTo&#x27;: ATTRIBUTION, 
+                    &#x27;hadPrimarySource&#x27;: PRIMARY_SOURCE
+                }
+    } )
+
+    # ESEMPIO CONCRETO
+    ({
+        &#x27;https://example.it/id/1&#x27;: {
+            &#x27;2021-07-04T10:06:34&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;, 
+            &#x27;2021-07-05T11:07:34&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;,
+            &#x27;2021-07-06T09:49:56&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;
+        }
+    }, 
+    {
+        {
+            &#x27;https://example.it/id/1/prov/se/1&#x27;: {
+                &#x27;generatedAtTime&#x27;: &#x27;2021-07-04T10:06:34&#x27;, 
+                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
+                &#x27;hadPrimarySource&#x27;: None
+            },
+            &#x27;https://example.it/id/1/prov/se/2&#x27;: {
+                &#x27;generatedAtTime&#x27;: &#x27;2021-07-05T11:07:34&#x27;, 
+                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
+                &#x27;hadPrimarySource&#x27;: None
+            }
+        {
+            &#x27;https://example.it/id/1/prov/se/3&#x27;: {
+                &#x27;generatedAtTime&#x27;: &#x27;2021-07-06T09:49:56&#x27;, 
+                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
+                &#x27;hadPrimarySource&#x27;: &#x27;https://api.crossref.org/works/10.1162/qss_a_00023&#x27;
+            }
+        }
+    })
+                                                </code></pre></div>
+                                            </li>
+                                        </ol>
+                                <p class="mt-4">Novità relative alla testo della tesi.</p>
+                                    <li>Ho scritto il <strong>capitolo 8 <em>Library implementation</em></strong>.
+                                        <a class="btn btn-primary d-block my-3 col-md-12 col-sm-12" type="submit" href="assets/documents/li_1_0_0_beta.pdf" download="library_implementation_1_0_0-beta.pdf">
+                                            <span class="mr-1"><span class="fas fa-download"></span></span>
+                                            Download <em>Library implementation</em> 1.0.0-beta
+                                        </a>
+                                    </li>
+                                    <li>Nel diagramma del modello di provenance di OpenCitations viene usata una linea continua per
+                                        prov:generatedAtTime e prov:invalidatedAtTime, in quanto il loro range è concretamente xsd:dateTime.
+                                    </li>
+                                    <li>(AFTER, BEFORE) → (START, END) all&#x27;interno dei Listings.</li>
+                                    <li>triples → triple patterns, in riferimento alle triple RDF contenenti variabili all&#x27;interno
+                                        delle query SPARQL. </li>
+                                    <li>Ho trovato un esempio reale che prevedo di poter usare in tutta la tesi. Nello specifico, ho trovato
+                                        nel dataset un DOI sbagliato, che ho corretto a mano tramite il mio KG editor. Non ho avuto il tempo
+                                        di aggiornare il testo, ma ho realizzato un diagramma tramite Graffoo che ne illustra i punti
+                                        salienti. 
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4" style="background-color: #fff;">
+                                            <img src="assets/img/universal_example.png" />
+                                        </div>
+                                    </li>
+                                </ol>
+                                <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>Per quanto riguarda il capitolo 8 <em>Library implementation</em>, hai consigli su come formattare i
+                                        nomi di variabili e metodi all&#x27;interno del testo?</li>
+                                    <li>Tutto il codice finora incluso nella tesi è stato formattato in Times New Roman per uniformità con
+                                        il resto. Tuttavia, Consolas sarebbe decisamente più leggibile. Posso usare un font diverso solo per
+                                        il codice?</li>
+                                    <li>Quando cito del codice come nomino gli autori? Uso il loro nickname o il loro vero nome? Come mi
+                                        comporto se il vero nome non è noto? Infine, nel caso in cui del codice abbia decine o centinaia di
+                                        autori, va bene se cito solo i primi 7?</li>
+                                    <li>Desideri essere citato come coautore di time-agnostic-library e time-agnostic-browser?</li>
+                                    <li>Nel capitolo 8 scrivo:
+                                        <blockquote class="blockquote ml-5 mt-3">
+                                            The library supports reverse paths because placing an object URI as a subject makes queries more efficient.
+                                        </blockquote>
+                                        <p>Questa affermazione è monca e rappresenta un
+                                            placeholder perché non so come dettagliarla. Avevamo parlato di questo argomento, ma non ne
+                                            ricordo la giustificazione precisa. Potresti rinfrescarmi la memoria?</p>
+                                    </li>
+                                </ol>  
                             </div>
                         </div>
                     </div>
