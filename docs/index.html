@@ -56,115 +56,96 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (15/09/2021)</h2>
+                    <h2>Prossimo incontro (22/09/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
-                <p>Novità relative al codice.</p>
+                <p>Novità relative al codice:</p>
                 <ol>
-                    <li>Gli output di get_state_at_time e get_history sono cambiati. Ora i metadati degli snapshot hanno
-                        delle chiavi dai nomi semplificati:
+                    <li>Risolto un bug per cui vars_to_explicit_by_time non aggiornava i tempi rilevanti. In altre parole,
+                        se durante l&#x27;esplicitazione delle variabili venivano individuati nuovi tempi di generazione
+                        degli snapshot, l&#x27;esplicitazione ricorsiva delle variabili continuava ad avvenire solo sui
+                        tempi originali, senza tenere in considerazione quelli nuovi. 
                         <ol>
-                            <li>http://www.w3.org/ns/prov#generatedAtTime → generatedAtTime</li>
-                            <li>http://www.w3.org/ns/prov#wasAttributedTo → wasAttributedTo</li>
-                            <li>http://www.w3.org/ns/prov#hadPrimarySource → hadPrimarySource </li>
-                            <li>http://purl.org/dc/terms/description → description</li>
-                            <div class="card bg-primary shadow-inset border-light">
-                                <pre><code class="prettyprint">
-    # NUOVO OUTPUT DI GET_HISTORY
-    # MODELLO
-    ({
-            RES_URI: {
-                TIME_1: ENTITY_GRAPH_AT_TIME_1, 
-                TIME_2: ENTITY_GRAPH_AT_TIME_2
-            }
-        },
-        {
-            RES_URI: {
-                SNAPSHOT_URI_AT_TIME_1: {
-                    &#x27;generatedAtTime&#x27;: GENERATION_TIME, 
-                    &#x27;wasAttributedTo&#x27;: ATTRIBUTION, 
-                    &#x27;hadPrimarySource&#x27;: PRIMARY_SOURCE
-                }, 
-                SNAPSHOT_URI_AT_TIME_2: {
-                    &#x27;generatedAtTime&#x27;: GENERATION_TIME, 
-                    &#x27;wasAttributedTo&#x27;: ATTRIBUTION, 
-                    &#x27;hadPrimarySource&#x27;: PRIMARY_SOURCE
-                }
-    } )
-
-    # ESEMPIO CONCRETO
-    ({
-        &#x27;https://example.it/id/1&#x27;: {
-            &#x27;2021-07-04T10:06:34&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;, 
-            &#x27;2021-07-05T11:07:34&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;,
-            &#x27;2021-07-06T09:49:56&#x27;: &lt;Graph identifier=N2a032c5b693d48d8a3aa5bb126d47a5a  (&lt;class &#x27;rdflib.graph.ConjunctiveGraph&#x27;&gt;)&gt;
-        }
-    }, 
-    {
-        {
-            &#x27;https://example.it/id/1/prov/se/1&#x27;: {
-                &#x27;generatedAtTime&#x27;: &#x27;2021-07-04T10:06:34&#x27;, 
-                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
-                &#x27;hadPrimarySource&#x27;: None
-            },
-            &#x27;https://example.it/id/1/prov/se/2&#x27;: {
-                &#x27;generatedAtTime&#x27;: &#x27;2021-07-05T11:07:34&#x27;, 
-                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
-                &#x27;hadPrimarySource&#x27;: None
-            }
-        {
-            &#x27;https://example.it/id/1/prov/se/3&#x27;: {
-                &#x27;generatedAtTime&#x27;: &#x27;2021-07-06T09:49:56&#x27;, 
-                &#x27;wasAttributedTo&#x27;: &#x27;https://orcid.org/0000-0002-8420-0696&#x27;, 
-                &#x27;hadPrimarySource&#x27;: &#x27;https://api.crossref.org/works/10.1162/qss_a_00023&#x27;
-            }
-        }
-    })
-                                </code></pre></div>
-                            </li>
+                            <li>È stato aggiunto un nuovo test congeniato per fallire nel caso in cui
+                                vars_to_explicit_by_time non aggiorni correttamente i tempi rilevanti. </li>
                         </ol>
-                <p class="mt-4">Novità relative alla testo della tesi.</p>
-                    <li>Ho scritto il <strong>capitolo 8 <em>Library implementation</em></strong>.
-                        <a class="btn btn-primary d-block my-3 col-md-12 col-sm-12" type="submit" href="assets/documents/li_1_0_0_beta.pdf" download="library_implementation_1_0_0-beta.pdf">
+                    </li>
+                    <li>È stata rilasciata la versione 2.1.3-beta di time-agnostic-library, disponibile anche su PyPi. </li>
+                <p>Novità relative al testo della tesi:</p>
+                    <li>Ho scritto il capitolo 8.1 <em>Test dataset</em>.
+                        <a class="btn btn-primary d-block my-3 col-md-6 col-sm-12" type="submit" href="assets/documents/td_1_0_0_beta.pdf" download="test_dataset_1_0_0-beta.pdf">
                             <span class="mr-1"><span class="fas fa-download"></span></span>
-                            Download <em>Library implementation</em> 1.0.0-beta
+                            Download <em>8.1&nbsp;Test&nbsp;dataset</em>&nbsp;1.0.0&#8209;beta, <em>6&nbsp;Methodology</em>&nbsp;1.2.0, and <em>7&nbsp;Library&nbsp;implementation</em>&nbsp;1.0.1&#8209;beta 
                         </a>
                     </li>
-                    <li>Nel diagramma del modello di provenance di OpenCitations viene usata una linea continua per
-                        prov:generatedAtTime e prov:invalidatedAtTime, in quanto il loro range è concretamente xsd:dateTime.
-                    </li>
-                    <li>(AFTER, BEFORE) → (START, END) all&#x27;interno dei Listings.</li>
-                    <li>triples → triple patterns, in riferimento alle triple RDF contenenti variabili all&#x27;interno
-                        delle query SPARQL. </li>
-                    <li>Ho trovato un esempio reale che prevedo di poter usare in tutta la tesi. Nello specifico, ho trovato
-                        nel dataset un DOI sbagliato, che ho corretto a mano tramite il mio KG editor. Non ho avuto il tempo
-                        di aggiornare il testo, ma ho realizzato un diagramma tramite Graffoo che ne illustra i punti
-                        salienti. 
-                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4" style="background-color: #fff;">
-                            <img src="assets/img/universal_example.png" />
+                    <li>Il font monospaziato Consolas è stato usato in tutti i Listing e in tutti gli snippet intratestuali.</li>
+                    <li>Gli autori del codice citato sono stati indicati con i loro nomi e cognomi. Mancano all&#x27;appello
+                        jbrockmendel, ThiefMaster e kristi. </li>
+                    <li>Il diagramma Graffoo dell&#x27;esempio universale è stato aggiornato aggiungendo nuovi prefissi che
+                        contengano l&#x27;intero percorso, ovvero br:, id: ed se:. È stata inoltre specificata la classe di
+                        appartenenza degli snapshot, ovvero prov:Entity.
+                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                            <img src="assets/img/universal_examplev0_2.png" />
                         </div>
+                        <ol>
+                            <li>Tale esempio è adesso universale all&#x27;interno della tesi. Viene infatti richiamato nei capitoli
+                                5, 6, 7 e 8 da tutti gli altri esempi, time-agnostic-browser e knowledge graph editor compresi. Gli
+                                output d&#x27;esempio relativi a materializzazioni o query agnostiche sono quindi concreti e
+                                riproducibili sul dataset descritto in 8.1. </li>    
+                        </ol>
                     </li>
+                    <li>Ho realizzato il diagramma di sequenza UML relativo a get_state_at_time.</li>
+                    <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                        <img src="assets/img/diagram.svg" />
+                    </div>
                 </ol>
                 <h3>Cosa non ho capito</h3>
                 <ol>
-                    <li>Per quanto riguarda il capitolo 8 <em>Library implementation</em>, hai consigli su come formattare i
-                        nomi di variabili e metodi all&#x27;interno del testo?</li>
-                    <li>Tutto il codice finora incluso nella tesi è stato formattato in Times New Roman per uniformità con
-                        il resto. Tuttavia, Consolas sarebbe decisamente più leggibile. Posso usare un font diverso solo per
-                        il codice?</li>
-                    <li>Quando cito del codice come nomino gli autori? Uso il loro nickname o il loro vero nome? Come mi
-                        comporto se il vero nome non è noto? Infine, nel caso in cui del codice abbia decine o centinaia di
-                        autori, va bene se cito solo i primi 7?</li>
-                    <li>Desideri essere citato come coautore di time-agnostic-library e time-agnostic-browser?</li>
-                    <li>Nel capitolo 8 scrivo:
-                        <blockquote class="blockquote ml-5 mt-3">
-                            The library supports reverse paths because placing an object URI as a subject makes queries more efficient.
-                        </blockquote>
-                        <p>Questa affermazione è monca e rappresenta un
-                            placeholder perché non so come dettagliarla. Avevamo parlato di questo argomento, ma non ne
-                            ricordo la giustificazione precisa. Potresti rinfrescarmi la memoria?</p>
+                    <li>Per riferirmi a un&#x27;entità, nel testo della tesi uso o la parola &quot;entity&quot; o la parola
+                        &quot;resource&quot;. Ci sono altri sinonimi?</li>
+                    <li>Oltre al codice, dovrei usare un font monospaziato anche per riferirmi a variabili SPARQL e
+                        predicati all&#x27;interno del testo? Per esempio, scrivo ?id o <span class="monospace">?id</span>? oco:hasUpdateQuery o
+                        <span class="monospace">oco:hasUpdateQuery?</span></li>
+                    <li>Blazegraph ed rdflib interpretano in maniera diversa il punto in un&#x27;espressione regolare
+                        all&#x27;interno di una query SPARQL. Prendiamo ad esempio la seguente query.
+                        <div class="card bg-primary shadow-inset border-light">
+                            <pre><code>
+    PREFIX literal: &lt;http://www.essepuntato.it/2010/06/literalreification/&gt;
+    SELECT ?literal
+    WHERE {
+        ?id literal:hasLiteralValue ?literal.
+        FILTER REGEX(?literal, &quot;.$&quot;)
+    }
+                            </code></pre>
+                        </div>
+                        <p>Blazegraph interpreta il punto come
+                            &quot;qualunque carattere&quot; - com&#x27;è giusto che sia - mentre rdflib lo interpreta come
+                            &quot;carattere punto&quot;. Per dire a Blazegraph di fare l&#x27;escaping, sono poi necessari
+                            ben due backslash, così: &quot;\\.$&quot;. Tuttavia, tale sequenza fa crashare rdflib, che
+                            interpreta il punto escaped come un punto di fine pattern. Hai idea del perché di tali
+                            inconsistenze? Quale delle due opzioni riporto nella tesi? </p>
                     </li>
-                </ol>                
+                    <li>La proprietà biro:references è definita come &quot;The relation between a bibliographic record or a
+                        bibliographic reference and the publication being referenced.&quot; Tale predicato serve quindi a
+                        collegare un riferimento bibliografico alla risorsa bibliografica del citante o del citato?</li>
+                    <li>A proposito del livello 1 di provenance, spiego che ho aggiunto al dataset citazioni presenti in
+                        COCI e non trovate in Crossref. Mi ripeteresti qual è la spiegazione ufficiale di tale fenomeno?
+                    </li>
+                </ol>
+                <h3>Note</h3>
+                <ol>
+                    <li>Ti segnalo che, nella pagina <a href="https://essepuntato.it/graffoo/">https://essepuntato.it/graffoo/</a>, il
+                        link <a href="https://essepuntato.it/graffoo/specification/current.html">official specification</a> non
+                        è funzionante.
+                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-4">
+                            <img src="assets/img/broken_link.png" />
+                        </div>
+                    </li>
+                    <li>Penso che avrebbe senso isolare la parte di oc_ocdm che si occupa della provenance da quella che si
+                        occupa dei dati. Mi metto nei panni di un utente che vuole realizzare un dataset con un data model
+                        diverso per i dati ma uguale per la provenance, in modo da poter sfruttare time-agnostic-library.
+                        Sono pensieri in libertà. È possibile generalizzare la parte di creazione della provenance?</li>
+                </ol>
             </div>
         </section>
 
@@ -5046,10 +5027,21 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-25" data-target="#panel-25" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-25">
-                            <span class="h6 mb-0 font-weight-bold">dd/09/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">22/09/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-25">
+                            <div class="pt-3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-26" data-target="#panel-26" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-26">
+                            <span class="h6 mb-0 font-weight-bold">dd/09/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-26">
                             <div class="pt-3">
                             </div>
                         </div>

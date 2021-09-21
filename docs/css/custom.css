@@ -37,3 +37,7 @@ li ol > li:before {
     max-width: 60rem;
     overflow-x: auto;
 }
+
+.monospace {
+    font-family: monospace;
+}
