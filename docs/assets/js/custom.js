@@ -7,4 +7,8 @@ $( document ).ready(function() {
             scrollTop: $(start).offset().top
         }, 1000);
     });
+
+    $('.carousel').carousel({
+        interval: false
+      })      
 });

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="891px" preserveAspectRatio="none" style="width:625px;height:891px;background:transparent;" version="1.1" viewBox="0 0 625 891" width="625px" zoomAndPan="magnify">
+    <defs>
+        <filter height="300%" id="f1d6bdks2f64p7" width="300%" x="-1" y="-1">
+            <feGaussianBlur result="blurOut" stdDeviation="2.0"/>
+            <feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/>
+            <feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/>
+            <feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/>
+        </filter>
+    </defs>
+    <g>
+        <rect fill="#FFFFFF" filter="url(#f1d6bdks2f64p7)" height="469.5703" style="stroke:#000000;stroke-width:2.0;" width="537" x="74.5" y="106.6094"/>
+        <rect fill="#FFFFFF" filter="url(#f1d6bdks2f64p7)" height="437.2188" style="stroke:#000000;stroke-width:2.0;" width="517" x="84.5" y="131.9609"/>
+        <rect fill="#FFFFFF" filter="url(#f1d6bdks2f64p7)" height="288.8125" style="stroke:#000000;stroke-width:2.0;" width="497" x="94.5" y="157.3125"/>
+        <rect fill="#FFFFFF" filter="url(#f1d6bdks2f64p7)" height="107.0547" style="stroke:#000000;stroke-width:2.0;" width="396" x="104.5" y="332.0703"/>
+        <rect fill="#FFFFFF" height="45.3516" style="stroke:none;stroke-width:1.0;" width="396" x="104.5" y="393.7734"/>
+        <rect fill="#FFFFFF" filter="url(#f1d6bdks2f64p7)" height="102.0547" style="stroke:#000000;stroke-width:2.0;" width="313.5" x="104.5" y="460.125"/>
+        <rect fill="#FFFFFF" filter="url(#f1d6bdks2f64p7)" height="138.4063" style="stroke:#000000;stroke-width:2.0;" width="416" x="94.5" y="620.5313"/>
+        <rect fill="#FFFFFF" filter="url(#f1d6bdks2f64p7)" height="106.0547" style="stroke:#000000;stroke-width:2.0;" width="396" x="104.5" y="645.8828"/>
+        <line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="22" x2="22" y1="89.6094" y2="806.2891"/>
+        <line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="166.5" x2="166.5" y1="89.6094" y2="806.2891"/>
+        <line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="406.5" x2="406.5" y1="89.6094" y2="806.2891"/>
+        <line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="468.5" x2="468.5" y1="89.6094" y2="806.2891"/>
+        <line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="540.5" x2="540.5" y1="89.6094" y2="806.2891"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="28" x="5" y="86.5332">user</text>
+        <ellipse cx="22" cy="15" fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" rx="8" ry="8" style="stroke:#A80036;stroke-width:2.0;"/>
+        <path d="M22,23 L22,50 M9,31 L35,31 M22,50 L9,65 M22,50 L35,65 " fill="none" filter="url(#f1d6bdks2f64p7)" style="stroke:#A80036;stroke-width:2.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="28" x="5" y="819.8223">user</text>
+        <ellipse cx="22" cy="832.8984" fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" rx="8" ry="8" style="stroke:#A80036;stroke-width:2.0;"/>
+        <path d="M22,840.8984 L22,867.8984 M9,848.8984 L35,848.8984 M22,867.8984 L9,882.8984 M22,867.8984 L35,882.8984 " fill="none" filter="url(#f1d6bdks2f64p7)" style="stroke:#A80036;stroke-width:2.0;"/>
+        <rect fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" height="31.6094" style="stroke:#A80036;stroke-width:1.5;" width="101" x="114.5" y="53"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="87" x="121.5" y="74.5332">VersionQuery</text>
+        <rect fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" height="31.6094" style="stroke:#A80036;stroke-width:1.5;" width="101" x="114.5" y="805.2891"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="87" x="121.5" y="826.8223">VersionQuery</text>
+        <rect fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" height="31.6094" style="stroke:#A80036;stroke-width:1.5;" width="55" x="377.5" y="53"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="41" x="384.5" y="74.5332">Sparql</text>
+        <rect fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" height="31.6094" style="stroke:#A80036;stroke-width:1.5;" width="55" x="377.5" y="805.2891"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="41" x="384.5" y="826.8223">Sparql</text>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="38" x="446.5" y="86.5332">cache</text>
+        <path d="M450.5,36 C450.5,26 468.5,26 468.5,26 C468.5,26 486.5,26 486.5,36 L486.5,62 C486.5,72 468.5,72 468.5,72 C468.5,72 450.5,72 450.5,62 L450.5,36 " fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" style="stroke:#000000;stroke-width:1.5;"/>
+        <path d="M450.5,36 C450.5,46 468.5,46 468.5,46 C468.5,46 486.5,46 486.5,36 " fill="none" style="stroke:#000000;stroke-width:1.5;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="38" x="446.5" y="819.8223">cache</text>
+        <path d="M450.5,832.8984 C450.5,822.8984 468.5,822.8984 468.5,822.8984 C468.5,822.8984 486.5,822.8984 486.5,832.8984 L486.5,858.8984 C486.5,868.8984 468.5,868.8984 468.5,868.8984 C468.5,868.8984 450.5,868.8984 450.5,858.8984 L450.5,832.8984 " fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" style="stroke:#000000;stroke-width:1.5;"/>
+        <path d="M450.5,832.8984 C450.5,842.8984 468.5,842.8984 468.5,842.8984 C468.5,842.8984 486.5,842.8984 486.5,832.8984 " fill="none" style="stroke:#000000;stroke-width:1.5;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="75" x="500.5" y="86.5332">provenance</text>
+        <path d="M523,36 C523,26 541,26 541,26 C541,26 559,26 559,36 L559,62 C559,72 541,72 541,72 C541,72 523,72 523,62 L523,36 " fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" style="stroke:#000000;stroke-width:1.5;"/>
+        <path d="M523,36 C523,46 541,46 541,46 C541,46 559,46 559,36 " fill="none" style="stroke:#000000;stroke-width:1.5;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="75" x="500.5" y="819.8223">provenance</text>
+        <path d="M523,832.8984 C523,822.8984 541,822.8984 541,822.8984 C541,822.8984 559,822.8984 559,832.8984 L559,858.8984 C559,868.8984 541,868.8984 541,868.8984 C541,868.8984 523,868.8984 523,858.8984 L523,832.8984 " fill="#FEFECE" filter="url(#f1d6bdks2f64p7)" style="stroke:#000000;stroke-width:1.5;"/>
+        <path d="M523,832.8984 C523,842.8984 541,842.8984 541,842.8984 C541,842.8984 559,842.8984 559,832.8984 " fill="none" style="stroke:#000000;stroke-width:1.5;"/>
+        <path d="M74.5,106.6094 L280.5,106.6094 L280.5,114.6094 L270.5,124.6094 L74.5,124.6094 L74.5,106.6094 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/>
+        <rect fill="none" height="469.5703" style="stroke:#000000;stroke-width:2.0;" width="537" x="74.5" y="106.6094"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="161" x="89.5" y="121.1045">_rebuild_relevant_entity()</text>
+        <path d="M84.5,131.9609 L145.5,131.9609 L145.5,139.9609 L135.5,149.9609 L84.5,149.9609 L84.5,131.9609 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/>
+        <rect fill="none" height="437.2188" style="stroke:#000000;stroke-width:2.0;" width="517" x="84.5" y="131.9609"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="16" x="99.5" y="146.4561">alt</text>
+        <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="126" x="160.5" y="145.3799">[cache_triplestore_url]</text>
+        <path d="M94.5,157.3125 L393.5,157.3125 L393.5,165.3125 L383.5,175.3125 L94.5,175.3125 L94.5,157.3125 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/>
+        <rect fill="none" height="288.8125" style="stroke:#000000;stroke-width:2.0;" width="497" x="94.5" y="157.3125"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="254" x="109.5" y="171.8076">_get_relevant_timestamps_from_cache()</text>
+        <polygon fill="#A80036" points="456.5,194.0156,466.5,198.0156,456.5,202.0156,460.5,198.0156" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="167" x2="462.5" y1="198.0156" y2="198.0156"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="107" x="174" y="193.1592">query_timestamps</text>
+        <polygon fill="#A80036" points="178,224.3672,168,228.3672,178,232.3672,174,228.3672" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="172" x2="467.5" y1="228.3672" y2="228.3672"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="39" x="184" y="223.5107">results</text>
+        <polygon fill="#A80036" points="395,254.7188,405,258.7188,395,262.7188,399,258.7188" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="167" x2="401" y1="258.7188" y2="258.7188"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="104" x="174" y="253.8623">query_provenance</text>
+        <polygon fill="#A80036" points="529,268.7188,539,272.7188,529,276.7188,533,272.7188" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:2.0,2.0;" x1="407" x2="535" y1="272.7188" y2="272.7188"/>
+        <polygon fill="#A80036" points="418,282.7188,408,286.7188,418,290.7188,414,286.7188" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:2.0,2.0;" x1="412" x2="540" y1="286.7188" y2="286.7188"/>
+        <polygon fill="#A80036" points="178,313.0703,168,317.0703,178,321.0703,174,317.0703" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="172" x2="406" y1="317.0703" y2="317.0703"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="65" x="184" y="312.2139">provenance</text>
+        <path d="M104.5,332.0703 L165.5,332.0703 L165.5,340.0703 L155.5,350.0703 L104.5,350.0703 L104.5,332.0703 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/>
+        <rect fill="none" height="107.0547" style="stroke:#000000;stroke-width:2.0;" width="396" x="104.5" y="332.0703"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="16" x="119.5" y="346.5654">alt</text>
+        <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="315" x="180.5" y="345.4893">[len(results) == len(provenance) and len(provenance) &gt; 0]</text>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="167" x2="209" y1="372.7734" y2="372.7734"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="209" x2="209" y1="372.7734" y2="385.7734"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="168" x2="209" y1="385.7734" y2="385.7734"/>
+        <polygon fill="#A80036" points="178,381.7734,168,385.7734,178,389.7734,174,385.7734" style="stroke:#A80036;stroke-width:1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="219" x="174" y="367.917">relevant_timestamps_in_cache = True</text>
+        <line style="stroke:#000000;stroke-width:1.0;stroke-dasharray:2.0,2.0;" x1="104.5" x2="500.5" y1="394.7734" y2="394.7734"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="167" x2="209" y1="418.125" y2="418.125"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="209" x2="209" y1="418.125" y2="431.125"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="168" x2="209" y1="431.125" y2="431.125"/>
+        <polygon fill="#A80036" points="178,427.125,168,431.125,178,435.125,174,431.125" style="stroke:#A80036;stroke-width:1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="226" x="174" y="413.2686">relevant_timestamps_in_cache = False</text>
+        <path d="M104.5,460.125 L165.5,460.125 L165.5,468.125 L155.5,478.125 L104.5,478.125 L104.5,460.125 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/>
+        <rect fill="none" height="102.0547" style="stroke:#000000;stroke-width:2.0;" width="313.5" x="104.5" y="460.125"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="16" x="119.5" y="474.6201">alt</text>
+        <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="180" x="180.5" y="473.5439">[relevant_timestamps_in_cache]</text>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="167" x2="209" y1="500.8281" y2="500.8281"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="209" x2="209" y1="500.8281" y2="513.8281"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="168" x2="209" y1="513.8281" y2="513.8281"/>
+        <polygon fill="#A80036" points="178,509.8281,168,513.8281,178,517.8281,174,513.8281" style="stroke:#A80036;stroke-width:1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="170" x="174" y="495.9717">_store_relevant_timestamps()</text>
+        <path d="M172,526.8281 L172,552.8281 L404,552.8281 L404,536.8281 L394,526.8281 L172,526.8281 " fill="#FBFB77" filter="url(#f1d6bdks2f64p7)" style="stroke:#A80036;stroke-width:1.0;"/>
+        <path d="M394,526.8281 L394,536.8281 L404,536.8281 L394,526.8281 " fill="#FBFB77" style="stroke:#A80036;stroke-width:1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="195" x="178" y="545.3232">return without rebuilding the entity</text>
+        <polygon fill="#A80036" points="155,601.5313,165,605.5313,155,609.5313,159,605.5313" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="22" x2="161" y1="605.5313" y2="605.5313"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="121" x="29" y="600.6748">run_agnostic_query()</text>
+        <path d="M94.5,620.5313 L155.5,620.5313 L155.5,628.5313 L145.5,638.5313 L94.5,638.5313 L94.5,620.5313 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/>
+        <rect fill="none" height="138.4063" style="stroke:#000000;stroke-width:2.0;" width="416" x="94.5" y="620.5313"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="16" x="109.5" y="635.0264">alt</text>
+        <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="126" x="170.5" y="633.9502">[cache_triplestore_url]</text>
+        <path d="M104.5,645.8828 L177.5,645.8828 L177.5,653.8828 L167.5,663.8828 L104.5,663.8828 L104.5,645.8828 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/>
+        <rect fill="none" height="106.0547" style="stroke:#000000;stroke-width:2.0;" width="396" x="104.5" y="645.8828"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="28" x="119.5" y="660.3779">loop</text>
+        <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="98" x="192.5" y="659.3018">[relevant_graphs]</text>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="167" x2="209" y1="686.5859" y2="686.5859"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="209" x2="209" y1="686.5859" y2="699.5859"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="168" x2="209" y1="699.5859" y2="699.5859"/>
+        <polygon fill="#A80036" points="178,695.5859,168,699.5859,178,703.5859,174,699.5859" style="stroke:#A80036;stroke-width:1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="86" x="174" y="681.7295">split_by_where</text>
+        <polygon fill="#A80036" points="456.5,725.9375,466.5,729.9375,456.5,733.9375,460.5,729.9375" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="167" x2="462.5" y1="729.9375" y2="729.9375"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="117" x="174" y="725.0811">query_named_graph</text>
+        <polygon fill="#A80036" points="178,739.9375,168,743.9375,178,747.9375,174,743.9375" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:2.0,2.0;" x1="172" x2="467.5" y1="743.9375" y2="743.9375"/>
+        <polygon fill="#A80036" points="33,784.2891,23,788.2891,33,792.2891,29,788.2891" style="stroke:#A80036;stroke-width:1.0;"/>
+        <line style="stroke:#A80036;stroke-width:1.0;" x1="27" x2="166" y1="788.2891" y2="788.2891"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="95" x="39" y="783.4326">agnostic_results</text>        <!--MD5=[dd1fd38973797167131e773de072dbba]
+@startuml
+actor user
+participant VersionQuery
+participant Sparql
+database cache
+database provenance
+
+group _rebuild_relevant_entity()
+    alt cache_triplestore_url
+        group _get_relevant_timestamps_from_cache()
+            VersionQuery -> cache: query_timestamps
+            cache -> VersionQuery: results
+            VersionQuery -> Sparql: query_provenance
+            Sparql - -> provenance
+            provenance - -> Sparql
+            Sparql -> VersionQuery: provenance
+            alt len(results) == len(provenance) and len(provenance) > 0
+                VersionQuery -> VersionQuery: relevant_timestamps_in_cache = True
+            else
+                VersionQuery -> VersionQuery: relevant_timestamps_in_cache = False             
+            end
+        end    
+        alt relevant_timestamps_in_cache
+            VersionQuery -> VersionQuery: _store_relevant_timestamps()        
+            note right VersionQuery
+            return without rebuilding the entity    
+            end note
+        end 
+    end
+end
+user -> VersionQuery: run_agnostic_query()
+alt cache_triplestore_url
+    loop relevant_graphs
+        VersionQuery -> VersionQuery: split_by_where
+        VersionQuery -> cache: query_named_graph
+        return
+    end 
+end
+VersionQuery -> user: agnostic_results
+@enduml
+
+PlantUML version 1.2021.7(Sun May 23 14:40:07 CEST 2021)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: Cp1252
+Language: it
+Country: IT
+-->    </g>
+</svg>

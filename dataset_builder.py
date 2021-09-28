@@ -1,5 +1,4 @@
 import requests, json, urllib, os
-from oc_ocdm.graph.entities.bibliographic_entity import BibliographicEntity
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.support import create_date
 from oc_ocdm.metadata import MetadataSet
@@ -70,7 +69,7 @@ class DatasetBuilder(object):
         switch[item["type"]]()
     
     @classmethod
-    def _manage_volume_issue(cls, graphset:GraphSet, journal_br:BibliographicEntity, item_br:BibliographicEntity, item:dict, resp_agent:str, source:str):
+    def _manage_volume_issue(cls, graphset:GraphSet, journal_br:BibliographicResource, item_br:BibliographicResource, item:dict, resp_agent:str, source:str):
         volume_br = None
         if "volume" in item:
             volume_br = graphset.add_br(resp_agent=resp_agent, source=source)
@@ -93,7 +92,7 @@ class DatasetBuilder(object):
             item_br.is_part_of(journal_br)
 
     @classmethod
-    def _manage_resource_embodiment(cls, graphset:GraphSet, item:dict, item_br:BibliographicEntity, digital_format:bool, resp_agent:str, source:str):
+    def _manage_resource_embodiment(cls, graphset:GraphSet, item:dict, item_br:BibliographicResource, digital_format:bool, resp_agent:str, source:str):
         if not digital_format:
             item_re = graphset.add_re(resp_agent=resp_agent, source=source)
             item_re.create_print_embodiment()
@@ -143,7 +142,7 @@ class DatasetBuilder(object):
             if index+1 < len(authorAgentRoles):
                 authorAgentRole.has_next(authorAgentRoles[index+1])         
 
-    def _manage_citations(self, graphset:GraphSet, item:dict, citing_entity:BibliographicEntity, source:str):
+    def _manage_citations(self, graphset:GraphSet, item:dict, citing_entity:BibliographicResource, source:str):
         if "reference" in item:
             for reference in item["reference"]:
                 if "DOI" in reference:
@@ -165,7 +164,7 @@ class DatasetBuilder(object):
                     reference_be = graphset.add_be(resp_agent=self.resp_agent, source=source)
                     if "unstructured" in reference:
                         reference_be.has_content(reference["unstructured"])
-                    reference_be.references_br(citing_entity)
+                    reference_be.references_br(reference_br)
                     citing_entity.contains_in_reference_list(reference_be)
     
     def generate_dataset(self, title:str, description:str=None) -> MetadataSet:
@@ -183,6 +182,10 @@ class DatasetBuilder(object):
         with open(journal_data_path) as journal_data:
             journal_data_items = json.load(journal_data)["message"]["items"]
         journal_item = next((item for item in journal_data_items if item["type"] == "journal"), None)
+        journal_item = {
+            "ISSN": ["1234"],
+            "title": "Scientometrics"
+        }
         if journal_item is not None:
             source_journal = f"http://api.crossref.org/journals/{journal_item['ISSN'][0]}"
             journal_br = journal_graphset.add_br(resp_agent=self.resp_agent, source=source_journal)

@@ -38,18 +38,17 @@ class DatasetAutoEnhancer(object):
         ids = entity.get_identifiers()
         for identifier in ids:
             id_query = f"""
-                SELECT ?schema ?literal
-                WHERE {{<{identifier.res}> <{GraphEntity.iri_uses_identifier_scheme}> ?schema;
-                                            <{GraphEntity.iri_has_literal_value}> ?literal.}}
+                CONSTRUCT {{
+                    <{identifier.res}> ?p ?o.
+                }}
+                WHERE {{
+                    <{identifier.res}> ?p ?o.
+                }}
             """
             sparql.setQuery(id_query)
-            sparql.setReturnFormat(JSON)
-            results = sparql.queryAndConvert()
-            for result in results["results"]["bindings"]:
-                schema = result["schema"]["value"]
-                literal = result["literal"]["value"]
-                create_method = mapping[str(GraphEntity.iri_identifier)][str(GraphEntity.iri_has_literal_value)]["create"][schema]
-                getattr(identifier, create_method)(literal)
+            sparql.setReturnFormat(RDFXML)
+            graph_id = sparql.queryAndConvert()
+            getattr(graphset, "add_id")(self.resp_agent, res=identifier.res, preexisting_graph=graph_id)
 
         if other:
             query_other_as_obj = f"""

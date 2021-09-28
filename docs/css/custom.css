@@ -41,3 +41,8 @@ li ol > li:before {
 .monospace {
     font-family: monospace;
 }
+
+.carousel-item img {
+    height: 100rem;
+    width: auto;
+}
