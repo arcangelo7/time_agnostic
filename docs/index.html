@@ -5232,11 +5232,205 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-26" data-target="#panel-26" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-26">
-                            <span class="h6 mb-0 font-weight-bold">27/09/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">29/09/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-26">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <p>Novità relative al codice</p>
+                                <ol>
+                                    <li>Utilizzando <a href="https://pypi.org/project/line-profiler/" target="_blank">line_profiler</a> ho
+                                        analizzato i tempi di
+                                        esecuzione di ogni singola linea di codice. Mi sono accorto di vari <strong>problemi di
+                                            performance</strong>
+                                        <ol>
+                                            <li>Risolto un problema di performance in get_state_at_time, per
+                                                cui la query sullo stato presente dell&#x27;entità veniva inutilmente ripetuta per ogni
+                                                stato passato entro l&#x27;intervallo da materializzare.</li>
+                                            <li>Risolto un problema di performance per cui una query
+                                                agnostica sul tempo veniva prima eseguita su tutti i tempi e, solo in un secondo momento,
+                                                venivano selezionati quelli rilevanti in base all&#x27;intervallo indicato dall&#x27;utente.
+                                                Ora la query viene direttamente eseguita solo sui tempi rilevanti. </li>
+                                        </ol>
+                                    </li>
+                                    <li>Il <strong>dataset di test</strong> è stato ricostruito collegando i
+                                        <strong>riferimenti bibliografici</strong> ai citati tramite biro:references, anziché ai citanti
+                                        come in precedenza.
+                                    </li>
+                                    <li>Ho modificato lo script per <strong>testare</strong> il <strong>tempo
+                                        </strong>di esecuzione in modo che chiuda e riapra i <strong>triplestore </strong>a ogni
+                                        ripetizione. Tale operazione preliminare viene esclusa dal computo del tempo. </li>
+                                    <li>Ho creato uno script per <strong>testare </strong>la <strong>memoria
+                                        </strong>occupata. Dato che la RAM viene rilasciata solo quando un processo è concluso, eseguire i
+                                        test in sequenza in un unico processo ne avrebbe artificiosamente incrementato le risorse occupate.
+                                        La soluzione adottata è stata generare al volo un file Python contenente esclusivamente il test,
+                                        eseguirlo, misurare la RAM nel suo picco, chiuderlo e cancellare il file. La RAM è stata misurata tramite <a href="https://pypi.org/project/psutil/" target="_blank">psutil</a>.</li>
+                                    <p>Novità relative alla tesi</p>
+                                    <li>Ho trovato i <strong>nomi </strong>degli <strong>sviluppatori
+                                        </strong>non identificati sui siti delle aziende a cui sono affiliati. </li>
+                                    <li>time-travel query → <strong>time-traversal</strong> query.</li>
+                                    <li>Ho aggiornato la <strong>numerazione dei capitoli</strong> e dei riferimenti intratestuali, in modo che indice, abstract, introduzione, conclusione e bibliografia siano esclusi dalla numerazione. Ora il primo capitolo è <em>Literature review</em>.</li>
+                                    <li>Ho scritto il capitolo <em>Introduction</em> e la parte del capitolo <em>Discussion</em> relativa al setup dei test.</li>
+                                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/intro_1_0_0-beta.pdf" download="introduction_1-0-0-beta.pdf">
+                                        <span class="mr-1"><span class="fas fa-download"></span></span>
+                                        Download <em>Introduction</em> 1.0.0-beta
+                                    </a>
+                                    <li>I <strong>test</strong> sono ancora in corso. Mancano i test con la cache, con l'indice testuale di Blazegraph, sia separatamente che con entrambi. Inoltre, la cache va testata sia pulendola a ogni esecuzione che non pulendola. Riporto i dati finora ottenuti.
+                                        <table class="table shadow-inset rounded table-striped mt-3">
+                                            <tr>
+                                                <th class="border-0" scope="col" id="class">Test name</th>
+                                                <th class="border-0" scope="col" id="teacher">Average RAM (MB) <br/>w/out cache <br/>w/out textual index</th>
+                                                <th class="border-0" scope="col" id="males">Average time (s) <br/>w/out cache <br/>w/out textual index</th>
+                                                <th class="border-0" scope="col" id="males">Average time (s) <br/>w/out cache <br/>w/ textual index</th>
+                                            </tr>
+                                            <tr>
+                                                <td>Materialization of all versions</td>
+                                                <td>51.77</td>
+                                                <td>0.66</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Materialization of a specific version</td>
+                                                <td>51.56</td>
+                                                <td>0.59</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Cross-version structured query</td>
+                                                <td>54.80</td>
+                                                <td>1.76</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Single-version structured query</td>
+                                                <td>53.74</td>
+                                                <td>1.76</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Cross-version structured query  <br/>where only the predicate and object are known</td>
+                                                <td>828.12</td>
+                                                <td>962.53</td>
+                                                <td>783.13</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Single-version structured query  <br/>where only the predicate and object are known</td>
+                                                <td>75.84</td>
+                                                <td>959.00</td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Cross-delta structured query</td>
+                                                <td>54.90</td>
+                                                <td>2.30</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Single-delta structured query</td>
+                                                <td>53.89</td>
+                                                <td>2.27</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Cross-delta structured query <br/>where only the predicate and object are known</td>
+                                                <td>69.04</td>
+                                                <td>740.94</td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Single-delta structured query  <br/>where only the predicate and object are known</td>
+                                                <td>66.31</td>
+                                                <td>740.35</td>
+                                                <td></td>
+                                            </tr>
+                                        </table>                        
+                                    </li>
+                                    <p>Capitolo 1 <em>Literature review</em></p>
+                                    <li>Il <strong>diagramma </strong>di esempio su <strong>RDF
+                                            Reification</strong> è stato rifatto tramite <strong>Graffoo</strong>.
+                                            <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-3">
+                                                <img src="assets/img/statement_reification.drawio.svg"/>
+                                            </div>
+                                    </li>
+                                    <p>Capitolo 4 <em>Library implementation</em></p>
+                                    <li>Ho realizzato i <strong>diagrammi UML di sequenza</strong> degli
+                                        algoritmi per materializzare tutte le versioni, ricostruire il passato rilevante rispetto a una
+                                        query e del sistema di cache. 
+                                        <div id="carouselExampleIndicators_1" class="carousel slide" data-ride="carousel">
+                                            <ol class="carousel-indicators">
+                                                <li data-target="#carouselExampleIndicators_1" data-slide-to="0" class="active"></li>
+                                                <li data-target="#carouselExampleIndicators_1" data-slide-to="1"></li>
+                                                <li data-target="#carouselExampleIndicators_1" data-slide-to="2"></li>
+                                            </ol>                            
+                                            <div class="carousel-inner">
+                                              <div class="carousel-item active">
+                                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-3 pb-7">
+                                                    <img src="assets/img/get_history.svg" alt="First slide">
+                                                    <div style="color: black" class="carousel-caption d-none d-md-block">
+                                                        <h4>Diagramma UML di sequenza del metodo get_history().</h4>
+                                                    </div>                                    
+                                                </div>
+                                              </div>
+                                              <div class="carousel-item">
+                                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-3 pb-7">
+                                                    <img src="assets/img/time_travel_query.svg" alt="Second slide">
+                                                    <div style="color: black" class="carousel-caption d-none d-md-block">
+                                                        <h4>Diagramma UML di sequenza relativo all'inizializzazione di AgnosticQuery().</h4>
+                                                    </div>                                    
+                                                </div>
+                                              </div>
+                                              <div class="carousel-item">
+                                                <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-3 pb-7">
+                                                    <img src="assets/img/cache.svg" alt="Third slide">
+                                                    <div style="color: black" class="carousel-caption d-none d-md-block">
+                                                        <h4>Diagramma UML di sequenza sul sistema di cache.</h4>
+                                                    </div>                                    
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <a class="carousel-control-prev" href="#carouselExampleIndicators_1" role="button" data-slide="prev">
+                                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                <span class="sr-only">Previous</span>
+                                              </a>
+                                              <a class="carousel-control-next" href="#carouselExampleIndicators_1" role="button" data-slide="next">
+                                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                <span class="sr-only">Next</span>
+                                              </a>                            
+                                        </div>                        
+                                    </li>
+                                    <p>Capitolo 5 <em>Discussion</em></p>
+                                    <li>Ora biro:references collega il riferimento bibliografico alla risorsa
+                                        bibliografica citata nel diagramma e nel testo del capitolo 8.1. </li>
+                                    <li>In 5.1, dopo i diagrammi e prima di dettagliare i 5 livelli di
+                                        provenance addizionali, ho aggiunto un cappello introduttivo su come oc_ocdm traccia automaticamente
+                                        la provenance di entità aggiunte, modificate, cancellate e fuse. </li>
+                                    <li>In 5.1, a proposito del layer i provenance avente come fonte primaria
+                                        COCI, ho chiarito la differenza tra citazioni aperte, limitate e chiuse in Crossref. </li>
+                                    </ol>
+                                    <h3>Cosa non ho capito</h3>
+                                    <ol>
+                                        <li>Riporto quanto scritto nella documentazione di timeit.repeat (<a
+                                                href="https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat" target="_blank">https://docs.python.org/3/library/timeit.html#timeit.Timer.repeat</a>):
+                                            <blockquote class="blockquote ml-5 mt-3">
+                                                Note: it&#x27;s tempting to calculate mean and standard deviation
+                                                from the result vector and report these.  However, this is not
+                                                very useful.  In a typical case, the lowest value gives a
+                                                lower bound for how fast your machine can run the given code
+                                                snippet; higher values in the result vector are typically not
+                                                caused by variability in Python&#x27;s speed, but by other
+                                                processes interfering with your timing accuracy.  So the min()
+                                                of the result is probably the only number you should be
+                                                interested in.  After that, you should look at the entire
+                                                vector and apply common sense rather than statistics.</blockquote>
+                                            <p>Sei d&#x27;accordo sul considerare il
+                                                risultato minore e non la media?</p>
+                                        </li>
+                                        <li>Come cito un modulo nativo di Python? Ad esempio, timeit si trova non
+                                            come modulo separato, ma come parte di cpython su Software Heritage Archive. </li>
+                                        <li>Come mai nel testo di molti articoli non compare la data di pubblicazione?</li>
+                                    </ol>
+                                </ol>                
                             </div>
                         </div>
                     </div>
@@ -5247,6 +5441,17 @@ for index, author_agent_role in enumerate(author_agent_roles):
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-27">
+                            <div class="pt-3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-28" data-target="#panel-28" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-28">
+                            <span class="h6 mb-0 font-weight-bold">dd/10/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-28">
                             <div class="pt-3">
                             </div>
                         </div>
