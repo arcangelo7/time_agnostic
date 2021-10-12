@@ -1,1 +1,1 @@
-var baseUri = "https://github.com/arcangelo7/time_agnostic/";
+var baseUri = "https://github.com/opencitations/time-agnostic-library/";

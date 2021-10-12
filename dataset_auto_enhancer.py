@@ -2,6 +2,7 @@ from typing import Dict, Tuple
 
 import re, json, urllib, os, psutil
 from oc_ocdm.graph.entities.bibliographic_entity import BibliographicEntity
+from oc_ocdm.graph.entities.identifier import Identifier
 from support import Support
 from dataset_builder import DatasetBuilder
 from tqdm import tqdm
@@ -20,7 +21,7 @@ class DatasetAutoEnhancer(object):
         self.info_dir = info_dir
         Support._hack_dates()
 
-    def _get_entity_and_enrich_graphset(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, mapping:dict, entity_type:str, other:bool) -> GraphEntity:
+    def _get_entity_and_enrich_graphset(self, sparql:SPARQLWrapper, graphset:GraphSet, res:URIRef, mapping:dict, entity_type:str) -> GraphEntity:
         query_subj = f"""
             CONSTRUCT {{
                 <{res}> ?p ?o.
@@ -47,36 +48,48 @@ class DatasetAutoEnhancer(object):
             """
             sparql.setQuery(id_query)
             sparql.setReturnFormat(RDFXML)
-            graph_id = sparql.queryAndConvert()
-            getattr(graphset, "add_id")(self.resp_agent, res=identifier.res, preexisting_graph=graph_id)
-
-        if other:
-            query_other_as_obj = f"""
-                SELECT DISTINCT ?s ?type
-                WHERE {{
-                    ?s ?p <{res}>;
-                        a ?type.
-                }}        
+            results = sparql.queryAndConvert()
+            identifier.preexisting_graph = results
+            id_query = f"""
+                SELECT ?schema ?literal
+                WHERE {{<{identifier.res}> <{GraphEntity.iri_uses_identifier_scheme}> ?schema;
+                                            <{GraphEntity.iri_has_literal_value}> ?literal.}}
             """
-            sparql.setQuery(query_other_as_obj)
+            sparql.setQuery(id_query)
             sparql.setReturnFormat(JSON)
-            data_obj = sparql.queryAndConvert()
-            for data in data_obj["results"]["bindings"]:
-                if data["type"]["value"] in mapping:
-                    res_other_as_obj = URIRef(data["s"]["value"])
-                    query_other_as_obj_preexisting_graph = f"""
-                        CONSTRUCT {{
-                            <{res_other_as_obj}> ?p ?o.
-                        }}
-                        WHERE {{
-                            <{res_other_as_obj}> ?p ?o.
-                        }}
-                    """
-                    sparql.setQuery(query_other_as_obj_preexisting_graph)
-                    sparql.setReturnFormat(RDFXML)
-                    other_as_obj_preexisting_graph = sparql.queryAndConvert()
-                    other_as_obj_add_method = mapping[data["type"]["value"]]["add"]
-                    getattr(graphset, other_as_obj_add_method)(resp_agent=self.resp_agent, res=res_other_as_obj, preexisting_graph=other_as_obj_preexisting_graph)
+            results = sparql.queryAndConvert()
+            for result in results["results"]["bindings"]:
+                schema = result["schema"]["value"]
+                literal = result["literal"]["value"]
+                create_method = mapping[str(GraphEntity.iri_identifier)][str(GraphEntity.iri_has_literal_value)]["create"][schema]
+                getattr(identifier, create_method)(literal)
+
+        query_other_as_obj = f"""
+            SELECT DISTINCT ?s ?type
+            WHERE {{
+                ?s ?p <{res}>;
+                    a ?type.
+            }}        
+        """
+        sparql.setQuery(query_other_as_obj)
+        sparql.setReturnFormat(JSON)
+        data_obj = sparql.queryAndConvert()
+        for data in data_obj["results"]["bindings"]:
+            if data["type"]["value"] in mapping:
+                res_other_as_obj = URIRef(data["s"]["value"])
+                query_other_as_obj_preexisting_graph = f"""
+                    CONSTRUCT {{
+                        <{res_other_as_obj}> ?p ?o.
+                    }}
+                    WHERE {{
+                        <{res_other_as_obj}> ?p ?o.
+                    }}
+                """
+                sparql.setQuery(query_other_as_obj_preexisting_graph)
+                sparql.setReturnFormat(RDFXML)
+                other_as_obj_preexisting_graph = sparql.queryAndConvert()
+                other_as_obj_add_method = mapping[data["type"]["value"]]["add"]
+                getattr(graphset, other_as_obj_add_method)(resp_agent=self.resp_agent, res=res_other_as_obj, preexisting_graph=other_as_obj_preexisting_graph)
         return entity
     
     def merge_by_id(
@@ -111,8 +124,8 @@ class DatasetAutoEnhancer(object):
                     if result["literalValue"]["value"] in ids_found and result["s"]["value"] != ids_found[result["literalValue"]["value"]]:
                         preexisting_entity_res = URIRef(ids_found[result["literalValue"]["value"]])
                         duplicated_entity_res = URIRef(result["s"]["value"])
-                        preexisting_entity = self._get_entity_and_enrich_graphset(sparql, enhanced_graphset, preexisting_entity_res, mapping, entity_type, False)
-                        duplicated_entity = self._get_entity_and_enrich_graphset(sparql, enhanced_graphset, duplicated_entity_res, mapping, entity_type, True)
+                        preexisting_entity = self._get_entity_and_enrich_graphset(sparql, enhanced_graphset, preexisting_entity_res, mapping, entity_type)
+                        duplicated_entity = self._get_entity_and_enrich_graphset(sparql, enhanced_graphset, duplicated_entity_res, mapping, entity_type)
                         preexisting_entity.merge(duplicated_entity)
                     else:
                         ids_found[result["literalValue"]["value"]] = result["s"]["value"]

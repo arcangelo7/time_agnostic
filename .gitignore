@@ -7,3 +7,4 @@ scientometrics.py
 /logs
 /test
 /.vscode
+*.bat

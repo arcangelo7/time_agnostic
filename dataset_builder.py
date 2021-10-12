@@ -1,3 +1,4 @@
+from typing import Dict, List
 import requests, json, urllib, os
 from oc_ocdm.graph import GraphSet
 from oc_ocdm.support import create_date
@@ -14,28 +15,35 @@ class DatasetBuilder(object):
         self.resp_agent = resp_agent
         self.info_dir = info_dir
         Support._hack_dates()
-
-    def get_journal_data_from_crossref(self, journal_issn:str, your_email:str, path:str, small:bool=False, logs:bool=False):
+    
+    @staticmethod
+    def get_journal_data_from_crossref(journal_issn:str, your_email:str, path:str, logs:bool=False):
         error_log_dict = dict()
         if not os.path.exists("./cache/"):
             os.makedirs("./cache/")
         if requests.get(url = f'http://api.crossref.org/journals/{{{journal_issn}}}').status_code != 200:
             raise("ISSN not found!")
-        if small:
-            journal_data = Support().handle_request(f"http://api.crossref.org/journals/{{{journal_issn}}}/works?rows=200&mailto={your_email}", "./cache/crossref_cache", error_log_dict)
         else:
-            journal_data = Support().handle_request(f"http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor=*&mailto={your_email}", "./cache/crossref_cache", error_log_dict)
-            next_cursor = journal_data["message"]["next-cursor"]
+            journal_data = Support().handle_request(f"http://api.crossref.org/journals/{{{journal_issn}}}/works?mailto={your_email}", "./cache/crossref_cache", error_log_dict)
+            items = {
+                "message": {
+                    "items": journal_data["message"]["items"]
+                }
+            }
+            items_per_page = journal_data["message"]["items-per-page"]
+            offset = items_per_page
             total_results = journal_data["message"]["total-results"]
             pbar = tqdm(total=total_results)
-            cursors = set()
-            while next_cursor not in cursors:
-                cursors.add(next_cursor)
-                next_chunk = Support().handle_request(f"http://api.crossref.org/journals/{{{journal_issn}}}/works?cursor={urllib.parse.quote(next_cursor)}&mailto={your_email}", "./cache/crossref_cache", error_log_dict)
-                next_cursor = next_chunk["message"]["next-cursor"]
-                items_retrieved = next_chunk["message"]["items"]
-                journal_data["message"]["items"].extend(items_retrieved)
-                pbar.update(20)
+            while total_results > 0:
+                if total_results > items_per_page:
+                    pbar.update(items_per_page)
+                else:
+                    pbar.update(total_results)
+                total_results -= items_per_page
+                data = Support().handle_request(f"http://api.crossref.org/journals/{{{journal_issn}}}/works?offset={offset}&mailto={your_email}", "./cache/crossref_cache", error_log_dict)
+                if data["message"]["items"]:
+                    items["message"]["items"].extend(data["message"]["items"])
+                offset += items_per_page
             pbar.close()
         Support().dump_json(journal_data, path)
         if logs:
@@ -181,25 +189,22 @@ class DatasetBuilder(object):
         journal_graphset = GraphSet(base_iri=self.base_uri, info_dir=self.info_dir, wanted_label=False)
         with open(journal_data_path) as journal_data:
             journal_data_items = json.load(journal_data)["message"]["items"]
-        journal_item = next((item for item in journal_data_items if item["type"] == "journal"), None)
-        journal_item = {
-            "ISSN": ["1234"],
-            "title": "Scientometrics"
-        }
+        journal_issn = next((item for item in journal_data_items if item["ISSN"]), None)["ISSN"][0]
+        source_journal = f"http://api.crossref.org/journals/{journal_issn}"
+        journal_item = Support().handle_request(source_journal, "./cache/crossref_cache", dict())["message"]
         if journal_item is not None:
-            source_journal = f"http://api.crossref.org/journals/{journal_item['ISSN'][0]}"
             journal_br = journal_graphset.add_br(resp_agent=self.resp_agent, source=source_journal)
             journal_br.create_journal()
             journal_id = journal_graphset.add_id(resp_agent=self.resp_agent, source=source_journal)
             journal_id.create_issn(journal_item["ISSN"][0])
             journal_br.has_identifier(journal_id)
-            journal_br.has_title(journal_item["title"][0])
+            journal_br.has_title(journal_item["title"])
             if "issn-type" in journal_item:
                 for issn_type in journal_item["issn-type"]:
                     digital_format = True if issn_type["type"] == "electronic" else False
                     DatasetBuilder._manage_resource_embodiment(journal_graphset, journal_item, journal_br, digital_format, self.resp_agent, source_journal)
             publisher_ra = journal_graphset.add_ra(resp_agent=self.resp_agent, source=source_journal)
-            publisher_ra.has_name(journal_item["title"][0])
+            publisher_ra.has_name(journal_item["title"])
             publisher_ra.has_identifier(journal_id)
         pbar = tqdm(total=len(journal_data_items))
         for item in journal_data_items:
