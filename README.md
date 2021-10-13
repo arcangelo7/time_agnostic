@@ -23,18 +23,14 @@ To build the dataset, instance the `DatasetBuilder` class, indicating the base U
 
 Then, run `generate_graph`, specifying where the data obtained in the [previous step](#get-data) were saved.
 
-To produce the provenance related to the dataset creation, use the `Support.generate_provenance` method, indicating the newly generated dataset (`graphset`), the base URI and the path to save the snapshot counters (`info_dir`).
-
 ```python
 BASE_URI = "https://github.com/opencitations/time-agnostic-library/"
 RESP_AGENT = "https://orcid.org/0000-0002-8420-0696"
 INFO_DIR_GRAPH = "./info_dir/graph/"
-INFO_DIR_PROV = "./info_dir/prov/"
 DATA_PATH = "./data/scientometrics.json"
 
 dataset_builder = DatasetBuilder(base_uri=BASE_URI, resp_agent=RESP_AGENT, info_dir=INFO_DIR_GRAPH)
 scientometrics = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
-scientometrics_prov = Support.generate_provenance(graphset=scientometrics, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
 ```
 
 ### Automatic enhancements
@@ -98,7 +94,15 @@ scientometrics_merged = enhancer.merge_by_id(type_and_identifier_scheme={
 
 ### Generate provenance and track changes
 
+To produce the provenance related to each of the previous opetations, use the `Support.generate_provenance` method, indicating the modified dataset (`graphset`), the base URI and the path to save the snapshot counters (`info_dir`).
 
+```python
+DATA = enhancer.add_crossref_reference_data()
+BASE_URI = "https://github.com/opencitations/time-agnostic-library/"
+INFO_DIR_PROV = "./info_dir/prov/"
+
+scientometrics_prov = Support.generate_provenance(graphset=DATA, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
+```
 
 ### Store the dataset and its provenance
 
