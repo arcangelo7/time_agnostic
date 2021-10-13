@@ -60,17 +60,41 @@ JOURNAL_ISSN = "0138-9130"
 scientometrics_plus_coci = enhancer.add_coci_data(journal_issn=JOURNAL_ISSN)
 ```
 
-## Add Crossref data about cited entities
+### Add Crossref data about cited entities
 
 It is possible to enrich the DOI-identified resources extracted from the reference list of the works published by the journal considered. This step adds information regarding their publisher, typology, title, subtitle, publication date, authors, volume, issue, and resource embodiment. These details are obtained from Crossref.
 
-For this purpose, after instantiating the `DatasetAutoEnhancer` class (see [Automatic enhancements](#automatic-enhancements)), run the `add_crossref_reference_data` method on that instance.
+To this end, after instantiating the `DatasetAutoEnhancer` class (see [Automatic enhancements](#automatic-enhancements)), run the `add_crossref_reference_data` method on that instance.
 
 ```python
 crossref_reference_data = enhancer.add_crossref_reference_data()
 ```
 
+### Add references reported by Crossref without a DOI by heuristically retrieving those DOI names
 
+Many items in the Crossref reference lists are reported without a DOI, making it difficult to identify them uniquely. This phase aims to recover those DOI names and reintegrate the related entities into the dataset. Such shortcomings occur because reference records are not double-checked by Crossref and are directly provided by publishers. They may be incomplete or even contain errors. The procedure adopted is based on a heuristic borrowed from chapter 3.2 and especially from the appendix of the article *Large-scale comparison of bibliographic data sources: Scopus, Web of Science, Dimensions, Crossref, and Microsoft Academic* ([Visser, van Eck, and Waltman 2021](https://doi.org/10.1162/qss_a_00112)). 
+
+In order to add those missed references to the dataset, after instantiating the `DatasetAutoEnhancer` class (see [Automatic enhancements](#automatic-enhancements)), run the `add_reference_data_without_doi` method on that instance, specifying the journal data path.
+
+```python
+DATA_PATH = "./data/scientometrics.json"
+
+heuristic = enhancer.add_reference_data_without_doi(journal_data_path=DATA_PATH)
+```
+
+### Merge
+
+This step involves merging resources associated with identifiers having the same literal value. It may be the case for two publishers with identical ISSN, two authors with the same ORCID, or two bibliographical resources with the same DOI name. 
+
+For this purpose, after instantiating the `DatasetAutoEnhancer` class (see [Automatic enhancements](#automatic-enhancements)), run the `merge_by_id` method on that instance. Also, specify in a dictionary which types of entities you want to merge and based on which identifiers (`type_and_identifier_scheme`).
+> :warning: Depending on the number of duplicates, this operation may require a considerable amount of RAM. Specify in the `available_ram` field how much RAM you have available in GB. Once the process has filled that amount of RAM, it will return the partial output, which can be uploaded to a triplestore or saved to a file (see [Store the dataset and its provenance](#store-the-dataset-and-its-provenance)). After that, you can relaunch the function, which will work on the new dataset state.
+
+```python
+scientometrics_merged = enhancer.merge_by_id(type_and_identifier_scheme={
+    "http://xmlns.com/foaf/0.1/Agent": "http://purl.org/spar/datacite/orcid",
+    "http://purl.org/spar/fabio/Expression": "http://purl.org/spar/datacite/doi",
+}, available_ram=8)
+```
 
 ### Generate provenance and track changes
 
