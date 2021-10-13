@@ -1,0 +1,10 @@
+requests==2.25.1
+psutil==5.8.0
+tqdm==4.59.0
+Flask==1.1.2
+rdflib==5.0.0
+requests_cache==0.5.2
+urllib3==1.26.3
+numpy==1.20.1
+oc_ocdm==6.0.2
+SPARQLWrapper==1.8.5
