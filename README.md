@@ -33,6 +33,35 @@ dataset_builder = DatasetBuilder(base_uri=BASE_URI, resp_agent=RESP_AGENT, info_
 data = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
 ```
 
+### Generate provenance and track changes
+
+To produce the provenance related to each operation, use the `Support.generate_provenance` method, indicating the modified dataset (`graphset`), the base URI and the path to save the snapshot counters (`info_dir`).
+
+```python
+DATA = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
+BASE_URI = "https://github.com/opencitations/time-agnostic-library/"
+INFO_DIR_PROV = "./info_dir/prov/"
+
+provenance = Support.generate_provenance(graphset=DATA, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
+```
+
+### Store the dataset and its provenance
+
+You can save the dataset and its provenance both in a triplestore and on a file in JSON-LD format. To save them to a triplestore, use the `Support.upload_dataset` method, indicating the data and the endpoint URL. Instead, use the `Support.dump_dataset` function to store the datasets into a JSON-LD file, specifying the data and the location to save the file. Finally, `Support.upload_and_store_dataset` is a shortcut to perform both operations. 
+
+> :warning: To continue working on a dataset after saving it to triplestore or file, you must run the `commit_changes` method on the dataset. 
+
+```python
+DATA = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
+PROVENANCE_DATA = Support.generate_provenance(graphset=scientometrics, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
+TRIPLESTORE = "http://localhost:9999/blazegraph/sparql"
+PATH = "./data/scientrometrics_provenance.json"
+
+Support.upload_dataset(data=DATA, ts_url=TRIPLESTORE)
+Support.dump_dataset(data=PROVENANCE_DATA, path=PATH)
+DATA.commit_changes()
+```
+
 ### Automatic enhancements
 
 All the features to automatically improve the dataset use the `DatasetAutoEnhancer` class. To instantiate it, specity the base URI, your ORCID (`resp_agent`), and the path where the entity counter was previously saved (`info_dir`). 
@@ -92,31 +121,14 @@ data_merged = enhancer.merge_by_id(type_and_identifier_scheme={
 }, available_ram=8)
 ```
 
-### Generate provenance and track changes
+## Manual enhancements
 
-To produce the provenance related to each of the previous operations, use the `Support.generate_provenance` method, indicating the modified dataset (`graphset`), the base URI and the path to save the snapshot counters (`info_dir`).
+## Knowledge Graph Editor
 
-```python
-DATA = enhancer.add_crossref_reference_data()
-BASE_URI = "https://github.com/opencitations/time-agnostic-library/"
-INFO_DIR_PROV = "./info_dir/prov/"
+A knowledge graph editor with a graphical user interface allows performing CRUD operations on an RDF dataset: to read its content, create new graphs and connections, modifying existing information, and delete them. Furthermore, it generates provenance snapshots compliant with the OCDM on the fly.
 
-provenance = Support.generate_provenance(graphset=DATA, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
-```
+The Knowledge Graph Editor can be used by browsers at http://localhost:5000/, after running the following command from the terminal. 
 
-### Store the dataset and its provenance
-
-You can save the dataset both in a triplestore and on a file in JSON-LD format. To save the dataset to a triplestore, use the `Support.upload_dataset` method, indicating the data and the endpoint URL. Instead, use the `Support.dump_dataset` function to store the dataset into a JSON-LD file, specifying the data and the location to save the file. Finally, `Support.upload_and_store_dataset` is a shortcut to perform both operations. 
-
-> :warning: To continue working on a dataset after saving it to triplestore or file, you must run the `commit_changes` method on the dataset. 
-
-```python
-DATA = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
-PROVENANCE_DATA = Support.generate_provenance(graphset=scientometrics, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
-TRIPLESTORE = "http://localhost:9999/blazegraph/sparql"
-PATH = "./data/scientrometrics_provenance.json"
-
-Support.upload_dataset(data=DATA, ts_url=TRIPLESTORE)
-Support.dump_dataset(data=PROVENANCE_DATA, path=PATH)
-DATA.commit_changes()
+```bash
+python KGEditor/app.py
 ```
