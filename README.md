@@ -98,4 +98,21 @@ scientometrics_merged = enhancer.merge_by_id(type_and_identifier_scheme={
 
 ### Generate provenance and track changes
 
+
+
 ### Store the dataset and its provenance
+
+You can save the dataset both in a triplestore and on a file in JSON-LD format. To save the dataset to a triplestore, use the `Support.upload_dataset` method, indicating the data and the endpoint URL. Instead, use the `Support.dump_dataset` function to store the dataset into a JSON-LD file, specifying the data and the location to save the file. Finally, `Support.upload_and_store_dataset` is a shortcut to perform both operations. 
+
+> :warning: To continue working on a dataset after saving it to triplestore or file, you must run the `commit_changes` method on the dataset. 
+
+```python
+DATA = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
+PROVENANCE_DATA = Support.generate_provenance(graphset=scientometrics, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
+TRIPLESTORE = "http://localhost:9999/blazegraph/sparql"
+PATH = "./data/scientrometrics_provenance.json"
+
+Support.upload_dataset(data=DATA, ts_url=TRIPLESTORE)
+Support.dump_dataset(data=PROVENANCE_DATA, path=PATH)
+DATA.commit_changes()
+```
