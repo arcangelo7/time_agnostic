@@ -30,7 +30,7 @@ INFO_DIR_GRAPH = "./info_dir/graph/"
 DATA_PATH = "./data/scientometrics.json"
 
 dataset_builder = DatasetBuilder(base_uri=BASE_URI, resp_agent=RESP_AGENT, info_dir=INFO_DIR_GRAPH)
-scientometrics = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
+data = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
 ```
 
 ### Automatic enhancements
@@ -53,7 +53,7 @@ For this purpose, after instantiating the `DatasetAutoEnhancer` class (see [Auto
 ```python
 JOURNAL_ISSN = "0138-9130"
 
-scientometrics_plus_coci = enhancer.add_coci_data(journal_issn=JOURNAL_ISSN)
+data_plus_coci = enhancer.add_coci_data(journal_issn=JOURNAL_ISSN)
 ```
 
 ### Add Crossref data about cited entities
@@ -75,7 +75,7 @@ In order to add those missed references to the dataset, after instantiating the 
 ```python
 DATA_PATH = "./data/scientometrics.json"
 
-heuristic = enhancer.add_reference_data_without_doi(journal_data_path=DATA_PATH)
+heuristics = enhancer.add_reference_data_without_doi(journal_data_path=DATA_PATH)
 ```
 
 ### Merge
@@ -86,7 +86,7 @@ For this purpose, after instantiating the `DatasetAutoEnhancer` class (see [Auto
 > :warning: Depending on the number of duplicates, this operation may require a considerable amount of RAM. Specify in the `available_ram` field how much RAM you have available in GB. Once the process has filled that amount of RAM, it will return the partial output, which can be uploaded to a triplestore or saved to a file (see [Store the dataset and its provenance](#store-the-dataset-and-its-provenance)). After that, you can relaunch the function, which will work on the new dataset state.
 
 ```python
-scientometrics_merged = enhancer.merge_by_id(type_and_identifier_scheme={
+data_merged = enhancer.merge_by_id(type_and_identifier_scheme={
     "http://xmlns.com/foaf/0.1/Agent": "http://purl.org/spar/datacite/orcid",
     "http://purl.org/spar/fabio/Expression": "http://purl.org/spar/datacite/doi",
 }, available_ram=8)
@@ -94,14 +94,14 @@ scientometrics_merged = enhancer.merge_by_id(type_and_identifier_scheme={
 
 ### Generate provenance and track changes
 
-To produce the provenance related to each of the previous opetations, use the `Support.generate_provenance` method, indicating the modified dataset (`graphset`), the base URI and the path to save the snapshot counters (`info_dir`).
+To produce the provenance related to each of the previous operations, use the `Support.generate_provenance` method, indicating the modified dataset (`graphset`), the base URI and the path to save the snapshot counters (`info_dir`).
 
 ```python
 DATA = enhancer.add_crossref_reference_data()
 BASE_URI = "https://github.com/opencitations/time-agnostic-library/"
 INFO_DIR_PROV = "./info_dir/prov/"
 
-scientometrics_prov = Support.generate_provenance(graphset=DATA, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
+provenance = Support.generate_provenance(graphset=DATA, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
 ```
 
 ### Store the dataset and its provenance
