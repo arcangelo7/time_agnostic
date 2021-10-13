@@ -56,104 +56,51 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (06/10/2021)</h2>
+                    <h2>Prossimo incontro (14/10/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                 <p>Novità relative al codice:</p>
                 <ol>
-                    <li>
-                        Il <strong>sistema di cache</strong> è stato completamente rivisitato,
-                        alla luce dei deludenti risultati dei benchmark sui tempi di esecuzione. Ecco tutte le novità:
-                        <ol>
-                            <li>Il salvataggio di grafi in cache ora sfrutta il
-                                <strong>multithreading</strong>. Tutte le query di update avvengono in parallelo, ma tutti i
-                                thread devono terminare prima che avvenga l&#x27;allineamento degli snapshots.
-                            </li>
-                            <li>Ora la cache contiene tutte le informazioni necessarie a
-                                stabilire se la storia di un&#x27;entità sia stata ricostruita totalmente o parzialmente. In
-                                questo modo, non è più necessario interrogare il dataset di provenance. Nel concreto, se
-                                viene salvata in cache la storia completa di un&#x27;entità, viene anche salvata la tripla
-                                <span class="monospace">f&quot;{entity}/cache&quot; &quot;https://github.com/opencitations/time-agnostic-library/isComplete&quot;
-                                &quot;true&quot;</span>.</li>
-                            <li>Ora i grafi ricostruiti e la tripla che marca i tempi
-                                rilevanti vengono salvati in un&#x27;unica query di update, non in due separate come in
-                                precedenza. </li>
-                            <li>Aggiunto un nuovo controllo che evita di allineare grafi in
-                                cache precedentemente allineati. </li>
-                            <li>Per dare un&#x27;idea dei miglioramenti ottenuti sul sistema
-                                di cache, ecco alcuni tempi a confronto:
-                                <ol>
-                                    <li>Query agnostica in cui sono noti solo oggetto e
-                                        predicato. Senza cache occorrono 15 minuti, con la cache piena 11 minuti. </li>
-                                    <li>Query agnostica in cui sono noti solo oggetto e
-                                        predicato. Con la cache pulita, prima delle novità occorrevano 39 minuti, adesso 28
-                                        minuti. </li>
-                                    <li>Come si nota, se la cache è pulita, riempirla porta
-                                        l&#x27;esecuzione da 15 minuti a 28 minuti. Ne vale la pena? Dipende, perché la RAM
-                                        occupata senza cache è 828 MB, con la cache 77 MB, indipendentemente che sia piena o
-                                        pulita. </li>
-                                </ol>
-                            </li>
-                        </ol>
-                    </li>
-                    <li>Ora <strong>run_agnostic_query</strong> lancia le query agnostiche sui
-                        grafi ricostruiti in parallelo. Tutti i thread devono terminare prima che il metodo ritorni. </li>
+                    <li>Fixato il <strong>bug</strong> nel codice per fare i <strong>merge</strong> sul dataset di test, per cui
+                        l&#x27;identificatore dell&#x27;entità B fusa ad A non veniva cancellato. </li>
                     <p>Novità relative alla tesi:</p>
-                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/intro_2_0_0.pdf" download="introduction_2-0-0.pdf">
+                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/master_thesis_1_0_0.pdf" download="master_thesis_1_0_0.pdf">
                         <span class="mr-1"><span class="fas fa-download"></span></span>
-                        Download <br/><em>Introduction</em> 2.0.0, <br/><em>Test-Driven Development 1.0.0</em>, <br/><em>Evaluation 1.1.0</em>, and <br/><em>Conclusion 1.0.0</em>  
+                        Download Master Thesis 1.0.0.
                     </a>
-                    <li>Ho scritto il capitolo 7 <em>Conclusion</em>.</li>
-                    <li><em>Introduction </em>e <em>Conclusion</em> sono numerati. </li>
-                    <li><em>Discussion </em>→ <em>Evaluation.</em></li>
-                    <li>Dataset e risultati dei benchmark sono stati pubblicati su Zenodo e citati.</li>
-                    <li>Ho ideato un titolo che mi sembra più accattivante del precedente.
-                        <p><del><em>Introducing a Python library to perform time-agnostic queries on datasets compliant with the
-                                    OpenCitations&#x27; provenance model.</em></del> → </p>
-                        <p><strong>Time Agnostic Library: introducing a methodology and software to time-traversal query RDF datasets on
-                                the fly</strong>.</p>
+                    <li>Ho scritto l&#x27;<strong>abstract</strong>. L&#x27;ho strutturato seguendo i punti
+                        suggeriti da <a
+                            href="https://www.emeraldgrouppublishing.com/how-to/authoring-editing-reviewing/write-article-abstract">Emerald
+                            Publishing</a>, ma ho omesso i capitoletti, che mi avrebbero sottratto preziosi caratteri. È
+                        lungo 283 parole, ovvero 1,934 caratteri (spazi inclusi) sui 2,000 consentiti. </li>
+                    <li>Ho riletto tutta la tesi, apportando modifiche microscopiche e
+                        macroscopiche. Menziono solo le più rilevanti. </li>
+                    <li>Ho cambiato gestore di citazioni, da Word a <strong>Zotero</strong>. Ho ricostruito
+                        tutta la bibliografia in Zotero e ho sostituito le citazioni generate tramite Word con citazioni
+                        generate tramite Zotero. La ragione è che - a parità di stile di citazione - Word disambigua
+                        citazioni identiche aggiungendo il titolo, Zotero aggiungendo una lettera all&#x27;anno, soluzione
+                        nettamente più pulita. </li>
+                    <li>La <strong>conclusione</strong> è stata ampliata e portata a cinque pagine.</li>
+                    <li>Corrette tutte le occorrenze di time-traversal usato come avverbio.
                     </li>
-                    <p>Capitolo 1 <em>Introduction. </em></p>
-                    <li>Ho pompato il capitolo da due a cinque pagine. Ecco le principali
-                        novità:
-                        <ol>
-                            <li>In generale, vengono toccati tutti i punti cardine del
-                                lavoro. </li>
-                            <li>Il primo paragrafo esplicita il contributo della tesi. </li>
-                            <li>L&#x27;enfasi sulla rilevanza è stata aumentata, citando uno
-                                studio del Dynamic Linked Data Observatory sull&#x27;evoluzione di documenti RDF. </li>
-                            <li>Sono stati aggiunti molti elementi di contesto, offrendo uno
-                                sguardo più completo sul panorama di framework di annotazione e metodologie competitor.
-                            </li>
-                            <li>Il modello di provenance di OpenCitations è stato brevemente
-                                introdotto. </li>
-                            <li>Ho menzionato la metodologia generale e i principali
-                                obiettivi e problemi da risolvere, senza dire come li ho risolti. Dopodiché, ho specificato
-                                che tale procedura è stata applicata in un software, che è stato testato, e in
-                                un&#x27;applicazione, il time-agnostic-browser. </li>
-                        </ol>
-                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-3">
-                            <img src="assets/img/intro_meme.png"/>
-                        </div>
+                    <p>Capitolo 1 <em>Introduction</em></p>
+                    <li>Rimossa la menzione all&#x27;OpenCitations Project e aggiunto un
+                        riferimento a COCI come esempio di implementazione dell&#x27;OCDM. Inoltre, l&#x27;OpenCitations
+                        Corpus è stato citato facendo riferimento all&#x27;atto di convegno <em>One Year of the
+                            OpenCitations Corpus</em> (<a
+                            href="https://doi.org/10.1007/978-3-319-68204-4_19">https://doi.org/10.1007/978-3-319-68204-4_19</a>).
                     </li>
-                    <p>Capitolo 4 <em>The Time Agnostic Library</em></p>
-                    <li>Ho aggiunto un cappello introduttivo in cui dico che il TDD è stato
-                        usato come metodo di sviluppo. Dopodiché, rimando al capitolo 5 per una discussione più dettagliata.
-                    </li>
-                    <p>Capitolo 5 <em>Library implementation</em></p>
-                    <li>Ho scritto la sezione 5.4 <em>Test-Driven Development</em>. in cui
-                        spiego in maniera tecnica come funziona tale metodo di sviluppo e come è stato concretamente
-                        implementato. </li>
-                    <li>Il capitolo è stato suddiviso in quattro sezioni:
-                        <ul>
-                            <li>5.1 <em>Version materialization</em></li>
-                            <li>5.2 <em>Time-traversal query</em></li>
-                            <li>5.3 C<em>ache system</em></li>
-                            <li>5.4 <em>Test-driven development</em></li>
-                        </ul>
-                    </li>
-                    <p>Capitolo 6.2 <em>Evaluation</em></p>
-                    <li>I risultati dei benchmark sono stati riportati e descritti. </li>
+                    <p>Capitolo 4.1 <em>Structure and operation</em></p>
+                    <li>Aggiunta una spiegazione su come utilizzare la funzione empty_the_cache
+                        per liberare il triplestore di cache. </li>
+                    <p>Capitolo 5.1 <em>Test Dataset</em></p>
+                    <li>Aggiunte informazioni quantitative precise su dataset e provenance,
+                        quali numero di triple per dati e provenance, numero di entità e snapshot, numero di snapshot medio
+                        per entità e quante entità di ogni tipo. </li>
+                    <li>&lt;ci:137775&gt; → &lt;ci/137775&gt;</li>
+                    <p>Capitolo 5.3 <em>Cache system</em></p>
+                    <li>Il capitolo e il diagramma UML sono stati modificati per riflettere le
+                        modifiche apportate al sistema di cache. </li>
                 </ol>
             </div>
         </section>
@@ -5345,6 +5292,103 @@ for index, author_agent_role in enumerate(author_agent_roles):
                         </a>
                         <div class="collapse" id="panel-27">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <p>Novità relative al codice:</p>
+                                <ol>
+                                    <li>
+                                        Il <strong>sistema di cache</strong> è stato completamente rivisitato,
+                                        alla luce dei deludenti risultati dei benchmark sui tempi di esecuzione. Ecco tutte le novità:
+                                        <ol>
+                                            <li>Il salvataggio di grafi in cache ora sfrutta il
+                                                <strong>multithreading</strong>. Tutte le query di update avvengono in parallelo, ma tutti i
+                                                thread devono terminare prima che avvenga l&#x27;allineamento degli snapshots.
+                                            </li>
+                                            <li>Ora la cache contiene tutte le informazioni necessarie a
+                                                stabilire se la storia di un&#x27;entità sia stata ricostruita totalmente o parzialmente. In
+                                                questo modo, non è più necessario interrogare il dataset di provenance. Nel concreto, se
+                                                viene salvata in cache la storia completa di un&#x27;entità, viene anche salvata la tripla
+                                                <span class="monospace">f&quot;{entity}/cache&quot; &quot;https://github.com/opencitations/time-agnostic-library/isComplete&quot;
+                                                &quot;true&quot;</span>.</li>
+                                            <li>Ora i grafi ricostruiti e la tripla che marca i tempi
+                                                rilevanti vengono salvati in un&#x27;unica query di update, non in due separate come in
+                                                precedenza. </li>
+                                            <li>Aggiunto un nuovo controllo che evita di allineare grafi in
+                                                cache precedentemente allineati. </li>
+                                            <li>Per dare un&#x27;idea dei miglioramenti ottenuti sul sistema
+                                                di cache, ecco alcuni tempi a confronto:
+                                                <ol>
+                                                    <li>Query agnostica in cui sono noti solo oggetto e
+                                                        predicato. Senza cache occorrono 15 minuti, con la cache piena 11 minuti. </li>
+                                                    <li>Query agnostica in cui sono noti solo oggetto e
+                                                        predicato. Con la cache pulita, prima delle novità occorrevano 39 minuti, adesso 28
+                                                        minuti. </li>
+                                                    <li>Come si nota, se la cache è pulita, riempirla porta
+                                                        l&#x27;esecuzione da 15 minuti a 28 minuti. Ne vale la pena? Dipende, perché la RAM
+                                                        occupata senza cache è 828 MB, con la cache 77 MB, indipendentemente che sia piena o
+                                                        pulita. </li>
+                                                </ol>
+                                            </li>
+                                        </ol>
+                                    </li>
+                                    <li>Ora <strong>run_agnostic_query</strong> lancia le query agnostiche sui
+                                        grafi ricostruiti in parallelo. Tutti i thread devono terminare prima che il metodo ritorni. </li>
+                                    <p>Novità relative alla tesi:</p>
+                                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/intro_2_0_0.pdf" download="introduction_2-0-0.pdf">
+                                        <span class="mr-1"><span class="fas fa-download"></span></span>
+                                        Download <br/><em>Introduction</em> 2.0.0, <br/><em>Test-Driven Development 1.0.0</em>, <br/><em>Evaluation 1.1.0</em>, and <br/><em>Conclusion 1.0.0</em>  
+                                    </a>
+                                    <li>Ho scritto il capitolo 7 <em>Conclusion</em>.</li>
+                                    <li><em>Introduction </em>e <em>Conclusion</em> sono numerati. </li>
+                                    <li><em>Discussion </em>→ <em>Evaluation.</em></li>
+                                    <li>Dataset e risultati dei benchmark sono stati pubblicati su Zenodo e citati.</li>
+                                    <li>Ho ideato un titolo che mi sembra più accattivante del precedente.
+                                        <p><del><em>Introducing a Python library to perform time-agnostic queries on datasets compliant with the
+                                                    OpenCitations&#x27; provenance model.</em></del> → </p>
+                                        <p><strong>Time Agnostic Library: introducing a methodology and software to time-traversal query RDF datasets on
+                                                the fly</strong>.</p>
+                                    </li>
+                                    <p>Capitolo 1 <em>Introduction. </em></p>
+                                    <li>Ho pompato il capitolo da due a cinque pagine. Ecco le principali
+                                        novità:
+                                        <ol>
+                                            <li>In generale, vengono toccati tutti i punti cardine del
+                                                lavoro. </li>
+                                            <li>Il primo paragrafo esplicita il contributo della tesi. </li>
+                                            <li>L&#x27;enfasi sulla rilevanza è stata aumentata, citando uno
+                                                studio del Dynamic Linked Data Observatory sull&#x27;evoluzione di documenti RDF. </li>
+                                            <li>Sono stati aggiunti molti elementi di contesto, offrendo uno
+                                                sguardo più completo sul panorama di framework di annotazione e metodologie competitor.
+                                            </li>
+                                            <li>Il modello di provenance di OpenCitations è stato brevemente
+                                                introdotto. </li>
+                                            <li>Ho menzionato la metodologia generale e i principali
+                                                obiettivi e problemi da risolvere, senza dire come li ho risolti. Dopodiché, ho specificato
+                                                che tale procedura è stata applicata in un software, che è stato testato, e in
+                                                un&#x27;applicazione, il time-agnostic-browser. </li>
+                                        </ol>
+                                        <div class="card bg-primary shadow-inset border-light col-12 mt-3 mb-4 p-3">
+                                            <img src="assets/img/intro_meme.png"/>
+                                        </div>
+                                    </li>
+                                    <p>Capitolo 4 <em>The Time Agnostic Library</em></p>
+                                    <li>Ho aggiunto un cappello introduttivo in cui dico che il TDD è stato
+                                        usato come metodo di sviluppo. Dopodiché, rimando al capitolo 5 per una discussione più dettagliata.
+                                    </li>
+                                    <p>Capitolo 5 <em>Library implementation</em></p>
+                                    <li>Ho scritto la sezione 5.4 <em>Test-Driven Development</em>. in cui
+                                        spiego in maniera tecnica come funziona tale metodo di sviluppo e come è stato concretamente
+                                        implementato. </li>
+                                    <li>Il capitolo è stato suddiviso in quattro sezioni:
+                                        <ul>
+                                            <li>5.1 <em>Version materialization</em></li>
+                                            <li>5.2 <em>Time-traversal query</em></li>
+                                            <li>5.3 C<em>ache system</em></li>
+                                            <li>5.4 <em>Test-driven development</em></li>
+                                        </ul>
+                                    </li>
+                                    <p>Capitolo 6.2 <em>Evaluation</em></p>
+                                    <li>I risultati dei benchmark sono stati riportati e descritti. </li>
+                                </ol>                
                             </div>
                         </div>
                     </div>
