@@ -36,3 +36,42 @@ dataset_builder = DatasetBuilder(base_uri=BASE_URI, resp_agent=RESP_AGENT, info_
 scientometrics = dataset_builder.generate_graph(journal_data_path=DATA_PATH)
 scientometrics_prov = Support.generate_provenance(graphset=scientometrics, base_iri=BASE_URI, info_dir=INFO_DIR_PROV)
 ```
+
+### Automatic enhancements
+
+All the features to automatically improve the dataset use the `DatasetAutoEnhancer` class. To instantiate it, specity the base URI, your ORCID (`resp_agent`), and the path where the entity counter was previously saved (`info_dir`). 
+```python
+BASE_URI = "https://github.com/opencitations/time-agnostic-library/"
+RESP_AGENT = "https://orcid.org/0000-0002-8420-0696"
+INFO_DIR_GRAPH = "./info_dir/graph/"
+
+enhancer = DatasetAutoEnhancer(base_uri=BASE_URI, resp_agent=RESP_AGENT, info_dir=INFO_DIR_GRAPH)
+```
+
+#### Add citations from COCI
+This step adds to the dataset the references present in COCI and not in the graph of level zero derived from Crossref in the [previous step](build-the-dataset). 
+[COCI](https://opencitations.net/index/coci) is the OpenCitations Index Of Crossref Open DOI To DOI Citations, an RDF dataset containing metadata on all the citations to DOI-identified works on Crossref. One might wonder why COCI includes additional citations if it is derived from Crossref. The reason is that COCI issues limited references that Crossref makes available only in the paid version. In fact, since 1 January 2018, limited references have been distributed by Crossref without a license, and they are in the public domain ([https://www.crossref.org/documentation/content-registration/descriptive-metadata/references/](https://www.crossref.org/documentation/content-registration/descriptive-metadata/references/)). At any rate, COCI does not index Crossref references that are closed.
+
+For this purpose, after instantiating the `DatasetAutoEnhancer` class (see [Automatic enhancements](#automatic-enhancements)), run the `add_coci_data` method on that instance, specifying the journal ISSN.
+
+```python
+JOURNAL_ISSN = "0138-9130"
+
+scientometrics_plus_coci = enhancer.add_coci_data(journal_issn=JOURNAL_ISSN)
+```
+
+## Add Crossref data about cited entities
+
+It is possible to enrich the DOI-identified resources extracted from the reference list of the works published by the journal considered. This step adds information regarding their publisher, typology, title, subtitle, publication date, authors, volume, issue, and resource embodiment. These details are obtained from Crossref.
+
+For this purpose, after instantiating the `DatasetAutoEnhancer` class (see [Automatic enhancements](#automatic-enhancements)), run the `add_crossref_reference_data` method on that instance.
+
+```python
+crossref_reference_data = enhancer.add_crossref_reference_data()
+```
+
+
+
+### Generate provenance and track changes
+
+### Store the dataset and its provenance
