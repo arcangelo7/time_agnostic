@@ -56,51 +56,90 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (14/10/2021)</h2>
+                    <h2>Prossimo incontro (28/10/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
-                <p>Novità relative al codice:</p>
                 <ol>
-                    <li>Fixato il <strong>bug</strong> nel codice per fare i <strong>merge</strong> sul dataset di test, per cui
-                        l&#x27;identificatore dell&#x27;entità B fusa ad A non veniva cancellato. </li>
-                    <p>Novità relative alla tesi:</p>
-                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/master_thesis_1_0_0.pdf" download="master_thesis_1_0_0.pdf">
-                        <span class="mr-1"><span class="fas fa-download"></span></span>
-                        Download Master Thesis 1.0.0.
-                    </a>
-                    <li>Ho scritto l&#x27;<strong>abstract</strong>. L&#x27;ho strutturato seguendo i punti
-                        suggeriti da <a
-                            href="https://www.emeraldgrouppublishing.com/how-to/authoring-editing-reviewing/write-article-abstract">Emerald
-                            Publishing</a>, ma ho omesso i capitoletti, che mi avrebbero sottratto preziosi caratteri. È
-                        lungo 283 parole, ovvero 1,934 caratteri (spazi inclusi) sui 2,000 consentiti. </li>
-                    <li>Ho riletto tutta la tesi, apportando modifiche microscopiche e
-                        macroscopiche. Menziono solo le più rilevanti. </li>
-                    <li>Ho cambiato gestore di citazioni, da Word a <strong>Zotero</strong>. Ho ricostruito
-                        tutta la bibliografia in Zotero e ho sostituito le citazioni generate tramite Word con citazioni
-                        generate tramite Zotero. La ragione è che - a parità di stile di citazione - Word disambigua
-                        citazioni identiche aggiungendo il titolo, Zotero aggiungendo una lettera all&#x27;anno, soluzione
-                        nettamente più pulita. </li>
-                    <li>La <strong>conclusione</strong> è stata ampliata e portata a cinque pagine.</li>
-                    <li>Corrette tutte le occorrenze di time-traversal usato come avverbio.
+                    <li>Ho scritto la <strong>documentazione </strong>del codice utilizzato per
+                        costruire il dataset di test, ovvero il README della repository <a
+                            href="https://github.com/arcangelo7/time_agnostic">arcangelo7/time_agnostic</a>. L&#x27;ho
+                        chiamato <strong>time-agnostic-generator</strong>.</li>
+                    <li>Ho scritto la <strong>documentazione </strong>di
+                        <strong>time-agnostic-browser</strong>, ovvero il README della repository <a
+                            href="https://github.com/opencitations/time-agnostic-browser#materialization">opencitations/time-agnostic-browser</a>.
                     </li>
-                    <p>Capitolo 1 <em>Introduction</em></p>
-                    <li>Rimossa la menzione all&#x27;OpenCitations Project e aggiunto un
-                        riferimento a COCI come esempio di implementazione dell&#x27;OCDM. Inoltre, l&#x27;OpenCitations
-                        Corpus è stato citato facendo riferimento all&#x27;atto di convegno <em>One Year of the
-                            OpenCitations Corpus</em> (<a
-                            href="https://doi.org/10.1007/978-3-319-68204-4_19">https://doi.org/10.1007/978-3-319-68204-4_19</a>).
+                    <li>Risolti due <strong>bug </strong>in time-agnostic-library:
+                        <ol>
+                            <li>In specifiche condizioni grafi già salvati in cache venivano
+                                nuovamente riallineati, perdendo tempo inutilmente. </li>
+                            <li>Il salvataggio dei grafi in cache su più thread sollevava
+                                un&#x27;eccezione se la stessa interfaccia SPARQLWrapper veniva usata contemporaneamente per
+                                un UPDATE e per un SELECT. Sono state create due interfacce separate. </li>
+                        </ol>
                     </li>
-                    <p>Capitolo 4.1 <em>Structure and operation</em></p>
-                    <li>Aggiunta una spiegazione su come utilizzare la funzione empty_the_cache
-                        per liberare il triplestore di cache. </li>
-                    <p>Capitolo 5.1 <em>Test Dataset</em></p>
-                    <li>Aggiunte informazioni quantitative precise su dataset e provenance,
-                        quali numero di triple per dati e provenance, numero di entità e snapshot, numero di snapshot medio
-                        per entità e quante entità di ogni tipo. </li>
-                    <li>&lt;ci:137775&gt; → &lt;ci/137775&gt;</li>
-                    <p>Capitolo 5.3 <em>Cache system</em></p>
-                    <li>Il capitolo e il diagramma UML sono stati modificati per riflettere le
-                        modifiche apportate al sistema di cache. </li>
+                    <li>Ho <strong>automatizzato </strong>l&#x27;intera procedura di
+                        <strong>benchmark</strong>.
+                        <ol>
+                            <li>È possibile riprodurre i miei risultati semplicemente
+                                lanciando un file bash. </li>
+                            <li>L&#x27;utente <strong>non </strong>deve aprire e chiudere
+                                manualmente la cache, pulirla o non pulirla, abilitare o disabilitare l&#x27;indice testuale
+                                di Blazegraph, o conoscere quali benchmark sono rilevanti per quali funzionalità. Fa tutto
+                                il software. </li>
+                            <li>Inoltre, se la procedura si interrompe riparte da dove si era
+                                interrotta.</li>
+                        </ol>
+                    </li>
+                    <li>Nonostante i notevoli sforzi di Murphy, Hofstadter e compagnia, dopo
+                        aver fixato i bug sul merge e su biro:references ho ricostruito il dataset, rifatto i benchmark,
+                        pubblicato il nuovo dataset e i nuovi risultati e, per il rotto della cuffia, aggiornato
+                        l&#x27;intera tesi. Questo ha comportato modificare tutti gli URI degli esempi, compresi quelli in
+                        tutte le immagini e listing, e tutti i numeri dei risultati. Ho pubblicato la tesi alle due notte,
+                        spero che la stanchezza non abbia causato refusi.</li>
+                    <li>Ho realizzato le <strong>slide </strong>per la discussione. </li>
+                    <li>Ho cominciato a preparare l&#x27;articolo e convertirlo in LaTeX. Sono
+                        arrivato alla sezione <em>Literature review</em> compresa. Differenze tra la tesi e l&#x27;articolo:
+                        <ol>
+                            <li>Il capitolo su che cos&#x27;è la provenance è stato rimosso.
+                            </li>
+                            <li>I metadata representation model e le archiving policies
+                                vengono introdotti brevemente e soltanto negli elementi pertinenti rispetto alla comparativa
+                                finale. Sono stati rimossi molti esempi d&#x27;uso. </li>
+                        </ol>
+                    </li>
+                </ol>
+                <h3>Cosa non ho capito</h3>
+                <ol>
+                    <li>Come mai l&#x27;OpenCitations Data Model non comprende la peer-review
+                        come tipologia di risorsa bibliografica?</li>
+                    <li>Domande relative a LaTeX:
+                        <ol>
+                            <li>LaTeX interpreta il carattere undercore (_) come un simbolo
+                                matematico. Senza escaping o math mode viene sollevata un&#x27;eccezione. Il problema è che
+                                tale simbolo è presente in numerosi DOI e URL. Come affronto il problema senza rischiare di
+                                rompere il DOI o l&#x27;URL?</li>
+                            <li>Come fare con le righe che superano la dimensione della
+                                colonna e che non vengono automaticamente segmentate? Posso usare \newline? </li>
+                            <li>Come fare per indicare la larghezza delle immagini? La mia
+                                soluzione è la seguente:
+                                <div class="card bg-primary shadow-inset border-light"><pre><code class="prettyprint">
+    \begin{figure*}[h]
+    \includegraphics[width=\textwidth]{images/annotation_frameworks.png}
+    \caption{Annotation frameworks for RDF provenance.}\label{f1}
+    \end{figure*}
+                                </code></pre></div>
+                                <p>Tuttavia, le istruzioni di IOS Press
+                                    specificano di non utilizzare il comando \textwidth. </p>
+                            </li>
+                            <li>Come mandare a capo il testo in una tabella senza specificare
+                                la dimensione della colonna?</li>
+                        </ol>
+                    </li>
+                    <li>Visto che il mio nome compare tra gli attuali collaboratori del
+                        Research Centre for Open Scholarly Metadata (<a
+                            href="https://openscholarlymetadata.org/collaborators/">https://openscholarlymetadata.org/collaborators/</a>),
+                        posso scrivere nel curriculum che da marzo a oggi sto svolgendo un tirocinio presso OpenCitations?
+                        Lo chiedo perché formalmente il tirocinio è stato rimosso dal mio piano di studio. </li>
                 </ol>
             </div>
         </section>
@@ -5395,21 +5434,159 @@ for index, author_agent_role in enumerate(author_agent_roles):
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-28" data-target="#panel-28" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-28">
-                            <span class="h6 mb-0 font-weight-bold">dd/10/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">14/10/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-28">
                             <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <p>Novità relative al codice:</p>
+                                <ol>
+                                    <li>Fixato il <strong>bug</strong> nel codice per fare i <strong>merge</strong> sul dataset di test, per cui
+                                        l&#x27;identificatore dell&#x27;entità B fusa ad A non veniva cancellato. </li>
+                                    <p>Novità relative alla tesi:</p>
+                                    <a class="btn btn-primary d-block my-3 col-md-4 col-sm-12" type="submit" href="assets/documents/master_thesis_1_0_0.pdf" download="master_thesis_1_0_0.pdf">
+                                        <span class="mr-1"><span class="fas fa-download"></span></span>
+                                        Download Master Thesis 1.0.0.
+                                    </a>
+                                    <li>Ho scritto l&#x27;<strong>abstract</strong>. L&#x27;ho strutturato seguendo i punti
+                                        suggeriti da <a
+                                            href="https://www.emeraldgrouppublishing.com/how-to/authoring-editing-reviewing/write-article-abstract">Emerald
+                                            Publishing</a>, ma ho omesso i capitoletti, che mi avrebbero sottratto preziosi caratteri. È
+                                        lungo 283 parole, ovvero 1,934 caratteri (spazi inclusi) sui 2,000 consentiti. </li>
+                                    <li>Ho riletto tutta la tesi, apportando modifiche microscopiche e
+                                        macroscopiche. Menziono solo le più rilevanti. </li>
+                                    <li>Ho cambiato gestore di citazioni, da Word a <strong>Zotero</strong>. Ho ricostruito
+                                        tutta la bibliografia in Zotero e ho sostituito le citazioni generate tramite Word con citazioni
+                                        generate tramite Zotero. La ragione è che - a parità di stile di citazione - Word disambigua
+                                        citazioni identiche aggiungendo il titolo, Zotero aggiungendo una lettera all&#x27;anno, soluzione
+                                        nettamente più pulita. </li>
+                                    <li>La <strong>conclusione</strong> è stata ampliata e portata a cinque pagine.</li>
+                                    <li>Corrette tutte le occorrenze di time-traversal usato come avverbio.
+                                    </li>
+                                    <p>Capitolo 1 <em>Introduction</em></p>
+                                    <li>Rimossa la menzione all&#x27;OpenCitations Project e aggiunto un
+                                        riferimento a COCI come esempio di implementazione dell&#x27;OCDM. Inoltre, l&#x27;OpenCitations
+                                        Corpus è stato citato facendo riferimento all&#x27;atto di convegno <em>One Year of the
+                                            OpenCitations Corpus</em> (<a
+                                            href="https://doi.org/10.1007/978-3-319-68204-4_19">https://doi.org/10.1007/978-3-319-68204-4_19</a>).
+                                    </li>
+                                    <p>Capitolo 4.1 <em>Structure and operation</em></p>
+                                    <li>Aggiunta una spiegazione su come utilizzare la funzione empty_the_cache
+                                        per liberare il triplestore di cache. </li>
+                                    <p>Capitolo 5.1 <em>Test Dataset</em></p>
+                                    <li>Aggiunte informazioni quantitative precise su dataset e provenance,
+                                        quali numero di triple per dati e provenance, numero di entità e snapshot, numero di snapshot medio
+                                        per entità e quante entità di ogni tipo. </li>
+                                    <li>&lt;ci:137775&gt; → &lt;ci/137775&gt;</li>
+                                    <p>Capitolo 5.3 <em>Cache system</em></p>
+                                    <li>Il capitolo e il diagramma UML sono stati modificati per riflettere le
+                                        modifiche apportate al sistema di cache. </li>
+                                </ol>                
                             </div>
                         </div>
                     </div>
                     <div class="card card-sm card-body bg-primary border-light mb-0">
                         <a href="#panel-29" data-target="#panel-29" class="accordion-panel-header" data-toggle="collapse" role="button"
                             aria-expanded="false" aria-controls="panel-29">
-                            <span class="h6 mb-0 font-weight-bold">dd/10/2021</span>
+                            <span class="h6 mb-0 font-weight-bold">28/10/2021</span>
                             <span class="icon"><span class="fas fa-plus"></span></span>
                         </a>
                         <div class="collapse" id="panel-29">
+                            <div class="pt-3">
+                                <h3>Cosa ho fatto</h3>
+                                <ol>
+                                    <li>Ho scritto la <strong>documentazione </strong>del codice utilizzato per
+                                        costruire il dataset di test, ovvero il README della repository <a
+                                            href="https://github.com/arcangelo7/time_agnostic">arcangelo7/time_agnostic</a>. L&#x27;ho
+                                        chiamato <strong>time-agnostic-generator</strong>.</li>
+                                    <li>Ho scritto la <strong>documentazione </strong>di
+                                        <strong>time-agnostic-browser</strong>, ovvero il README della repository <a
+                                            href="https://github.com/opencitations/time-agnostic-browser#materialization">opencitations/time-agnostic-browser</a>.
+                                    </li>
+                                    <li>Risolti due <strong>bug </strong>in time-agnostic-library:
+                                        <ol>
+                                            <li>In specifiche condizioni grafi già salvati in cache venivano
+                                                nuovamente riallineati, perdendo tempo inutilmente. </li>
+                                            <li>Il salvataggio dei grafi in cache su più thread sollevava
+                                                un&#x27;eccezione se la stessa interfaccia SPARQLWrapper veniva usata contemporaneamente per
+                                                un UPDATE e per un SELECT. Sono state create due interfacce separate. </li>
+                                        </ol>
+                                    </li>
+                                    <li>Ho <strong>automatizzato </strong>l&#x27;intera procedura di
+                                        <strong>benchmark</strong>.
+                                        <ol>
+                                            <li>È possibile riprodurre i miei risultati semplicemente
+                                                lanciando un file bash. </li>
+                                            <li>L&#x27;utente <strong>non </strong>deve aprire e chiudere
+                                                manualmente la cache, pulirla o non pulirla, abilitare o disabilitare l&#x27;indice testuale
+                                                di Blazegraph, o conoscere quali benchmark sono rilevanti per quali funzionalità. Fa tutto
+                                                il software. </li>
+                                            <li>Inoltre, se la procedura si interrompe riparte da dove si era
+                                                interrotta.</li>
+                                        </ol>
+                                    </li>
+                                    <li>Nonostante i notevoli sforzi di Murphy, Hofstadter e compagnia, dopo
+                                        aver fixato i bug sul merge e su biro:references ho ricostruito il dataset, rifatto i benchmark,
+                                        pubblicato il nuovo dataset e i nuovi risultati e, per il rotto della cuffia, aggiornato
+                                        l&#x27;intera tesi. Questo ha comportato modificare tutti gli URI degli esempi, compresi quelli in
+                                        tutte le immagini e listing, e tutti i numeri dei risultati. Ho pubblicato la tesi alle due notte,
+                                        spero che la stanchezza non abbia causato refusi.</li>
+                                    <li>Ho realizzato le <strong>slide </strong>per la discussione. </li>
+                                    <li>Ho cominciato a preparare l&#x27;articolo e convertirlo in LaTeX. Sono
+                                        arrivato alla sezione <em>Literature review</em> compresa. Differenze tra la tesi e l&#x27;articolo:
+                                        <ol>
+                                            <li>Il capitolo su che cos&#x27;è la provenance è stato rimosso.
+                                            </li>
+                                            <li>I metadata representation model e le archiving policies
+                                                vengono introdotti brevemente e soltanto negli elementi pertinenti rispetto alla comparativa
+                                                finale. Sono stati rimossi molti esempi d&#x27;uso. </li>
+                                        </ol>
+                                    </li>
+                                </ol>
+                                <h3>Cosa non ho capito</h3>
+                                <ol>
+                                    <li>Come mai l&#x27;OpenCitations Data Model non comprende la peer-review
+                                        come tipologia di risorsa bibliografica?</li>
+                                    <li>Domande relative a LaTeX:
+                                        <ol>
+                                            <li>LaTeX interpreta il carattere undercore (_) come un simbolo
+                                                matematico. Senza escaping o math mode viene sollevata un&#x27;eccezione. Il problema è che
+                                                tale simbolo è presente in numerosi DOI e URL. Come affronto il problema senza rischiare di
+                                                rompere il DOI o l&#x27;URL?</li>
+                                            <li>Come fare con le righe che superano la dimensione della
+                                                colonna e che non vengono automaticamente segmentate? Posso usare \newline? </li>
+                                            <li>Come fare per indicare la larghezza delle immagini? La mia
+                                                soluzione è la seguente:
+                                                <div class="card bg-primary shadow-inset border-light"><pre><code class="prettyprint">
+    \begin{figure*}[h]
+    \includegraphics[width=\textwidth]{images/annotation_frameworks.png}
+    \caption{Annotation frameworks for RDF provenance.}\label{f1}
+    \end{figure*}
+                                                </code></pre></div>
+                                                <p>Tuttavia, le istruzioni di IOS Press
+                                                    specificano di non utilizzare il comando \textwidth. </p>
+                                            </li>
+                                            <li>Come mandare a capo il testo in una tabella senza specificare
+                                                la dimensione della colonna?</li>
+                                        </ol>
+                                    </li>
+                                    <li>Visto che il mio nome compare tra gli attuali collaboratori del
+                                        Research Centre for Open Scholarly Metadata (<a
+                                            href="https://openscholarlymetadata.org/collaborators/">https://openscholarlymetadata.org/collaborators/</a>),
+                                        posso scrivere nel curriculum che da marzo a oggi sto svolgendo un tirocinio presso OpenCitations?
+                                        Lo chiedo perché formalmente il tirocinio è stato rimosso dal mio piano di studio. </li>
+                                </ol>                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-sm card-body bg-primary border-light mb-0">
+                        <a href="#panel-30" data-target="#panel-30" class="accordion-panel-header" data-toggle="collapse" role="button"
+                            aria-expanded="false" aria-controls="panel-30">
+                            <span class="h6 mb-0 font-weight-bold">dd/10/2021</span>
+                            <span class="icon"><span class="fas fa-plus"></span></span>
+                        </a>
+                        <div class="collapse" id="panel-30">
                             <div class="pt-3">
                             </div>
                         </div>
