@@ -56,90 +56,183 @@
         <section class="section pb-5" id="next-meet">
             <div class="container">
                 <div class="row justify-content-center mb-5">
-                    <h2>Prossimo incontro (28/10/2021)</h2>
+                    <h2>Ultima pagina (31/10/2021)</h2>
                 </div>
                 <h3>Cosa ho fatto</h3>
                 <ol>
-                    <li>Ho scritto la <strong>documentazione </strong>del codice utilizzato per
-                        costruire il dataset di test, ovvero il README della repository <a
-                            href="https://github.com/arcangelo7/time_agnostic">arcangelo7/time_agnostic</a>. L&#x27;ho
-                        chiamato <strong>time-agnostic-generator</strong>.</li>
-                    <li>Ho scritto la <strong>documentazione </strong>di
-                        <strong>time-agnostic-browser</strong>, ovvero il README della repository <a
-                            href="https://github.com/opencitations/time-agnostic-browser#materialization">opencitations/time-agnostic-browser</a>.
-                    </li>
-                    <li>Risolti due <strong>bug </strong>in time-agnostic-library:
-                        <ol>
-                            <li>In specifiche condizioni grafi già salvati in cache venivano
-                                nuovamente riallineati, perdendo tempo inutilmente. </li>
-                            <li>Il salvataggio dei grafi in cache su più thread sollevava
-                                un&#x27;eccezione se la stessa interfaccia SPARQLWrapper veniva usata contemporaneamente per
-                                un UPDATE e per un SELECT. Sono state create due interfacce separate. </li>
+                    <li>Le <strong>slide</strong> sono state modificate: <ol>
+                            <li>Le citazioni sono sia intratestuali che complete
+                                all&#x27;interno di ogni singola slide. Ogni citazione è un link alla risorsa. Rimossa la
+                                slide sulla bibliografia finale. </li>
+                            <li>Nella slide sulla provenance è stata aggiunta una freccia che
+                                indica Trust sull&#x27;immagine del Semantic Web stack. È una sorta di <strong>ti trovi
+                                    qui</strong>.</li>
+                            <li>Rimossi i punti dagli elenchi. Ogni item è composto da
+                                un&#x27;unica proposizione. </li>
+                            <li>Rimosso il riferimento all&#x27;assenza di standard per
+                                rappresentare la provenance in RDF. Aggiunta una precisazione circa alcuni dataset che
+                                registrano la provenance ma non i cambiamenti. </li>
+                            <li>Il primo dei due obiettivi è identificare un provenance
+                                metadata model conforme a RDF. Rimosso il riferimento alla conformità con SPARQL. </li>
+                            <li>Menziono brevemente RDF*. Dico che c&#x27;è, che molti lo
+                                usano (esempio, YAGO 4).</li>
+                            <li>Ho colorato gli elementi più rilevanti sul diagramma degli
+                                annotation frameworks per RDF.</li>
+                            <li>Ho aggiunto una slide prima della metodologia che introduce
+                                le time-related retrieval functionalities. Le loro definizioni vengono ripetute in ciascuna
+                                slide di approfondimento, anche se non verranno ripetute a voce. </li>
+                            <li>Tutta la metodologia è stata esemplificata graficamente con
+                                un esempio che gira attorno al luogo di residenza di <strong>Dante Alighieri</strong>, omettendo le query
+                                SPARQL. La query di esempio è "Dove vive Dante?", una domanda che ha avuto molte risposte diverse (Firenze, Forlì, Verona, Ravenna...). Ho scelto questo esempio perché è <strong>autoesplicativo</strong> per un pubblico di umanisti, che si possono in questo modo concentrare sul comprendere la metodologia e non l'esempio stesso.</li>
+                            <li>Tutti i diagrammi di flusso sono stati spostati dopo la slide
+                                finale. </li>
                         </ol>
                     </li>
-                    <li>Ho <strong>automatizzato </strong>l&#x27;intera procedura di
-                        <strong>benchmark</strong>.
+                    <li><strong>time-agnostic-browser</strong> è disponibile al seguente
+                        indirizzo: <a href="http://51.15.198.219/" target="_blank">http://51.15.198.219/</a>
                         <ol>
-                            <li>È possibile riprodurre i miei risultati semplicemente
-                                lanciando un file bash. </li>
-                            <li>L&#x27;utente <strong>non </strong>deve aprire e chiudere
-                                manualmente la cache, pulirla o non pulirla, abilitare o disabilitare l&#x27;indice testuale
-                                di Blazegraph, o conoscere quali benchmark sono rilevanti per quali funzionalità. Fa tutto
-                                il software. </li>
-                            <li>Inoltre, se la procedura si interrompe riparte da dove si era
-                                interrotta.</li>
-                        </ol>
-                    </li>
-                    <li>Nonostante i notevoli sforzi di Murphy, Hofstadter e compagnia, dopo
-                        aver fixato i bug sul merge e su biro:references ho ricostruito il dataset, rifatto i benchmark,
-                        pubblicato il nuovo dataset e i nuovi risultati e, per il rotto della cuffia, aggiornato
-                        l&#x27;intera tesi. Questo ha comportato modificare tutti gli URI degli esempi, compresi quelli in
-                        tutte le immagini e listing, e tutti i numeri dei risultati. Ho pubblicato la tesi alle due notte,
-                        spero che la stanchezza non abbia causato refusi.</li>
-                    <li>Ho realizzato le <strong>slide </strong>per la discussione. </li>
-                    <li>Ho cominciato a preparare l&#x27;articolo e convertirlo in LaTeX. Sono
-                        arrivato alla sezione <em>Literature review</em> compresa. Differenze tra la tesi e l&#x27;articolo:
-                        <ol>
-                            <li>Il capitolo su che cos&#x27;è la provenance è stato rimosso.
+                            <li>Si trova su un&#x27;istanza di <strong>Scaleway</strong>.
                             </li>
-                            <li>I metadata representation model e le archiving policies
-                                vengono introdotti brevemente e soltanto negli elementi pertinenti rispetto alla comparativa
-                                finale. Sono stati rimossi molti esempi d&#x27;uso. </li>
-                        </ol>
-                    </li>
-                </ol>
-                <h3>Cosa non ho capito</h3>
-                <ol>
-                    <li>Come mai l&#x27;OpenCitations Data Model non comprende la peer-review
-                        come tipologia di risorsa bibliografica?</li>
-                    <li>Domande relative a LaTeX:
-                        <ol>
-                            <li>LaTeX interpreta il carattere undercore (_) come un simbolo
-                                matematico. Senza escaping o math mode viene sollevata un&#x27;eccezione. Il problema è che
-                                tale simbolo è presente in numerosi DOI e URL. Come affronto il problema senza rischiare di
-                                rompere il DOI o l&#x27;URL?</li>
-                            <li>Come fare con le righe che superano la dimensione della
-                                colonna e che non vengono automaticamente segmentate? Posso usare \newline? </li>
-                            <li>Come fare per indicare la larghezza delle immagini? La mia
-                                soluzione è la seguente:
-                                <div class="card bg-primary shadow-inset border-light"><pre><code class="prettyprint">
-    \begin{figure*}[h]
-    \includegraphics[width=\textwidth]{images/annotation_frameworks.png}
-    \caption{Annotation frameworks for RDF provenance.}\label{f1}
-    \end{figure*}
-                                </code></pre></div>
-                                <p>Tuttavia, le istruzioni di IOS Press
-                                    specificano di non utilizzare il comando \textwidth. </p>
+                            <li>Come web server è stato usato <strong>Nginx</strong>, il
+                                quale gestisce i file statici. I file Python vengono invece inoltrati a
+                                <strong>Gunicorn</strong>.
                             </li>
-                            <li>Come mandare a capo il testo in una tabella senza specificare
-                                la dimensione della colonna?</li>
+                            <li>È stato configurato un <strong>firewall </strong>(ufw). Le
+                                uniche porte aperte sono 80 e 22, non è possibile interagire con i triplestore
+                                dall&#x27;esterno. </li>
                         </ol>
                     </li>
-                    <li>Visto che il mio nome compare tra gli attuali collaboratori del
-                        Research Centre for Open Scholarly Metadata (<a
-                            href="https://openscholarlymetadata.org/collaborators/">https://openscholarlymetadata.org/collaborators/</a>),
-                        posso scrivere nel curriculum che da marzo a oggi sto svolgendo un tirocinio presso OpenCitations?
-                        Lo chiedo perché formalmente il tirocinio è stato rimosso dal mio piano di studio. </li>
+                    <li>Ho trovato l&#x27;unica peer-review citata da un articolo pubblicato su
+                        <em>Scientometrics</em>. <a href="https://doi.org/10.1007/s11192-019-03263-0" target="_blank">10.1007/s11192-019-03263-0</a>
+                        cita <a href="https://doi.org/10.1162/qss_a_00109/v2/response1" target="_blank">10.1162/qss_a_00109/v2/response1</a>
+                        <ol>
+                            <li>È interessante notare che i metadati riportati da Crossref
+                                sono molto precisi. Nota &quot;relation&quot; → &quot;is-review-of&quot; oppure "review" → "revision-round". Crossref ha fatto passi da gigante.</li>
+                            <div class="card bg-primary shadow-inset border-light">
+                            <pre><code class="prettyprint">
+    {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message-type&quot;: &quot;work&quot;,
+        &quot;message-version&quot;: &quot;1.0.0&quot;,
+        &quot;message&quot;: {
+            &quot;indexed&quot;: {
+                &quot;date-parts&quot;: [
+                    [
+                        2021,
+                        5,
+                        12
+                    ]
+                ],
+                &quot;date-time&quot;: &quot;2021-05-12T11:52:12Z&quot;,
+                &quot;timestamp&quot;: 1620820332837
+            },
+            &quot;reference-count&quot;: 0,
+            &quot;publisher&quot;: &quot;MIT Press - Journals&quot;,
+            &quot;content-domain&quot;: {
+                &quot;domain&quot;: []
+            },
+            &quot;short-container-title&quot;: [],
+            &quot;published-print&quot;: {
+                &quot;date-parts&quot;: [
+                    [
+                        2020,
+                        11,
+                        23
+                    ]
+                ]
+            },
+            &quot;DOI&quot;: &quot;10.1162\/qss_a_00109\/v2\/response1&quot;,
+            &quot;type&quot;: &quot;peer-review&quot;,
+            &quot;created&quot;: {
+                &quot;date-parts&quot;: [
+                    [
+                        2021,
+                        1,
+                        21
+                    ]
+                ],
+                &quot;date-time&quot;: &quot;2021-01-21T12:10:01Z&quot;,
+                &quot;timestamp&quot;: 1611231001000
+            },
+            &quot;source&quot;: &quot;Crossref&quot;,
+            &quot;is-referenced-by-count&quot;: 1,
+            &quot;title&quot;: [
+                &quot;Author response for \&quot;A multidimensional perspective on the citation impact of scientific publications\&quot;&quot;
+            ],
+            &quot;prefix&quot;: &quot;10.1162&quot;,
+            &quot;author&quot;: [
+                {
+                    &quot;family&quot;: &quot;Bu, Yi&quot;,
+                    &quot;sequence&quot;: &quot;first&quot;,
+                    &quot;affiliation&quot;: []
+                },
+                {
+                    &quot;family&quot;: &quot;Waltman, Ludo&quot;,
+                    &quot;sequence&quot;: &quot;additional&quot;,
+                    &quot;affiliation&quot;: []
+                },
+                {
+                    &quot;family&quot;: &quot;Huang, Yong&quot;,
+                    &quot;sequence&quot;: &quot;additional&quot;,
+                    &quot;affiliation&quot;: []
+                }
+            ],
+            &quot;member&quot;: &quot;281&quot;,
+            &quot;container-title&quot;: [],
+            &quot;review&quot;: {
+                &quot;type&quot;: &quot;author-comment&quot;,
+                &quot;running-number&quot;: &quot;A1V2&quot;,
+                &quot;revision-round&quot;: &quot;2&quot;,
+                &quot;stage&quot;: &quot;pre-publication&quot;
+            },
+            &quot;original-title&quot;: [],
+            &quot;deposited&quot;: {
+                &quot;date-parts&quot;: [
+                    [
+                        2021,
+                        1,
+                        21
+                    ]
+                ],
+                &quot;date-time&quot;: &quot;2021-01-21T12:10:02Z&quot;,
+                &quot;timestamp&quot;: 1611231002000
+            },
+            &quot;score&quot;: 1,
+            &quot;subtitle&quot;: [],
+            &quot;short-title&quot;: [],
+            &quot;issued&quot;: {
+                &quot;date-parts&quot;: [
+                    [
+                        2020,
+                        11,
+                        23
+                    ]
+                ]
+            },
+            &quot;references-count&quot;: 0,
+            &quot;URL&quot;: &quot;http:\/\/dx.doi.org\/10.1162\/qss_a_00109\/v2\/response1&quot;,
+            &quot;relation&quot;: {
+                &quot;is-review-of&quot;: [
+                    {
+                        &quot;id-type&quot;: &quot;doi&quot;,
+                        &quot;id&quot;: &quot;10.1162\/QSS_A_00109&quot;,
+                        &quot;asserted-by&quot;: &quot;subject&quot;
+                    }
+                ]
+            },
+            &quot;published&quot;: {
+                &quot;date-parts&quot;: [
+                    [
+                        2020,
+                        11,
+                        23
+                    ]
+                ]
+            }
+        }
+    }
+            </code></pre></div>
+                    </li>
                 </ol>
             </div>
         </section>
